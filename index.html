@@ -4992,7 +4992,7 @@ function fmtTowTime(iso) {
   return m ? m[1] : '';
 }
 
-// Returns { towOff, towOn, idleStand } if tow condition met, else null
+// Returns { towOff, towOn, idleStand, depGate } if tow condition met, else null
 function getTowInfo(e) {
   if (!e.numberOfTowings || e.numberOfTowings <= 0) return null;
   const arr  = (e.arrStand  || '').trim().toUpperCase();
@@ -5004,6 +5004,7 @@ function getTowInfo(e) {
     towOff:    fmtTowTime(e.tow1StartTime),
     towOn:     fmtTowTime(e.tow2StartTime),
     idleStand: e.idleStand || '',
+    depGate:   e.depGate || '',
   };
 }
 
@@ -5105,7 +5106,8 @@ function exportTrafficWindow(period) {
     const towCells = anyTow ? `
       <td style="${S}padding:3px 6px;font-family:'Courier New',monospace;color:${cfg.accentDk};font-weight:700">${tow ? tow.towOff : ''}</td>
       <td style="${S}padding:3px 6px;color:#555">${tow ? tow.idleStand : ''}</td>
-      <td style="${S}padding:3px 6px;font-family:'Courier New',monospace;color:#1A7A5E;font-weight:700">${tow ? tow.towOn : ''}</td>` : '';
+      <td style="${S}padding:3px 6px;font-family:'Courier New',monospace;color:#1A7A5E;font-weight:700">${tow ? tow.towOn : ''}</td>
+      <td style="${S}padding:3px 6px;color:#555;font-weight:700">${tow ? tow.depGate : ''}</td>` : '';
 
     rows += `<tr bgcolor="${bg}" style="background:${bg}">
       <td style="${S}padding:3px 6px;font-weight:700;color:#222">${callsign}</td>
@@ -5113,14 +5115,14 @@ function exportTrafficWindow(period) {
       <td style="${S}padding:3px 6px;color:#555">${stand}</td>${towCells}
     </tr>`;
     if (note) {
-      const colspan = anyTow ? 6 : 3;
+      const colspan = anyTow ? 7 : 3;
       rows += `<tr bgcolor="${bg}" style="background:${bg}">
         <td colspan="${colspan}" style="${S}padding:0 6px 3px 6px;font-size:10px;font-style:italic;color:#666"><strong style="font-style:normal;color:#999">Note:</strong> ${escapeHtml(note)}</td>
       </tr>`;
     }
   });
 
-  const towHdrCells = anyTow ? `${hdrTd('Tow Off')}${hdrTd('Idle')}${hdrTd('Tow On')}` : '';
+  const towHdrCells = anyTow ? `${hdrTd('Tow Off')}${hdrTd('Idle')}${hdrTd('Tow On')}${hdrTd('Dep Gate')}` : '';
 
   // ── Teams-paste-safe markup ──────────────────────────────────────────────
   // Teams' chat compose box rewrites pasted HTML through its own sanitizer:
@@ -5135,7 +5137,7 @@ function exportTrafficWindow(period) {
   // Both are applied below. Padding is also tightened throughout.
   const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:10px;background:#F0F0F0;font-family:Arial,sans-serif">
-<table cellpadding="0" cellspacing="0" border="0" width="${anyTow ? 520 : 360}" style="max-width:${anyTow ? 520 : 360}px;margin:0 auto;background:#fff;border-radius:6px;border-collapse:collapse;border:1px solid #E0E0E0">
+<table cellpadding="0" cellspacing="0" border="0" width="${anyTow ? 590 : 360}" style="max-width:${anyTow ? 590 : 360}px;margin:0 auto;background:#fff;border-radius:6px;border-collapse:collapse;border:1px solid #E0E0E0">
   <tr><td bgcolor="${cfg.headBg}" style="background:${cfg.headBg};padding:6px 12px 5px">
     <table cellpadding="0" cellspacing="0" border="0"><tr><td style="font-family:Arial,sans-serif;font-size:17px;font-weight:900;color:${cfg.accentDk};letter-spacing:.04em">DFW</td></tr>
     <tr><td style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#333;padding-top:1px">${cfg.label}</td></tr>
