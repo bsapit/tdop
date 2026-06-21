@@ -288,7 +288,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
       <input type="time" id="timeTo" value="23:59" style="font-family:var(--mono);font-size:.8rem;background:transparent;border:none;color:var(--text-1);outline:none;cursor:pointer;max-width:72px">
     </div>
     <button class="btn-unlock" id="btnUnlockDate" style="display:none" onclick="unlockDate()" title="Unlock date to change">🔒 Date</button>
-    <button class="btn bp" id="btnPull" onclick="loadOps()">⟳ Pull</button>
+    <button class="btn bp" id="btnPull" onclick="loadOps()">⟳ Refresh</button>
     <button class="btn-kv btn-kv-save" id="btnSave" onclick="kvSave()">💾 Save</button>
     <button class="btn-kv btn-kv-load" id="btnLoad" onclick="kvLoadAndApply()">↓ Load</button>
 
@@ -357,7 +357,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
 
 <div class="status-bar">
   <div class="dot" id="dot"></div>
-  <span id="stxt">Select a date and click Generate to build the briefing.</span>
+  <span id="stxt">Select a date and click Refresh to build the briefing.</span>
   <span id="saveIndicator" style="margin-left:auto;font-size:.68rem;color:var(--text-3);white-space:nowrap;display:none"></span>
   <button id="btnClearState" onclick="nuclearClear()" class="btn-kv btn-kv-clear" style="margin-left:6px">🗑 Clear All</button>
 </div>
@@ -375,7 +375,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <div class="empty">
       <div class="ic">📋</div>
       <h3>No briefing loaded</h3>
-      <p>Select a date above and click <strong>Generate</strong> to pull<br>live data from the Stand &amp; Gate API.</p>
+      <p>Select a date above and click <strong>Refresh</strong> to pull<br>live data from the Stand &amp; Gate API.</p>
     </div>
   </div>
 </main>
@@ -1038,6 +1038,62 @@ function prefillApiEstimates(data) {
   console.log(`[TDOP PREFILL] ── Summary: filled=${_filled} | same-as-sched=${_sameSched} | no-API-est=${_noEst} | DOM-not-found=${_noEl} | already-had-value=${_hasVal}`);
 }
 
+// ── GATEGADGET PAX AUTO-FILL ─────────────────────────────────────────────────
+// GateGadget (gate-side headcount app) posts its counts to a shared Netlify
+// Blobs store at GATEGADGET_PAX_URL. Response shape:
+//   { counts: { "F9229 (Arrival)": 213, "F92496 (Departure)": 0, ... } }
+// Keys are built as `${iata}${flightNumber} (Arrival|Departure)` — the same
+// convention TDOP's own paxBinSync() already uses, so we reuse that format
+// to match against TDOP's pax_{IATA}_{FLIGHT}_{arr|dep} input ids.
+async function fetchGateGadgetPax() {
+  try {
+    const r = await fetch(GATEGADGET_PAX_URL);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    return (data && data.counts) || {};
+  } catch (e) {
+    console.warn('TDOP: GateGadget PAX fetch failed', e.message);
+    return null; // null = fetch failed, distinct from {} = fetched but empty
+  }
+}
+
+// Only fills PAX inputs that are still blank — exactly like prefillApiEstimates
+// does for ETAs. Anything already in the field (typed by ops, or filled by a
+// prior GateGadget poll) is left alone, so manual entries always win and a
+// correction never gets silently overwritten on the next 5-minute poll.
+// A count of 0 is treated as "not counted yet" rather than a real value, since
+// GateGadget reports 0 before headcounting starts — filling that in would
+// permanently block the real number from ever auto-filling.
+function applyGateGadgetPax(counts) {
+  if (!counts) return;
+  let filled = 0;
+  document.querySelectorAll('input.cell-pax-input').forEach(el => {
+    if (!el.id || el.value) return; // already has a value — don't touch
+    const m = el.id.match(/^pax_([A-Z0-9]+)_(.+)_(arr|dep)$/);
+    if (!m) return;
+    const [, iata, fnum, leg] = m;
+    const legLabel = leg === 'arr' ? 'Arrival' : 'Departure';
+    const val = counts[`${iata}${fnum} (${legLabel})`];
+    if (typeof val === 'number' && val > 0) {
+      el.value = val;
+      filled++;
+    }
+  });
+  if (filled) console.log(`TDOP: GateGadget auto-filled ${filled} PAX field(s)`);
+}
+
+async function pollGateGadgetPax() {
+  if (!briefingData) return;
+  const counts = await fetchGateGadgetPax();
+  applyGateGadgetPax(counts);
+}
+
+function startGateGadgetPoll() {
+  if (_gateGadgetPaxTimer) clearInterval(_gateGadgetPaxTimer);
+  _gateGadgetPaxTimer = setInterval(pollGateGadgetPax, AUTO_REFRESH_INTERVAL);
+  pollGateGadgetPax(); // also run once immediately rather than waiting 5 min
+}
+
 function restoreInputs(snap) {
   if (!snap || !Object.keys(snap).length) return;
   _applyingSyncedInputs = true;
@@ -1093,6 +1149,8 @@ let _kvSyncTimer     = null;   // 30-second live-sync poll
 let _kvLastSavedAt   = null;   // ISO timestamp of the version we have loaded
 let _autoRefreshTimer = null;  // API auto-refresh timer
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+let _gateGadgetPaxTimer = null; // GateGadget PAX-count poll timer
+const GATEGADGET_PAX_URL = 'https://gategadgetdata.netlify.app/api/pax-counts';
 
 // ── GATE/STAND CHANGE TRACKING ────────────────────────────────────────────────
 // Tracks last-known gate/stand per flight plus a TTL counter for how many more
@@ -1265,7 +1323,7 @@ async function paxBinSync() {
 
 async function kvSave({ silent = false } = {}) {
   if (!briefingData) {
-    if (!silent) setStatus('error','Pull a briefing first before saving.');
+    if (!silent) setStatus('error','Refresh a briefing first before saving.');
     return;
   }
   const saveBtn = document.getElementById('btnSave');
@@ -1356,6 +1414,7 @@ async function nuclearClear() {
   if (_kvAutoSaveTimer) { clearInterval(_kvAutoSaveTimer); _kvAutoSaveTimer = null; }
   if (_kvSaveTimer)     { clearTimeout(_kvSaveTimer);      _kvSaveTimer = null; }
   if (_autoRefreshTimer){ clearInterval(_autoRefreshTimer);_autoRefreshTimer = null; }
+  if (_gateGadgetPaxTimer){ clearInterval(_gateGadgetPaxTimer);_gateGadgetPaxTimer = null; }
 
   // 2. Nuke all in-memory state — including the user input store
   _kvLastSavedAt           = null;
@@ -1392,6 +1451,7 @@ async function nuclearClear() {
   startAutoSave();
   startLiveSync();
   startAutoRefresh();
+  startGateGadgetPoll();
 }
 
 // Legacy alias
@@ -1456,6 +1516,7 @@ async function startupNew() {
   startAutoSave();
   startLiveSync();
   startAutoRefresh();
+  startGateGadgetPoll();
   scheduleNightlyReset();
 }
 
@@ -1467,6 +1528,7 @@ async function startupLoad() {
   startAutoSave();
   startLiveSync();
   startAutoRefresh();
+  startGateGadgetPoll();
   scheduleNightlyReset();
 }
 
@@ -1575,6 +1637,11 @@ async function silentRefresh() {
     out.oninput  = (e) => { recordInputEvent(e); };
     out.onchange = (e) => { recordInputEvent(e); };
 
+    // Fill any still-blank PAX fields from GateGadget (manual entries win,
+    // already handled inside applyGateGadgetPax — fire-and-forget, doesn't
+    // block the refresh).
+    pollGateGadgetPax();
+
     // Show refresh timestamp in save indicator
     const t = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
     const el = document.getElementById('saveIndicator');
@@ -1668,6 +1735,7 @@ function scheduleNightlyReset() {
     if (_kvAutoSaveTimer) { clearInterval(_kvAutoSaveTimer); _kvAutoSaveTimer = null; }
     if (_kvSaveTimer)     { clearTimeout(_kvSaveTimer);      _kvSaveTimer = null; }
     if (_autoRefreshTimer){ clearInterval(_autoRefreshTimer);_autoRefreshTimer = null; }
+    if (_gateGadgetPaxTimer){ clearInterval(_gateGadgetPaxTimer);_gateGadgetPaxTimer = null; }
 
     // Wipe KV
     try {
@@ -1711,12 +1779,13 @@ function scheduleNightlyReset() {
       await loadOps();
     } catch(e) {
       console.warn('[TDOP] Nightly auto-pull failed:', e.message);
-      setStatus('error', 'Auto-pull failed — click Generate to retry.');
+      setStatus('error', 'Auto-refresh failed — click Refresh to retry.');
     }
 
     startAutoSave();
     startLiveSync();
     startAutoRefresh();
+  startGateGadgetPoll();
 
     // Schedule the next night
     scheduleNightlyReset();
@@ -1905,6 +1974,9 @@ async function loadOps() {
     const out = document.getElementById('out');
     out.oninput  = (e) => { recordInputEvent(e); };
     out.onchange = (e) => { recordInputEvent(e); };
+    // Fill any blank PAX fields from GateGadget (fire-and-forget; manual
+    // entries are never overwritten — see applyGateGadgetPax).
+    pollGateGadgetPax();
     setStatus('success',
       `Briefing generated — ${briefingData.hardstand.length} hardstand operation(s), ` +
       `${briefingData.terminal.length} terminal turn(s).`);
@@ -5288,7 +5360,7 @@ function addFifaCharter() {
     renderBriefing(briefingData, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
     restoreUserInputs();
   } else {
-    alert('Charter added. Generate a briefing to see it in the FIFA Charters section.');
+    alert('Charter added. Refresh the briefing to see it in the FIFA Charters section.');
   }
 }
 
