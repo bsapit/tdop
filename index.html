@@ -436,6 +436,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
         <li><strong>SeeSay button</strong> &mdash; new 👁 SeeSay button posts a Teams adaptive card via Power Automate directing staff to submit IOC requests through the SeeSay app, with a direct mobile link. Always enabled.</li>
         <li><strong>Teams gated badge fix</strong> &mdash; Teams card posts now correctly show the &lt;strong&gt;✈ GATED&lt;/strong&gt; indicator when a card's Gated toggle is active. Previously the styled badge was stripped by Teams' HTML sanitiser.</li>
         <li><strong>QSG &amp; User Guide updated</strong> &mdash; both documents reflect V1.0.3 features including Traffic, O/N Traffic, and SeeSay.</li>
+      </ul>
     </div>
 
     <!-- V1.0 -->
@@ -5085,7 +5086,7 @@ function exportTrafficWindow(period) {
   const accentColor = cfg.accent;
   const S = 'font-family:Arial,sans-serif;font-size:11px;';
   const hdrTd = (txt) =>
-    `<td style="${S}padding:4px 6px;font-size:10px;font-weight:700;color:${cfg.accentDk};text-transform:uppercase;letter-spacing:.05em;background:${cfg.headBg};border-bottom:2px solid ${accentColor}">${txt}</td>`;
+    `<td bgcolor="${cfg.headBg}" style="${S}padding:3px 6px;font-size:10px;font-weight:700;color:${cfg.accentDk};text-transform:uppercase;letter-spacing:.05em;background:${cfg.headBg};border-bottom:2px solid ${accentColor}">${txt}</td>`;
 
   const anyTow = arrivals.some(e => getTowInfo(e) !== null);
 
@@ -5099,46 +5100,58 @@ function exportTrafficWindow(period) {
     const tow      = getTowInfo(e);
 
     const towCells = anyTow ? `
-      <td style="${S}padding:5px 6px;font-family:'Courier New',monospace;color:${cfg.accentDk};font-weight:700">${tow ? tow.towOff : ''}</td>
-      <td style="${S}padding:5px 6px;color:#555">${tow ? tow.idleStand : ''}</td>
-      <td style="${S}padding:5px 6px;font-family:'Courier New',monospace;color:#1A7A5E;font-weight:700">${tow ? tow.towOn : ''}</td>` : '';
+      <td style="${S}padding:3px 6px;font-family:'Courier New',monospace;color:${cfg.accentDk};font-weight:700">${tow ? tow.towOff : ''}</td>
+      <td style="${S}padding:3px 6px;color:#555">${tow ? tow.idleStand : ''}</td>
+      <td style="${S}padding:3px 6px;font-family:'Courier New',monospace;color:#1A7A5E;font-weight:700">${tow ? tow.towOn : ''}</td>` : '';
 
-    rows += `<tr style="background:${bg}">
-      <td style="${S}padding:5px 6px;font-weight:700;color:#222">${callsign}</td>
-      <td style="${S}padding:5px 6px;font-family:'Courier New',monospace;color:#333">${fnum}</td>
-      <td style="${S}padding:5px 6px;color:#555">${stand}</td>${towCells}
+    rows += `<tr bgcolor="${bg}" style="background:${bg}">
+      <td style="${S}padding:3px 6px;font-weight:700;color:#222">${callsign}</td>
+      <td style="${S}padding:3px 6px;font-family:'Courier New',monospace;color:#333">${fnum}</td>
+      <td style="${S}padding:3px 6px;color:#555">${stand}</td>${towCells}
     </tr>`;
     if (note) {
       const colspan = anyTow ? 6 : 3;
-      rows += `<tr style="background:${bg}">
-        <td colspan="${colspan}" style="${S}padding:0 6px 5px 6px;font-size:10px;font-style:italic;color:#666"><strong style="font-style:normal;color:#999">Note:</strong> ${escapeHtml(note)}</td>
+      rows += `<tr bgcolor="${bg}" style="background:${bg}">
+        <td colspan="${colspan}" style="${S}padding:0 6px 3px 6px;font-size:10px;font-style:italic;color:#666"><strong style="font-style:normal;color:#999">Note:</strong> ${escapeHtml(note)}</td>
       </tr>`;
     }
   });
 
   const towHdrCells = anyTow ? `${hdrTd('Tow Off')}${hdrTd('Idle')}${hdrTd('Tow On')}` : '';
 
+  // ── Teams-paste-safe markup ──────────────────────────────────────────────
+  // Teams' chat compose box rewrites pasted HTML through its own sanitizer:
+  // stacked div elements for the title block get flattened onto one line ("DFW" +
+  // label run together with no break), and inline background-color/padding
+  // on <td> is frequently stripped in favor of Teams' own larger defaults
+  // (hence the oversized rows). Word doesn't do this, which is why the same
+  // HTML looks fine there. Two things are known to survive Teams' cleanup
+  // much more reliably than nested divs or CSS-only styling:
+  //   1. Real table rows instead of divs — one <tr> per line of text.
+  //   2. Legacy bgcolor/border attributes alongside the CSS equivalents.
+  // Both are applied below. Padding is also tightened throughout.
   const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:10px;background:#F0F0F0;font-family:Arial,sans-serif">
-<div style="max-width:${anyTow ? 520 : 360}px;margin:0 auto;background:#fff;border-radius:6px;overflow:hidden;border:1px solid #E0E0E0">
-  <div style="background:${cfg.headBg};border-bottom:3px solid ${accentColor};padding:8px 12px">
-    <div style="font-size:18px;font-weight:900;color:${cfg.accentDk};letter-spacing:.04em">DFW</div>
-    <div style="font-size:13px;font-weight:700;color:#333;margin-top:2px">${cfg.label}</div>
-    <div style="font-size:11px;color:#888;margin-top:2px">${dateLong} &nbsp;·&nbsp; ${shiftLabel}</div>
-  </div>
-  <div style="padding:10px 12px">
+<table cellpadding="0" cellspacing="0" border="0" width="${anyTow ? 520 : 360}" style="max-width:${anyTow ? 520 : 360}px;margin:0 auto;background:#fff;border-radius:6px;border-collapse:collapse;border:1px solid #E0E0E0">
+  <tr><td bgcolor="${cfg.headBg}" style="background:${cfg.headBg};padding:6px 12px 5px">
+    <table cellpadding="0" cellspacing="0" border="0"><tr><td style="font-family:Arial,sans-serif;font-size:17px;font-weight:900;color:${cfg.accentDk};letter-spacing:.04em">DFW</td></tr>
+    <tr><td style="font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#333;padding-top:1px">${cfg.label}</td></tr>
+    <tr><td style="font-family:Arial,sans-serif;font-size:11px;color:#888;padding-top:1px">${dateLong} &nbsp;·&nbsp; ${shiftLabel}</td></tr></table>
+  </td></tr>
+  <tr><td bgcolor="${accentColor}" style="background:${accentColor};font-size:1px;line-height:3px" height="3">&nbsp;</td></tr>
+  <tr><td style="padding:8px 10px">
     <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif">
       <tr>${hdrTd('Callsign')}${hdrTd('Flt')}${hdrTd('Stand')}${towHdrCells}</tr>
       ${rows}
     </table>
-  </div>
-  <div style="background:#F9F9F9;border-top:1px solid #EEE;padding:5px 12px">
+  </td></tr>
+  <tr><td bgcolor="#F9F9F9" style="background:#F9F9F9;border-top:1px solid #EEE;padding:4px 12px">
     <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif">DFW Terminal D</td>
-      <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif;text-align:right">TDOP V1.0.3 · Generated ${now}</td>
+      <td style="font-size:9px;color:#AAA;font-family:Arial,sans-serif">DFW Terminal D</td>
+      <td style="font-size:9px;color:#AAA;font-family:Arial,sans-serif;text-align:right">TDOP V1.0.3 · Generated ${now}</td>
     </tr></table>
-  </div>
-</div>
+  </td></tr>
+</table>
 </body></html>`;
 
   copyEmailHtml(fullHtml, btnId);
