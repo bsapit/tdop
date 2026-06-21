@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Terminal D Operations Briefing</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
 // ── Jump to top FAB ──────────────────────────────────────────────────────────
 window.addEventListener('scroll', () => {
   const fab = document.getElementById('fabTop');
@@ -156,6 +157,8 @@ html,body{max-width:100%;overflow-x:hidden}
 .al-hs-mirror-badge{font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.45);color:#fff;padding:2px 7px;border-radius:4px;white-space:nowrap;margin-left:auto}
 .al-delete-btn{font-family:var(--sans);font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border:1px solid rgba(255,255,255,.55);border-radius:4px;padding:3px 8px;cursor:pointer;background:rgba(192,57,43,.85);color:#fff;white-space:nowrap;transition:all .15s;flex-shrink:0;margin-left:6px}
 .al-delete-btn:hover{background:#C0392B;border-color:#fff}
+.al-edit-btn{font-family:var(--sans);font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border:1px solid rgba(255,255,255,.55);border-radius:4px;padding:3px 8px;cursor:pointer;background:rgba(62,177,200,.85);color:#fff;white-space:nowrap;transition:all .15s;flex-shrink:0;margin-left:auto}
+.al-edit-btn:hover{background:#3EB1C8;border-color:#fff}
 
 /* ── TABLE INSIDE CARD ── */
 .al-tbl{width:100%;border-collapse:collapse;font-size:.88rem}
@@ -468,7 +471,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
 <!-- ── MANUAL ADD FLIGHT MODAL ── -->
 <div class="modal-backdrop" id="addFlightModal" style="display:none" onclick="if(event.target===this)hideAddFlightModal()">
   <div class="modal-box" style="width:320px">
-    <h3>➕ Add Flight</h3>
+    <h3 id="mfModalTitle">➕ Add Flight</h3>
     <div class="modal-field">
       <label>Airline Name</label>
       <input type="text" id="mf_airline" placeholder="e.g. Japan Airlines">
@@ -521,7 +524,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     </div>
     <div class="modal-actions">
       <button class="btn bs" onclick="hideAddFlightModal()">Cancel</button>
-      <button class="btn bp" onclick="addManualFlight()">Add Flight</button>
+      <button class="btn bp" id="mfSubmitBtn" onclick="addManualFlight()">Add Flight</button>
     </div>
   </div>
 </div>
@@ -543,7 +546,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
 <!-- ── FIFA CHARTER MODAL ────────────────────────────────────────────────── -->
 <div class="modal-backdrop" id="fifaModal" style="display:none" onclick="if(event.target===this)closeFifaModal()">
   <div class="modal-box" style="width:340px">
-    <h3>⚽ Add FIFA Charter</h3>
+    <h3 id="fifaModalTitle">⚽ Add FIFA Charter</h3>
 
     <!-- Airline -->
     <div class="modal-field">
@@ -633,7 +636,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
 
     <div class="modal-actions">
       <button class="btn bs" onclick="closeFifaModal()">Cancel</button>
-      <button class="btn" style="background:#17A44A" onclick="addFifaCharter()">Add Charter</button>
+      <button class="btn" id="fifaSubmitBtn" style="background:#17A44A" onclick="addFifaCharter()">Add Charter</button>
     </div>
   </div>
 </div>
@@ -842,6 +845,8 @@ const INTL_AIRPORTS = new Set([
 
 let briefingData    = null;
 let fifaCharters    = [];  // manually-added FIFA charter entries
+let mfEditTarget     = null; // {iata, arrFlight, depFlight} of manual flight being edited, or null when adding
+let fifaEditId       = null; // _id of FIFA charter being edited, or null when adding
 let currentShift    = 'AM';
 let currentTimeFrom = '00:00';
 let currentTimeTo   = '23:59';
@@ -2204,6 +2209,8 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
           <span class="al-hs-mirror-badge" title="This flight is also a hardstand operation">★ Hardstand</span>
         ` : ''}
         ${(!isHardstand && e.manual) ? `
+          <button class="al-edit-btn" title="Edit this manually-added flight"
+            onclick="editManualFlight('${iata}','${(e.arrFlight||'').replace(/'/g,'')}','${(e.depFlight||'').replace(/'/g,'')}')">✏ Edit</button>
           <button class="al-delete-btn" title="Delete this manually-added flight"
             onclick="deleteManualFlight('${iata}','${(e.arrFlight||'').replace(/'/g,'')}','${(e.depFlight||'').replace(/'/g,'')}')">🗑 Delete</button>
         ` : ''}
@@ -2234,7 +2241,7 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
           <td class="cell-stand gated-strike${standChg?' cell-changed':''}" title="${standChg?'Changed from '+e.origStand:''}">${pad}</td>
           <td class="gated-strike"><input class="cell-pax-input" id="${pid}" type="number" min="0" placeholder="—"></td>
           <td class="gated-strike"><span class="${intlCls}">${intlLbl}</span></td>
-          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}')"></td>
+          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}',this.checked)"></td>
         </tr>
         <tr class="note-row">
           <td colspan="9" class="gated-strike">
@@ -2259,7 +2266,7 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
           <td class="cell-stand gated-strike${standChg?' cell-changed':''}" title="${standChg?'Changed from '+e.origStand:''}">${pad}</td>
           <td class="gated-strike"><input class="cell-pax-input" id="${pid}" type="number" min="0" placeholder="—"></td>
           <td class="gated-strike"><span class="${intlCls}">${intlLbl}</span></td>
-          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}')"></td>
+          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}',this.checked)"></td>
         </tr>
         <tr class="note-row">
           <td colspan="9" class="gated-strike">
@@ -2285,7 +2292,7 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
           <td class="cell-city">${e.arrDest||'—'}</td>
           <td class="cell-arr-time">STA ${e.arrTime}</td>
           <td><input class="cell-eta" id="${etid}" type="text" maxlength="5" placeholder="––:––" oninput="updateEtaColor(this,'${e.arrTime}',true)"></td>
-          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}')"></td>
+          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}',this.checked)"></td>
         </tr>
         <tr class="note-row">
           <td colspan="5">
@@ -2301,7 +2308,7 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
           <td class="cell-city">${e.depDest||'—'}</td>
           <td class="cell-dep-time">STD ${e.depTime}</td>
           <td><input class="cell-eta" id="${etid}" type="text" maxlength="5" placeholder="––:––" oninput="updateEtaColor(this,'${e.depTime}',false)"></td>
-          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}')"></td>
+          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}',this.checked)"></td>
         </tr>
         <tr class="note-row">
           <td colspan="5">
@@ -2348,6 +2355,7 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
       fifaHtml += `<div class="al-card" id="${gid}">
         <div class="al-card-hdr" style="background:${bg};color:${fg}">
           <span class="al-card-hdr-name">${e.airline}</span>
+          <button class="al-edit-btn" title="Edit this charter" onclick="editFifaCharter(${e._id})">✏ Edit</button>
           <button class="al-delete-btn" title="Remove this charter" onclick="deleteFifaCharter(${e._id})">🗑 Remove</button>
         </div>
         <table class="al-tbl">
@@ -2368,7 +2376,7 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
           <td class="cell-stand">${pad}</td>
           <td><input class="cell-pax-input" id="${pid}" type="number" min="0" placeholder="—"${e._pax ? ` value="${e._pax}"` : ''}></td>
           <td><span class="${intlCls}">${intlLbl}</span></td>
-          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}')"></td>
+          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}',this.checked)"></td>
         </tr>
         <tr class="note-row">
           <td colspan="9"><span class="cell-note-label">Note</span><input class="cell-note-input" id="note_fifa_${e.iata}_${e.arrFlight}_arr" type="text" maxlength="100" placeholder="Add note (100 char max)…"></td>
@@ -2387,7 +2395,7 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
           <td class="cell-stand">${pad}</td>
           <td><input class="cell-pax-input" id="${pid}" type="number" min="0" placeholder="—"${e._pax ? ` value="${e._pax}"` : ''}></td>
           <td><span class="${intlCls}">${intlLbl}</span></td>
-          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}')"></td>
+          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}',this.checked)"></td>
         </tr>
         <tr class="note-row">
           <td colspan="9"><span class="cell-note-label">Note</span><input class="cell-note-input" id="note_fifa_${e.iata}_${e.depFlight}_dep" type="text" maxlength="100" placeholder="Add note (100 char max)…"></td>
@@ -2453,12 +2461,20 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
   document.getElementById('out').innerHTML = h;
 }
 
-function toggleCanceled(cid) {
-  const chk = document.getElementById(cid);
-  if (!chk) return;
-  const isChecked = chk.checked;
+function toggleCanceled(cid, isChecked) {
+  // isChecked is passed directly from the checkbox that fired the change
+  // event (this.checked). We can't trust document.getElementById(cid) here:
+  // the HS card and its Terminal D mirror intentionally share the same id
+  // (see "Sync all checkboxes" below), and getElementById only ever returns
+  // the FIRST matching element in the document — not necessarily the box
+  // the user actually clicked. Reading .checked off the wrong (stale)
+  // element was the root cause of the cancel checkbox sometimes seeming to
+  // ignore clicks or silently flip back.
+  const anyChk = document.querySelector(`input.cancel-chk[id="${CSS.escape(cid)}"]`);
+  if (!anyChk) return;
+  if (typeof isChecked !== 'boolean') isChecked = anyChk.checked;
   // Sync all checkboxes with this id (HS card + terminal mirror share the same id)
-  document.querySelectorAll(`input.cancel-chk#${CSS.escape(cid)}`).forEach(el => {
+  document.querySelectorAll(`input.cancel-chk[id="${CSS.escape(cid)}"]`).forEach(el => {
     el.checked = isChecked;
     const leg = el.closest('tr');
     if (leg) {
@@ -2475,8 +2491,11 @@ function toggleCanceled(cid) {
     }
   });
   recordUserInput(cid, 'check', isChecked ? true : null);
-  // Always update badge and visibility regardless of leg found
-  updateCxlBadge(chk);
+  // Update the CXL badge on every card containing this checkbox (HS + terminal
+  // mirror are separate cards) and refresh hardstand visibility.
+  document.querySelectorAll(`input.cancel-chk[id="${CSS.escape(cid)}"]`).forEach(el => {
+    updateCxlBadge(el);
+  });
   updateHardstandVisibility();
 }
 
@@ -2936,10 +2955,39 @@ function getNote(iata, flight, legKind) {
   return '';
 }
 
-// ── MANUAL FLIGHT ADD ─────────────────────────────────────────────────────────
+// ── MANUAL FLIGHT ADD / EDIT ────────────────────────────────────────────────
 function showAddFlightModal() {
+  mfEditTarget = null;
+  document.getElementById('mfModalTitle').textContent = '➕ Add Flight';
+  document.getElementById('mfSubmitBtn').textContent = 'Add Flight';
   document.getElementById('addFlightModal').style.display = 'flex';
   document.getElementById('mf_type_arr').checked = true;
+  updateAddFlightForm();
+  document.getElementById('mf_airline').focus();
+}
+function editManualFlight(iata, arrFlight, depFlight) {
+  if (!briefingData || !Array.isArray(briefingData.terminal)) return;
+  const term = briefingData.terminal.find(t =>
+    t.manual && t.iata === iata &&
+    (t.arrFlight || '') === (arrFlight || '') &&
+    (t.depFlight || '') === (depFlight || ''));
+  if (!term) { alert('Could not locate that flight to edit.'); return; }
+
+  mfEditTarget = { iata, arrFlight: arrFlight || '', depFlight: depFlight || '' };
+  document.getElementById('mfModalTitle').textContent = '✏ Edit Flight';
+  document.getElementById('mfSubmitBtn').textContent = 'Save Changes';
+
+  const type = (term.arrFlight && term.depFlight) ? 'turn' : (term.arrFlight ? 'arr' : 'dep');
+  document.getElementById('mf_type_' + type).checked = true;
+  document.getElementById('mf_airline').value  = term.airline || '';
+  document.getElementById('mf_arr_fnum').value = term.arrFlight || '';
+  document.getElementById('mf_arr_city').value = term.arrDest || '';
+  document.getElementById('mf_arr_time').value = term.arrTime || '';
+  document.getElementById('mf_dep_fnum').value = term.depFlight || '';
+  document.getElementById('mf_dep_city').value = term.depDest || '';
+  document.getElementById('mf_dep_time').value = term.depTime || '';
+
+  document.getElementById('addFlightModal').style.display = 'flex';
   updateAddFlightForm();
   document.getElementById('mf_airline').focus();
 }
@@ -2951,6 +2999,9 @@ function hideAddFlightModal() {
     if (el) el.value = '';
   });
   document.getElementById('mf_type_arr').checked = true;
+  mfEditTarget = null;
+  document.getElementById('mfModalTitle').textContent = '➕ Add Flight';
+  document.getElementById('mfSubmitBtn').textContent = 'Add Flight';
   updateAddFlightForm();
 }
 function updateAddFlightForm() {
@@ -2978,7 +3029,56 @@ function addManualFlight() {
   if (needArr && !/^\d{1,2}:\d{2}$/.test(arrTime)) { alert('STA must be in HH:MM format.'); return; }
   if (needDep && !/^\d{1,2}:\d{2}$/.test(depTime)) { alert('STD must be in HH:MM format.'); return; }
 
-  const iata = (arrFnum||depFnum).replace(/\d+.*$/, '');
+  // Pull the airline IATA code off the flight number. Try an alpha-only
+  // prefix first ("JL11" -> "JL"); if the code itself starts with a digit
+  // ("9E1234" -> "9E") fall back to the first two characters so carriers
+  // with numeric-leading codes don't end up with a blank iata.
+  const fnumForIata = arrFnum || depFnum;
+  const iata = (fnumForIata.match(/^[A-Z]+/) || [fnumForIata.slice(0, 2)])[0];
+  if (!briefingData) { alert('Load a briefing first.'); return; }
+
+  if (mfEditTarget) {
+    // ── EDIT MODE: update the existing entry in place ───────────────────────
+    const idx = briefingData.terminal.findIndex(t =>
+      t.manual && t.iata === mfEditTarget.iata &&
+      (t.arrFlight || '') === mfEditTarget.arrFlight &&
+      (t.depFlight || '') === mfEditTarget.depFlight);
+    if (idx === -1) { alert('Could not locate that flight — it may have been deleted.'); hideAddFlightModal(); return; }
+
+    const term = briefingData.terminal[idx];
+    term.airline  = airline;
+    term.arrFlight = arrFnum || ''; term.arrDest = arrCity; term.arrTime = arrTime;
+    term.depFlight = depFnum || ''; term.depDest = depCity; term.depTime = depTime;
+    term.iata = iata;
+
+    // If this flight was also promoted to a hardstand entry, keep it in sync.
+    if (Array.isArray(briefingData.hardstand)) {
+      const hs = briefingData.hardstand.find(h =>
+        h.manual && h.iata === mfEditTarget.iata &&
+        (h.arrFlight || '') === mfEditTarget.arrFlight &&
+        (h.depFlight || '') === mfEditTarget.depFlight);
+      if (hs) {
+        hs.airline = airline;
+        hs.arrFlight = arrFnum || ''; hs.arrDest = arrCity; hs.arrTime = arrTime;
+        hs.depFlight = depFnum || ''; hs.depDest = depCity; hs.depTime = depTime;
+        hs.iata = iata;
+      }
+    }
+
+    briefingData.terminal.sort((a, b) => {
+      const ta = a.arrTime || a.depTime || '';
+      const tb = b.arrTime || b.depTime || '';
+      return ta.localeCompare(tb);
+    });
+    const inputSnap = snapshotInputs();
+    renderBriefing(briefingData, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
+    restoreInputs(inputSnap);
+    kvSave({ silent: true });
+    hideAddFlightModal();
+    return;
+  }
+
+  // ── ADD MODE: create a new manual entry ───────────────────────────────────
   const entry = {
     iata, airline,
     arrFlight: arrFnum||'', arrDest: arrCity, arrTime: arrTime,
@@ -2988,7 +3088,6 @@ function addManualFlight() {
     isIntl: false, isHardstand: false, manual: true,
   };
 
-  if (!briefingData) { alert('Load a briefing first.'); return; }
   briefingData.terminal.push(entry);
   // Sort by STA (falling back to STD for dep-only)
   briefingData.terminal.sort((a, b) => {
@@ -3381,9 +3480,21 @@ function showTeamsDestPicker() {
   const flightLabels = turns.map(t => [t.arrFlight, t.depFlight].filter(Boolean).join('/')).join(', ');
   descEl.textContent = `Send ${turns.length} turn${turns.length !== 1 ? 's' : ''} (${flightLabels}) as a combined card.`;
   statEl.textContent = '';
-
-  // Build destination buttons
   listEl.innerHTML = '';
+  modal.style.display = 'flex';
+
+  // Only one destination configured — post straight away instead of making
+  // the user pick from a list of one. The modal still shows live status so
+  // they can see it succeed (or retry) without an extra click.
+  if (TEAMS_DESTINATIONS.length === 1) {
+    const dest = TEAMS_DESTINATIONS[0];
+    statEl.style.color = 'var(--text-2)';
+    statEl.textContent = `Posting to ${dest.label}…`;
+    postToTeams(dest.url, turns, dest.label);
+    return;
+  }
+
+  // Multiple destinations — let the user choose which one(s) to post to.
   TEAMS_DESTINATIONS.forEach(dest => {
     const btn = document.createElement('button');
     btn.className = 'btn';
@@ -3398,8 +3509,6 @@ function showTeamsDestPicker() {
     };
     listEl.appendChild(btn);
   });
-
-  modal.style.display = 'flex';
 }
 
 function hideTeamsModal() {
@@ -3717,6 +3826,7 @@ function copySelectedTermEmail() {
 </body></html>`;
 
   copyEmailHtml(fullHtml, 'termToolbarEmail');
+  openMailto('allOps', `Selected Terminal D Flights - ${fmtSubjectDate(briefingData.dateFrom)}`);
 }
 
 function getSelectedTurnData() {
@@ -3843,6 +3953,7 @@ function copySelectedEmail() {
 </body></html>`;
 
   copyEmailHtml(fullHtml, 'hsToolbarEmail');
+  openMailto('hsOps', `Selected Hardstand Turns - ${fmtSubjectDate(briefingData.dateFrom)}`);
 }
 
 // Flight-specific callsign overrides (checked first)
@@ -4076,7 +4187,6 @@ function emailShell(body, title, dateLong, shiftLabel, now) {
     </tr></table>
   </div>
 </div>
-<button class="fab-top" id="fabTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
 </body></html>`;
 }
 
@@ -4356,8 +4466,7 @@ function exportIntlOps() {
       <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif;text-align:right">TDOP V1.0.3 · Generated ${now}</td>
     </tr></table>
   </div>
-</div><button class="fab-top" id="fabTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
-</body></html>`;
+</div></body></html>`;
 
   // Copy HTML (pastes cleanly into both Outlook and Teams)
   copyEmailHtml(fullHtml, 'btnIntlOps');
@@ -4497,8 +4606,7 @@ function exportProspect() {
       <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif;text-align:right">TDOP V1.0.3 · Generated ${now}</td>
     </tr></table>
   </div>
-</div><button class="fab-top" id="fabTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
-</body></html>`;
+</div></body></html>`;
 
   copyEmailHtml(fullHtml, 'btnProspect');
 }
@@ -4623,8 +4731,7 @@ function exportHandler(handlerName) {
       <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif;text-align:right">TDOP V1.0.3 · Generated ${now}</td>
     </tr></table>
   </div>
-</div><button class="fab-top" id="fabTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
-</body></html>`;
+</div></body></html>`;
 
   const btnId = handlerName === 'Swissport' ? 'btnSwissport' : 'btnWFS';
   copyEmailHtml(fullHtml, btnId);
@@ -5061,6 +5168,9 @@ function updateFifaForm() {
 }
 
 function openFifaModal() {
+  fifaEditId = null;
+  document.getElementById('fifaModalTitle').textContent = '⚽ Add FIFA Charter';
+  document.getElementById('fifaSubmitBtn').textContent = 'Add Charter';
   // Reset radio to ARR and clear all fields
   const arrRadio = document.getElementById('fifa_type_arr');
   if (arrRadio) { arrRadio.checked = true; }
@@ -5074,8 +5184,37 @@ function openFifaModal() {
   setTimeout(() => { const el = document.getElementById('fifa_iata'); if (el) el.focus(); }, 80);
 }
 
+function editFifaCharter(id) {
+  const e = fifaCharters.find(c => c._id === id);
+  if (!e) { alert('Could not locate that charter to edit.'); return; }
+
+  fifaEditId = id;
+  document.getElementById('fifaModalTitle').textContent = '✏ Edit FIFA Charter';
+  document.getElementById('fifaSubmitBtn').textContent = 'Save Changes';
+
+  const type = (e.arrFlight && e.depFlight) ? 'turn' : (e.arrFlight ? 'arr' : 'dep');
+  document.getElementById('fifa_type_' + type).checked = true;
+  document.getElementById('fifa_iata').value     = e.iata || '';
+  document.getElementById('fifa_airline').value  = e.airline || '';
+  document.getElementById('fifa_arr_fnum').value = e.arrFlight || '';
+  document.getElementById('fifa_arr_city').value = e.arrDest || '';
+  document.getElementById('fifa_arr_time').value = e.arrTime || '';
+  document.getElementById('fifa_dep_fnum').value = e.depFlight || '';
+  document.getElementById('fifa_dep_city').value = e.depDest || '';
+  document.getElementById('fifa_dep_time').value = e.depTime || '';
+  document.getElementById('fifa_gate').value     = e.gate || '';
+  document.getElementById('fifa_stand').value    = e.stand || '';
+  document.getElementById('fifa_pax').value      = e._pax || '';
+  document.getElementById('fifa_intl').value     = e.isIntl ? 'INTL' : 'DOM';
+
+  updateFifaForm();
+  document.getElementById('fifaModal').style.display = 'flex';
+  setTimeout(() => { const el = document.getElementById('fifa_iata'); if (el) el.focus(); }, 80);
+}
+
 function closeFifaModal() {
   document.getElementById('fifaModal').style.display = 'none';
+  fifaEditId = null;
 }
 
 function addFifaCharter() {
@@ -5100,6 +5239,26 @@ function addFifaCharter() {
 
   const airline = airlineTxt || NAMES[iata] || iata;
   const isIntl  = intlVal === 'INTL';
+
+  if (fifaEditId) {
+    const existing = fifaCharters.find(c => c._id === fifaEditId);
+    if (!existing) { alert('Could not locate that charter — it may have been removed.'); closeFifaModal(); return; }
+    existing.iata = iata; existing.airline = airline; existing.isIntl = isIntl;
+    existing.arrFlight = arrFnum || null; existing.arrDest = arrCity || ''; existing.arrTime = arrTime || '';
+    existing.depFlight = depFnum || null; existing.depDest = depCity || ''; existing.depTime = depTime || '';
+    existing.gate = gate || ''; existing.arrGate = gate || ''; existing.depGate = gate || '';
+    existing.stand = stand || ''; existing.arrStand = stand || ''; existing.depStand = stand || '';
+    existing._pax = pax || '';
+
+    closeFifaModal();
+    kvSave({ silent: true }); // persist immediately so other users see the change
+
+    if (briefingData) {
+      renderBriefing(briefingData, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
+      restoreUserInputs();
+    }
+    return;
+  }
 
   const entry = {
     iata, airline, isIntl,
@@ -5677,7 +5836,6 @@ function exportEmail() {
 
 
 </script>
-<button class="fab-top" id="fabTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
 
 <!-- ── GATE COUNTS MODAL ───────────────────────────────────────────────── -->
 <div id="gcModal">
