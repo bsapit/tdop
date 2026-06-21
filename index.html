@@ -74,7 +74,13 @@ html,body{max-width:100%;overflow-x:hidden}
 .btn-pdf{background:#585858}.btn-email{background:var(--orange)}.btn-hsops{background:var(--purple)}
 .btn-lfops{background:var(--green)}.btn-intl{background:#7B4FBF}.btn-swiss{background:#C0392B}
 .btn-wfs{background:#2471A3}.btn-prospect{background:#D4800A}.btn-traffic{background:var(--gold)}
-.btn-on-traffic{background:var(--teal)}
+.traffic-wrap{position:relative;display:inline-block}
+.traffic-menu{display:none;flex-direction:column;gap:2px;position:absolute;top:calc(100% + 4px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px;min-width:230px;z-index:300;box-shadow:var(--shadow)}
+.traffic-menu.open{display:flex}
+.traffic-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--text-1);transition:background .12s}
+.traffic-item:hover{background:var(--surface-alt)}
+.traffic-item small{margin-left:auto;font-weight:400;font-size:.68rem;color:var(--text-3);white-space:nowrap}
+.traffic-item-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .btn-seesay{background:#1565C0}
 .btn-fifa{background:#E6A817;color:#1a1a1a}
 .btn-equip{background:#5D6D7E}
@@ -301,8 +307,14 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <span id="busBoardStatus" style="font-size:.75rem;color:var(--text-3);margin-left:4px;align-self:center"></span>
     <button class="btn btn-lfops" id="btnLFOps" onclick="exportLFOps()" disabled>✉ LF Ops</button>
     <button class="btn btn-intl" id="btnIntlOps" onclick="exportIntlOps()" disabled>🌐 Intl Ops</button>
-    <button class="btn btn-traffic" id="btnTraffic" onclick="exportTraffic()" disabled>📋 Traffic</button>
-    <button class="btn btn-on-traffic" id="btnONTraffic" onclick="exportONTraffic()" disabled>🌙 O/N Traffic</button>
+    <div class="traffic-wrap" id="trafficWrap">
+      <button class="btn btn-traffic" id="btnTraffic" onclick="toggleTrafficMenu()" disabled>📋 Traffic ▾</button>
+      <div class="traffic-menu" id="trafficMenu">
+        <div class="traffic-item" onclick="exportTrafficWindow('AM')"><span class="traffic-item-dot" style="background:#F2A900"></span>AM Traffic<small>04:30 – 14:30</small></div>
+        <div class="traffic-item" onclick="exportTrafficWindow('PM')"><span class="traffic-item-dot" style="background:#FF5000"></span>PM Traffic<small>14:00 – 23:59</small></div>
+        <div class="traffic-item" onclick="exportTrafficWindow('ON')"><span class="traffic-item-dot" style="background:#3EB1C8"></span>O/N Traffic<small>21:00 – 04:30 &middot; overnight stands only</small></div>
+      </div>
+    </div>
     <button class="btn btn-fifa" onclick="openFifaModal()">⚽ Add Charter</button>
     <button class="btn btn-seesay" id="btnSeeSay" onclick="triggerSeeSay()">👁 SeeSay</button>
     <button class="btn btn-busneeded" id="btnBusNeeded" onclick="openBusNeededModal()">🚌 Bus Needed</button>
@@ -420,8 +432,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
         <span style="font-size:.65rem;font-weight:700;background:var(--orange,#FF5000);color:#fff;padding:2px 7px;border-radius:10px;letter-spacing:.04em">CURRENT</span>
       </div>
       <ul style="margin:0;padding-left:18px;font-size:.78rem;color:var(--text-2,#555);line-height:2">
-        <li><strong>Traffic button</strong> &mdash; new 📋 Traffic button generates a formatted arrival list for all flights within the current TDOP shift window. Time range follows the shift picker.</li>
-        <li><strong>O/N Traffic button</strong> &mdash; new 🌙 O/N Traffic button generates an overnight arrival list fixed to 21:00–08:00, filtered to designated overnight stands (D6, D8A, D10–D16X, T83–T93). Independent of the shift window picker.</li>
+        <li><strong>Traffic button</strong> &mdash; 📋 Traffic is now one button with an AM / PM / O/N dropdown. Each option is a fixed clock-time window, independent of whatever shift the rest of TDOP is currently showing: AM 04:30&ndash;14:30, PM 14:00&ndash;23:59, O/N 21:00&ndash;04:30 (overnight stands only: D6, D8A, D10&ndash;D16X, T83&ndash;T93).</li>
         <li><strong>SeeSay button</strong> &mdash; new 👁 SeeSay button posts a Teams adaptive card via Power Automate directing staff to submit IOC requests through the SeeSay app, with a direct mobile link. Always enabled.</li>
         <li><strong>Teams gated badge fix</strong> &mdash; Teams card posts now correctly show the &lt;strong&gt;✈ GATED&lt;/strong&gt; indicator when a card's Gated toggle is active. Previously the styled badge was stripped by Teams' HTML sanitiser.</li>
         <li><strong>QSG &amp; User Guide updated</strong> &mdash; both documents reflect V1.0.3 features including Traffic, O/N Traffic, and SeeSay.</li>
@@ -1652,7 +1663,7 @@ async function silentRefresh() {
     lockDate();
 
     // Re-enable export buttons
-    ['btnPdf','btnEmail','btnHSOps','btnBusBoard','btnLFOps','btnTraffic','btnONTraffic',
+    ['btnPdf','btnEmail','btnHSOps','btnBusBoard','btnLFOps','btnTraffic',
      'btnIntlOps'].forEach(id => {
       const b = document.getElementById(id);
       if (b) b.disabled = false;
@@ -1892,7 +1903,6 @@ async function loadOps() {
   document.getElementById('btnBusBoard').disabled = true;
   document.getElementById('btnLFOps').disabled = true;
   document.getElementById('btnTraffic').disabled = true;
-  document.getElementById('btnONTraffic').disabled = true;
   document.getElementById('btnIntlOps').disabled = true;
   setStatus('loading', `Fetching Stand & Gate data for ${dateFrom} ${timeFrom} – ${dateTo} ${timeTo}…`);
 
@@ -1989,7 +1999,6 @@ async function loadOps() {
     document.getElementById('btnBusBoard').disabled = false;
     document.getElementById('btnLFOps').disabled = false;
     document.getElementById('btnTraffic').disabled = false;
-    document.getElementById('btnONTraffic').disabled = false;
     document.getElementById('btnIntlOps').disabled = false;
   } catch(e) {
     setStatus('error', `Failed: ${e.message}`);
@@ -4994,11 +5003,38 @@ function getTowInfo(e) {
   };
 }
 
-function exportTraffic() {
+function toggleTrafficMenu() {
+  document.getElementById('trafficMenu').classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('trafficWrap');
+  if (wrap && !wrap.contains(e.target)) document.getElementById('trafficMenu').classList.remove('open');
+});
+
+const ON_STANDS = new Set([
+  'D6','D8A','D10','D11','D11A','D14','D14A',
+  'D15','D15A','D16','D16X',
+  'T93','T92','T91X','T90','T85','T84','T83'
+]);
+function hasONStand(e) {
+  const stand = (e.arrStand || e.depStand || e.stand || '').trim().toUpperCase();
+  return ON_STANDS.has(stand);
+}
+
+// Fixed shift windows — always relative to these clock times, regardless of
+// whatever date-range/shift the rest of TDOP is currently displaying.
+const TRAFFIC_WINDOWS = {
+  AM: { from: '04:30', to: '14:30', label: 'AM Traffic — Terminal D',  accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0', standOnly: false },
+  PM: { from: '14:00', to: '23:59', label: 'PM Traffic — Terminal D',  accent: '#FF5000', accentDk: '#C03E00', headBg: '#FFEFE8', altBg: '#FFF6F2', standOnly: false },
+  ON: { from: '21:00', to: '04:30', label: 'O/N Traffic — Terminal D', accent: '#3EB1C8', accentDk: '#1A7080', headBg: '#E8F8FC', altBg: '#F0FBFD', standOnly: true  },
+};
+
+function exportTrafficWindow(period) {
+  document.getElementById('trafficMenu').classList.remove('open');
   if (!briefingData) return;
 
-  const winFrom = currentTimeFrom || '00:00';
-  const winTo   = currentTimeTo   || '23:59';
+  const cfg     = TRAFFIC_WINDOWS[period];
+  const winFrom = cfg.from, winTo = cfg.to;
   const fromM   = toMins(winFrom);
   const toM     = toMins(winTo);
   const wraps   = toM < fromM; // window crosses midnight
@@ -5016,11 +5052,13 @@ function exportTraffic() {
     if (!e.arrFlight || seen.has(e.arrFlight)) return;
     if (getChk(`cancel_${e.iata}_${e.arrFlight}`)) return;
     if (!inWindow(e.arrTime)) return;
+    if (cfg.standOnly && !hasONStand(e)) return;
     seen.add(e.arrFlight);
     arrivals.push(e);
   });
 
-  // Sort by ETA if available, else STA; handle midnight wrap
+  // Sort by ETA if available, else STA; wrap post-window times so a window
+  // that crosses midnight (or just spans past the fromM hour) sorts in order.
   arrivals.sort((a, b) => {
     let am = bestSortTime(a), bm = bestSortTime(b);
     if (wraps) {
@@ -5035,19 +5073,19 @@ function exportTraffic() {
 
   if (!arrivals.length) {
     const orig = btn.textContent;
-    btn.textContent = '— No flights';
+    btn.textContent = `— No ${period} flights`;
     setTimeout(() => { btn.textContent = orig; }, 2500);
     return;
   }
 
-  const shiftLabel  = (winFrom === '00:00' && winTo === '23:59') ? 'Full Day' : `${winFrom}–${winTo}`;
+  const shiftLabel  = `${winFrom}–${winTo}${wraps ? ' (+1)' : ''}`;
   const dk          = briefingData.dateFrom;
   const dateLong    = fmtDateLong(dk);
   const now         = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
-  const accentColor = '#F2A900';
+  const accentColor = cfg.accent;
   const S = 'font-family:Arial,sans-serif;font-size:11px;';
   const hdrTd = (txt) =>
-    `<td style="${S}padding:4px 6px;font-size:10px;font-weight:700;color:#B07800;text-transform:uppercase;letter-spacing:.05em;background:#FFF8E0;border-bottom:2px solid ${accentColor}">${txt}</td>`;
+    `<td style="${S}padding:4px 6px;font-size:10px;font-weight:700;color:${cfg.accentDk};text-transform:uppercase;letter-spacing:.05em;background:${cfg.headBg};border-bottom:2px solid ${accentColor}">${txt}</td>`;
 
   const anyTow = arrivals.some(e => getTowInfo(e) !== null);
 
@@ -5056,12 +5094,12 @@ function exportTraffic() {
     const callsign = CALLSIGN_FLIGHT[e.arrFlight] || CALLSIGNS[e.iata] || NAMES[e.iata] || e.iata;
     const fnum     = e.arrFlight.replace(new RegExp('^' + e.iata, 'i'), '').trim();
     const stand    = e.arrStand || e.stand || e.arrGate || e.gate || '—';
-    const bg       = i % 2 === 0 ? '#ffffff' : '#FFFBF0';
+    const bg       = i % 2 === 0 ? '#ffffff' : cfg.altBg;
     const note     = getNote(e.iata, e.arrFlight, 'arr');
     const tow      = getTowInfo(e);
 
     const towCells = anyTow ? `
-      <td style="${S}padding:5px 6px;font-family:'Courier New',monospace;color:#B07800;font-weight:700">${tow ? tow.towOff : ''}</td>
+      <td style="${S}padding:5px 6px;font-family:'Courier New',monospace;color:${cfg.accentDk};font-weight:700">${tow ? tow.towOff : ''}</td>
       <td style="${S}padding:5px 6px;color:#555">${tow ? tow.idleStand : ''}</td>
       <td style="${S}padding:5px 6px;font-family:'Courier New',monospace;color:#1A7A5E;font-weight:700">${tow ? tow.towOn : ''}</td>` : '';
 
@@ -5083,132 +5121,9 @@ function exportTraffic() {
   const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:10px;background:#F0F0F0;font-family:Arial,sans-serif">
 <div style="max-width:${anyTow ? 520 : 360}px;margin:0 auto;background:#fff;border-radius:6px;overflow:hidden;border:1px solid #E0E0E0">
-  <div style="background:#FFF3CC;border-bottom:3px solid ${accentColor};padding:8px 12px">
-    <div style="font-size:18px;font-weight:900;color:#B07800;letter-spacing:.04em">DFW</div>
-    <div style="font-size:13px;font-weight:700;color:#333;margin-top:2px">Traffic — Terminal D</div>
-    <div style="font-size:11px;color:#888;margin-top:2px">${dateLong} &nbsp;·&nbsp; ${shiftLabel}</div>
-  </div>
-  <div style="padding:10px 12px">
-    <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif">
-      <tr>${hdrTd('Callsign')}${hdrTd('Flt')}${hdrTd('Stand')}${towHdrCells}</tr>
-      ${rows}
-    </table>
-  </div>
-  <div style="background:#F9F9F9;border-top:1px solid #EEE;padding:5px 12px">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif">DFW Terminal D</td>
-      <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif;text-align:right">TDOP V1.0.3 · Generated ${now}</td>
-    </tr></table>
-  </div>
-</div>
-</body></html>`;
-
-  copyEmailHtml(fullHtml, btnId);
-}
-
-
-// ── O/N TRAFFIC LIST (21:00–08:00, specific stands only) ──────────────────────
-function exportONTraffic() {
-  if (!briefingData) return;
-
-  const winFrom = '21:00';
-  const winTo   = '08:00';
-  const fromM   = toMins(winFrom);
-  const toM     = toMins(winTo);
-  // Always crosses midnight
-
-  function inWindow(arrTime) {
-    const m = toMins(arrTime);
-    if (m === null) return false;
-    return m >= fromM || m <= toM;
-  }
-
-  const ON_STANDS = new Set([
-    'D6','D8A','D10','D11','D11A','D14','D14A',
-    'D15','D15A','D16','D16X',
-    'T93','T92','T91X','T90','T85','T84','T83'
-  ]);
-
-  function hasONStand(e) {
-    const stand = (e.arrStand || e.depStand || e.stand || '').trim().toUpperCase();
-    return ON_STANDS.has(stand);
-  }
-
-  const seen = new Set();
-  const arrivals = [];
-  [...briefingData.terminal, ...briefingData.hardstand].forEach(e => {
-    if (!e.arrFlight || seen.has(e.arrFlight)) return;
-    if (getChk(`cancel_${e.iata}_${e.arrFlight}`)) return;
-    if (!inWindow(e.arrTime)) return;
-    if (!hasONStand(e)) return;
-    seen.add(e.arrFlight);
-    arrivals.push(e);
-  });
-
-  // Sort by ETA/STA; wrap post-midnight times past fromM so they sort after 21:00+
-  arrivals.sort((a, b) => {
-    let am = bestSortTime(a), bm = bestSortTime(b);
-    if (am < fromM) am += 24 * 60;
-    if (bm < fromM) bm += 24 * 60;
-    return am - bm;
-  });
-
-  const btnId = 'btnONTraffic';
-  const btn = document.getElementById(btnId);
-
-  if (!arrivals.length) {
-    const orig = btn.textContent;
-    btn.textContent = '— No flights';
-    setTimeout(() => { btn.textContent = orig; }, 2500);
-    return;
-  }
-
-  const shiftLabel  = '21:00–08:00 (+1)';
-  const dk          = briefingData.dateFrom;
-  const dateLong    = fmtDateLong(dk);
-  const now         = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
-  const accentColor = '#3EB1C8';
-  const S = 'font-family:Arial,sans-serif;font-size:11px;';
-  const hdrTd = (txt) =>
-    `<td style="${S}padding:4px 6px;font-size:10px;font-weight:700;color:#1A7080;text-transform:uppercase;letter-spacing:.05em;background:#E8F8FC;border-bottom:2px solid ${accentColor}">${txt}</td>`;
-
-  const anyTow = arrivals.some(e => getTowInfo(e) !== null);
-
-  let rows = '';
-  arrivals.forEach((e, i) => {
-    const callsign = CALLSIGN_FLIGHT[e.arrFlight] || CALLSIGNS[e.iata] || NAMES[e.iata] || e.iata;
-    const fnum     = e.arrFlight.replace(new RegExp('^' + e.iata, 'i'), '').trim();
-    const stand    = e.arrStand || e.stand || e.arrGate || e.gate || '—';
-    const bg       = i % 2 === 0 ? '#ffffff' : '#F0FBFD';
-    const note     = getNote(e.iata, e.arrFlight, 'arr');
-    const tow      = getTowInfo(e);
-
-    const towCells = anyTow ? `
-      <td style="${S}padding:5px 6px;font-family:'Courier New',monospace;color:#1A7080;font-weight:700">${tow ? tow.towOff : ''}</td>
-      <td style="${S}padding:5px 6px;color:#555">${tow ? tow.idleStand : ''}</td>
-      <td style="${S}padding:5px 6px;font-family:'Courier New',monospace;color:#1A7A5E;font-weight:700">${tow ? tow.towOn : ''}</td>` : '';
-
-    rows += `<tr style="background:${bg}">
-      <td style="${S}padding:5px 6px;font-weight:700;color:#222">${callsign}</td>
-      <td style="${S}padding:5px 6px;font-family:'Courier New',monospace;color:#333">${fnum}</td>
-      <td style="${S}padding:5px 6px;color:#555">${stand}</td>${towCells}
-    </tr>`;
-    if (note) {
-      const colspan = anyTow ? 6 : 3;
-      rows += `<tr style="background:${bg}">
-        <td colspan="${colspan}" style="${S}padding:0 6px 5px 6px;font-size:10px;font-style:italic;color:#666"><strong style="font-style:normal;color:#999">Note:</strong> ${escapeHtml(note)}</td>
-      </tr>`;
-    }
-  });
-
-  const towHdrCells = anyTow ? `${hdrTd('Tow Off')}${hdrTd('Idle')}${hdrTd('Tow On')}` : '';
-
-  const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:10px;background:#F0F0F0;font-family:Arial,sans-serif">
-<div style="max-width:${anyTow ? 520 : 360}px;margin:0 auto;background:#fff;border-radius:6px;overflow:hidden;border:1px solid #E0E0E0">
-  <div style="background:#E8F8FC;border-bottom:3px solid ${accentColor};padding:8px 12px">
-    <div style="font-size:18px;font-weight:900;color:#1A7080;letter-spacing:.04em">DFW</div>
-    <div style="font-size:13px;font-weight:700;color:#333;margin-top:2px">O/N Traffic — Terminal D</div>
+  <div style="background:${cfg.headBg};border-bottom:3px solid ${accentColor};padding:8px 12px">
+    <div style="font-size:18px;font-weight:900;color:${cfg.accentDk};letter-spacing:.04em">DFW</div>
+    <div style="font-size:13px;font-weight:700;color:#333;margin-top:2px">${cfg.label}</div>
     <div style="font-size:11px;color:#888;margin-top:2px">${dateLong} &nbsp;·&nbsp; ${shiftLabel}</div>
   </div>
   <div style="padding:10px 12px">
