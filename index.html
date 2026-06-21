@@ -3908,7 +3908,6 @@ function copySelectedTermEmail() {
 </body></html>`;
 
   copyEmailHtml(fullHtml, 'termToolbarEmail');
-  openMailto('allOps', `Selected Terminal D Flights - ${fmtSubjectDate(briefingData.dateFrom)}`);
 }
 
 function getSelectedTurnData() {
@@ -4035,7 +4034,6 @@ function copySelectedEmail() {
 </body></html>`;
 
   copyEmailHtml(fullHtml, 'hsToolbarEmail');
-  openMailto('hsOps', `Selected Hardstand Turns - ${fmtSubjectDate(briefingData.dateFrom)}`);
 }
 
 // Flight-specific callsign overrides (checked first)
