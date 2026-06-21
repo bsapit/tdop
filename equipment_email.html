@@ -1,0 +1,368 @@
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Montserrat',sans-serif !important;}
+.wrap{padding:.5rem 0;max-width:560px;margin:0 auto;}
+.header{display:flex;align-items:center;gap:14px;padding:16px 18px;background:#FF5000;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;}
+.dfw-badge{background:#fff;color:#FF5000;font-size:17px;font-weight:700;padding:6px 14px;border-radius:6px;letter-spacing:.8px;flex-shrink:0;}
+.header-text h2{color:#fff;font-size:19px;font-weight:600;line-height:1.25;}
+.header-text p{color:rgba(255,255,255,.85);font-size:14px;margin-top:3px;line-height:1.3;}
+.body{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-top:none;border-radius:0 0 var(--border-radius-lg) var(--border-radius-lg);padding:18px;}
+
+.step{margin-bottom:18px;}
+.step-label{font-size:14px;font-weight:600;color:#FF5000;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.step-num{background:#FF5000;color:#fff;border-radius:50%;width:24px;height:24px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+select,input[type=text],.text-input{width:100%;padding:12px 36px 12px 14px;font-size:16px;font-family:'Montserrat',sans-serif !important;border:1.5px solid #FF5000;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);appearance:none;box-shadow:0 0 0 3px rgba(255,80,0,0.08);}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 12 12'%3E%3Cpath fill='%23FF5000' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+select:focus,input:focus{outline:none;border-color:#FF5000;box-shadow:0 0 0 3px rgba(255,80,0,0.18);}
+
+/* Style optgroup headers */
+optgroup{font-style:normal;font-weight:700;color:#FF5000;}
+
+/* Mobile-first single-column layout */
+.add-stack{display:flex;flex-direction:column;gap:14px;}
+.col-label{font-size:13px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+
+.other-input{display:none;margin-top:8px;width:100%;padding:12px 14px;font-size:16px;font-family:'Montserrat',sans-serif !important;border:1.5px solid #FF5000;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);}
+
+.btn-add{width:100%;background:#FF5000;color:#fff;border:none;border-radius:var(--border-radius-md);padding:12px;font-size:15px;font-weight:600;font-family:'Montserrat',sans-serif !important;cursor:pointer;margin-top:6px;transition:background .15s;}
+.btn-add:hover{background:#e04600;}
+.btn-add:disabled{background:#ffb899;cursor:not-allowed;}
+
+.table-wrap{margin-top:14px;}
+table{width:100%;border-collapse:collapse;font-size:15px;}
+thead th{background:#FF5000;color:#fff;padding:10px 12px;text-align:left;font-weight:600;font-family:'Montserrat',sans-serif !important;font-size:14px;}
+thead th:last-child{width:44px;text-align:center;}
+tbody tr{border-bottom:0.5px solid var(--color-border-tertiary);}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:nth-child(even) td{background:var(--color-background-secondary);}
+tbody td{padding:12px;color:var(--color-text-primary);font-size:15px;}
+.empty-row td{color:var(--color-text-tertiary);font-style:italic;text-align:center;padding:18px;font-size:14px;}
+.btn-remove{background:transparent;border:none;color:#aaa;cursor:pointer;font-size:20px;padding:6px 10px;border-radius:6px;line-height:1;min-height:36px;min-width:36px;}
+.btn-remove:hover{color:#FF5000;background:#fff3ee;}
+
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:16px 0;}
+
+.actions{display:flex;flex-direction:column;gap:10px;}
+.btn-send{width:100%;background:#FF5000;color:#fff;border:none;border-radius:var(--border-radius-md);padding:16px 22px;font-size:17px;font-weight:700;font-family:'Montserrat',sans-serif !important;cursor:pointer;transition:background .15s;letter-spacing:.3px;}
+.btn-send:hover{background:#e04600;}
+.btn-send:disabled{background:#ffb899;cursor:not-allowed;}
+.btn-clear{width:100%;background:transparent;color:var(--color-text-secondary);border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px;font-size:14px;font-weight:500;font-family:'Montserrat',sans-serif !important;cursor:pointer;}
+.btn-clear:hover{background:var(--color-background-secondary);}
+
+/* Optional 2-col on wider screens */
+@media (min-width:520px){
+  .add-stack{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
+  .btn-add{grid-column:1 / -1;}
+  .actions{flex-direction:row;}
+  .btn-send{flex:2;}
+  .btn-clear{flex:1;}
+}
+</style>
+
+<div class="wrap">
+<div class="header">
+  <div class="dfw-badge">DFW</div>
+  <div class="header-text">
+    <h2>Ground Equipment Notification</h2>
+    <p>Select org, add equipment + location, then send</p>
+  </div>
+</div>
+<div class="body">
+
+  <div class="step">
+    <div class="step-label"><span class="step-num">1</span> Select organization</div>
+    <select id="org-sel" onchange="onOrgChange()">
+      <option value="">— choose organization —</option>
+      <option>AGI</option>
+      <option>American</option>
+      <option>Envoy</option>
+      <option>F9 – Menzies</option>
+      <option>GAT</option>
+      <option>Swissport</option>
+      <option>SY – Menzies</option>
+      <option>Unifi</option>
+      <option>WFS</option>
+      <option>Y4 – Menzies</option>
+      <option>Other</option>
+    </select>
+    <input id="org-other" class="other-input" placeholder="Enter organization name…" oninput="updateSend()" />
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="step">
+    <div class="step-label"><span class="step-num">2</span> Add equipment + location</div>
+    <div class="add-stack">
+      <div>
+        <div class="col-label">Equipment</div>
+        <select id="eq-sel">
+          <option value="">— equipment —</option>
+          <option>Bag Cart(s)</option>
+          <option>Belt Loader(s)</option>
+          <option>Cans</option>
+          <option>Dollies</option>
+          <option>K-Loader(s)</option>
+          <option>Lav Truck</option>
+          <option>Pushback Tractor(s)</option>
+          <option>Towbar(s)</option>
+          <option>Truck</option>
+          <option>Tug(s)</option>
+          <option>ULD(s)</option>
+          <option>Van</option>
+          <option>Other</option>
+        </select>
+        <input id="eq-other" class="other-input" placeholder="Specify equipment…" oninput="updateAddBtn()" />
+      </div>
+      <div>
+        <div class="col-label">Location</div>
+        <select id="loc-sel">
+          <option value="">— location —</option>
+          <optgroup label="─── Terminal D ───">
+            <option>D1</option>
+            <option>D2</option>
+            <option>D3</option>
+            <option>D4</option>
+            <option>D5 Bus Station</option>
+            <option>D6</option>
+            <option>D7 Bus Station</option>
+            <option>D8</option>
+            <option>D10</option>
+            <option>D11</option>
+            <option>D12 Bus Station</option>
+            <option>D12 tunnel</option>
+            <option>D14</option>
+            <option>D15</option>
+            <option>D16</option>
+            <option>D17</option>
+            <option>D23</option>
+            <option>MU1</option>
+            <option>MU2</option>
+            <option>MU3</option>
+            <option>MU4</option>
+            <option>MU5</option>
+            <option>MU6</option>
+          </optgroup>
+          <optgroup label="─── Terminal E ───">
+            <option>E2</option>
+            <option>E7</option>
+            <option>E10</option>
+            <option>E11</option>
+            <option>E32</option>
+            <option>E33</option>
+          </optgroup>
+          <optgroup label="─── F-Hardstand / T-Stands ───">
+            <option>F-Hardstand</option>
+            <option>T83</option>
+            <option>T84</option>
+            <option>T85</option>
+            <option>T90</option>
+            <option>T91</option>
+            <option>T92</option>
+            <option>T93</option>
+            <option>T94</option>
+            <option>T95</option>
+          </optgroup>
+          <optgroup label="─── SWHP ───">
+            <option>H84</option>
+            <option>H85X</option>
+            <option>H86</option>
+            <option>H87</option>
+            <option>H88X</option>
+            <option>H89</option>
+            <option>H90</option>
+            <option>H91X</option>
+            <option>H92</option>
+            <option>H93</option>
+            <option>H94X</option>
+            <option>H95</option>
+            <option>H96</option>
+            <option>H97X</option>
+            <option>H98</option>
+            <option>H99</option>
+          </optgroup>
+          <optgroup label="─── Southwest (Sierra) Pads ───">
+            <option>S-Pads</option>
+            <option>S84</option>
+            <option>S85X</option>
+            <option>S86</option>
+            <option>S87</option>
+            <option>S88X</option>
+            <option>S89</option>
+            <option>S90</option>
+            <option>S91X</option>
+            <option>S92</option>
+            <option>S93</option>
+            <option>S94X</option>
+            <option>S95</option>
+            <option>S96</option>
+            <option>S97X</option>
+            <option>S98</option>
+            <option>S99</option>
+          </optgroup>
+          <option>Other</option>
+        </select>
+        <input id="loc-other" class="other-input" placeholder="Specify location…" oninput="updateAddBtn()" />
+      </div>
+      <button class="btn-add" id="add-btn" disabled onclick="addRow()">+ Add to list</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table id="pairs-table">
+      <thead><tr><th>Equipment</th><th>Location</th><th></th></tr></thead>
+      <tbody id="pairs-body">
+        <tr class="empty-row"><td colspan="3">No items added yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="actions">
+    <button class="btn-send" id="send-btn" disabled onclick="sendEmail()">Send Email</button>
+    <button class="btn-clear" onclick="clearAll()">Clear all</button>
+  </div>
+
+</div>
+</div>
+
+<script>
+const ORG_META={
+  "American":    {to:"DL_DFW_HCC_Leadership@aa.com",                                         cc:""},
+  "Envoy":       {to:"",                                                                       cc:""},
+  "Swissport":   {to:"dale.salisbury@swissport.com;john.jones@swissport.com;selene.santos@swissport.com;dfw.occ@swissport.com;venessa.sioka@swissport.com;jamie.shatinsky@swissport.com", cc:""},
+  "Y4 – Menzies":{to:"adel.megally@menziesaviation.com,peter.mannarino@menziesaviation.com", cc:""},
+  "F9 – Menzies":{to:"dfwf9ops@outlook.com",                                                 cc:""},
+  "SY – Menzies":{to:"belquita.reyes@menziesaviation.com,dfwops@suncountry.com",             cc:""},
+  "WFS":         {to:"dfwocc@wfs.aero",                                                       cc:""},
+  "AGI":         {to:"landre@agi.aero",                                                       cc:""},
+  "GAT":         {to:"hamza.ramadan@wearegat.net",                                           cc:""},
+  "Unifi":       {to:"dustin.power@unifiservice.com",                                         cc:""},
+  "Other":       {to:"",                                                                       cc:""}
+};
+const IOC="iocgatecoordinators@dfwairport.com";
+let pairs=[];
+
+function onOrgChange(){
+  const v=document.getElementById('org-sel').value;
+  document.getElementById('org-other').style.display=(v==='Other')?'block':'none';
+  updateSend();
+}
+
+document.getElementById('eq-sel').addEventListener('change',function(){
+  const show=this.value==='Other';
+  document.getElementById('eq-other').style.display=show?'block':'none';
+  updateAddBtn();
+});
+document.getElementById('loc-sel').addEventListener('change',function(){
+  const show=this.value==='Other';
+  document.getElementById('loc-other').style.display=show?'block':'none';
+  updateAddBtn();
+});
+
+function getEq(){
+  const s=document.getElementById('eq-sel').value;
+  if(!s||s==='Other') return document.getElementById('eq-other').value.trim();
+  return s;
+}
+function getLoc(){
+  const s=document.getElementById('loc-sel').value;
+  if(!s||s==='Other') return document.getElementById('loc-other').value.trim();
+  return s;
+}
+function getOrg(){
+  const s=document.getElementById('org-sel').value;
+  if(!s) return '';
+  if(s==='Other') return document.getElementById('org-other').value.trim();
+  return s;
+}
+
+function updateAddBtn(){
+  const eq=getEq(), loc=getLoc();
+  document.getElementById('add-btn').disabled=!(eq && loc);
+}
+
+function addRow(){
+  const eq=getEq(), loc=getLoc();
+  if(!eq||!loc) return;
+  pairs.push({eq,loc});
+  renderTable();
+  document.getElementById('eq-sel').value='';
+  document.getElementById('loc-sel').value='';
+  document.getElementById('eq-other').value='';
+  document.getElementById('loc-other').value='';
+  document.getElementById('eq-other').style.display='none';
+  document.getElementById('loc-other').style.display='none';
+  updateAddBtn();
+  updateSend();
+}
+
+function removeRow(i){
+  pairs.splice(i,1);
+  renderTable();
+  updateSend();
+}
+
+function renderTable(){
+  const tbody=document.getElementById('pairs-body');
+  tbody.innerHTML='';
+  if(!pairs.length){
+    tbody.innerHTML='<tr class="empty-row"><td colspan="3">No items added yet</td></tr>';
+    return;
+  }
+  pairs.forEach(({eq,loc},i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${eq}</td><td>${loc}</td><td style="text-align:center;"><button class="btn-remove" onclick="removeRow(${i})">&#x2715;</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateSend(){
+  const org=getOrg();
+  document.getElementById('send-btn').disabled=!(org&&pairs.length>0);
+}
+
+function clearAll(){
+  pairs=[];
+  document.getElementById('org-sel').value='';
+  document.getElementById('org-other').value='';
+  document.getElementById('org-other').style.display='none';
+  document.getElementById('eq-sel').value='';
+  document.getElementById('loc-sel').value='';
+  document.getElementById('eq-other').value='';
+  document.getElementById('loc-other').value='';
+  document.getElementById('eq-other').style.display='none';
+  document.getElementById('loc-other').style.display='none';
+  renderTable();
+  updateAddBtn();
+  updateSend();
+}
+
+function sendEmail(){
+  const org=getOrg();
+  const meta=ORG_META[document.getElementById('org-sel').value]||{to:'',cc:''};
+  const toAddr=document.getElementById('org-sel').value==='Other'?'':meta.to;
+  const ccParts=[IOC];
+  if(meta.cc) ccParts.push(meta.cc);
+
+  const subject=`Immediate Equipment Removal Required – ${org}`;
+
+  const rows=pairs.map(({eq,loc})=>`  • ${eq} — ${loc}`).join('\n');
+
+  const body=`${org} Operations Team,
+
+Please send your team to move the following equipment from the location(s) listed immediately. Active operations are in progress and cannot be conducted safely until your equipment has been moved.
+
+EQUIPMENT TO BE MOVED:
+${rows}
+
+Please notify Gate Control at ${IOC} upon removal.`;
+
+  const p=[];
+  p.push('cc='+encodeURIComponent(ccParts.join(',')));
+  p.push('subject='+encodeURIComponent(subject));
+  p.push('body='+encodeURIComponent(body));
+  window.location.href='mailto:'+toAddr+'?'+p.join('&');
+}
+</script>

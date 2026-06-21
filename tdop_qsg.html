@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TDOP — Quick Start Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{font-family:'Montserrat',sans-serif;background:#fff;color:#1C1A2B;font-size:11.5px;line-height:1.5;}
+@media print{html,body{font-size:10.5px;background:#fff;}.no-print{display:none!important;}.page{margin:0;width:100%;box-shadow:none;}}
+.page{width:8.5in;min-height:11in;margin:0 auto;display:flex;flex-direction:column;}
+
+/* ── MASTHEAD ── */
+.mast{background:#1b3a6b;border-bottom:5px solid #FF5000;padding:14px 26px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.mast-l{display:flex;align-items:center;gap:12px;}
+.dfw{background:#FF5000;color:#fff;font-size:17px;font-weight:900;letter-spacing:.1em;padding:5px 12px;border-radius:5px;flex-shrink:0;}
+.mast-title h1{color:#fff;font-size:14px;font-weight:800;letter-spacing:.01em;}
+.mast-title p{color:rgba(255,255,255,.45);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:2px;}
+.mast-r{text-align:right;}
+.ver{background:rgba(255,80,0,.25);border:1px solid rgba(255,80,0,.5);color:#FF5000;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.07em;}
+.mast-sub{color:rgba(255,255,255,.3);font-size:8.5px;margin-top:4px;}
+
+/* ── BODY ── */
+.body{flex:1;padding:14px 26px 12px;display:flex;flex-direction:column;gap:11px;}
+
+/* ── INTRO ── */
+.intro{background:#EEF3FA;border-left:4px solid #FF5000;border-radius:0 5px 5px 0;padding:9px 14px;font-size:11px;color:#444;line-height:1.6;}
+.intro strong{color:#1b3a6b;}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.stat{background:#1b3a6b;border-radius:6px;padding:9px 8px;text-align:center;}
+.stat .n{font-size:18px;font-weight:900;color:#FF5000;line-height:1;}
+.stat .l{font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.45);margin-top:2px;}
+.stat .s{font-size:9px;color:rgba(255,255,255,.65);margin-top:2px;}
+
+/* ── THREE-COL ── */
+.three-col{display:grid;grid-template-columns:1.05fr 1fr 0.95fr;gap:12px;flex:1;}
+
+/* ── SECTION HEADER ── */
+.sh{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #E0E0E8;}
+.sh-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sh h2{font-size:8.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#1b3a6b;}
+
+/* ── BUTTON LIST ── */
+.btn-list{display:flex;flex-direction:column;gap:5px;}
+.br{display:flex;align-items:flex-start;gap:7px;}
+.pill{display:inline-flex;align-items:center;justify-content:center;padding:2px 7px;border-radius:3px;font-size:8px;font-weight:700;color:#fff;white-space:nowrap;min-width:66px;letter-spacing:.02em;flex-shrink:0;}
+.br p{font-size:10px;color:#555;line-height:1.4;}
+
+/* ── WORKFLOW STEPS ── */
+.steps{display:flex;flex-direction:column;gap:6px;}
+.step{display:flex;gap:7px;align-items:flex-start;}
+.sn{background:#FF5000;color:#fff;width:16px;height:16px;border-radius:50%;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step p{font-size:10px;color:#555;line-height:1.4;}
+.step p strong{color:#1b3a6b;}
+
+/* ── TIPS ── */
+.tips{display:flex;flex-direction:column;gap:5px;}
+.tip{display:flex;gap:6px;align-items:flex-start;background:#F4F4F8;border-radius:4px;padding:6px 8px;}
+.ti{font-size:11px;flex-shrink:0;line-height:1;}
+.tt{font-size:10px;color:#555;line-height:1.4;}
+.tt strong{color:#1b3a6b;}
+
+/* ── CARD ANATOMY ── */
+.card-demo{border:1.5px solid #E0E0E8;border-radius:6px;overflow:hidden;}
+.cd-hdr{background:#1b3a6b;color:#fff;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;}
+.cd-airline{font-size:10px;font-weight:700;}
+.cd-badges{display:flex;gap:4px;}
+.cd-badge{font-size:7.5px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:.04em;}
+.cd-row{display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid #EEEEEE;font-size:9.5px;color:#444;}
+.cd-row:last-child{border-bottom:none;}
+.cd-tag{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;width:22px;flex-shrink:0;}
+.arr{color:#2090A8;}.dep{color:#FF5000;}
+.cd-flight{font-weight:700;color:#1b3a6b;width:46px;flex-shrink:0;}
+.cd-gate{font-size:9px;color:#FF5000;font-weight:600;width:28px;flex-shrink:0;}
+.cd-time{font-size:9px;color:#666;margin-left:auto;}
+.cd-eta{color:#FF5000;font-weight:700;}
+.ann-list{display:flex;flex-direction:column;gap:5px;margin-top:10px;}
+.ann{display:flex;gap:6px;align-items:flex-start;}
+.an{background:#1b3a6b;color:#fff;width:14px;height:14px;border-radius:50%;font-size:7.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.ann p{font-size:10px;color:#555;line-height:1.35;}
+.ann p strong{color:#1b3a6b;}
+
+/* ── FOOTER ── */
+.foot{background:#1b3a6b;padding:8px 26px;display:flex;align-items:center;justify-content:space-between;}
+.foot-l{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.06em;}
+.foot-r{font-size:8px;color:rgba(255,255,255,.35);}
+
+.print-btn{position:fixed;bottom:18px;right:18px;background:#FF5000;color:#fff;border:none;border-radius:6px;padding:9px 16px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(255,80,0,.35);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- MASTHEAD -->
+  <div class="mast">
+    <div class="mast-l">
+      <div class="dfw">DFW</div>
+      <div class="mast-title">
+        <h1>Terminal D Operations Briefing (TDOP) — Quick Start Guide</h1>
+        <p>Gate Gadget Initiative &nbsp;·&nbsp; DFW Terminal D &nbsp;·&nbsp; Internal Use Only</p>
+      </div>
+    </div>
+    <div class="mast-r">
+      <div class="ver">TDOP V1.0.3</div>
+      <div class="mast-sub">Created by Brad J. Sapit</div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- INTRO -->
+    <div class="intro">
+      <strong>TDOP</strong> is DFW Terminal D's live operations briefing tool. It pulls flight data directly from the Stand &amp; Gate API, displays Terminal D and F-Hardstand ops side-by-side, tracks real-time gate changes, and sends formatted briefings to every ops team — all in one browser tab.
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat"><div class="n">2</div><div class="l">Columns</div><div class="s">Hardstand + Terminal D</div></div>
+      <div class="stat"><div class="n">10+</div><div class="l">Send Actions</div><div class="s">Email · Teams · PDF</div></div>
+      <div class="stat"><div class="n">Auto</div><div class="l">Refresh</div><div class="s">Gate changes flagged live</div></div>
+      <div class="stat"><div class="n">Auto</div><div class="l">Save</div><div class="s">State persists if tab closes</div></div>
+    </div>
+
+    <!-- THREE-COL -->
+    <div class="three-col">
+
+      <!-- COL 1: BUTTONS -->
+      <div>
+        <div class="sh"><div class="sh-dot" style="background:#FF5000;"></div><h2>Toolbar Buttons</h2></div>
+        <div class="btn-list">
+          <div class="br"><span class="pill" style="background:#FF5000;">Generate</span><p>Fetches live data for the selected date &amp; shift window. Always your first action.</p></div>
+          <div class="br"><span class="pill" style="background:#585858;">📄 PDF</span><p>Exports the full briefing grid as a formatted PDF including ETAs, notes, and pax.</p></div>
+          <div class="br"><span class="pill" style="background:#FF5000;">✉ All Ops</span><p>Opens mail pre-addressed to all ops distribution lists with full briefing HTML.</p></div>
+          <div class="br"><span class="pill" style="background:#41395F;">🟣 HS Ops</span><p>Hardstand-only brief to Gate Control / HS leadership.</p></div>
+          <div class="br"><span class="pill" style="background:#1A7A5E;">🟢 LF Ops</span><p>Frontier (F9) scoped brief to Menzies F9 ops team.</p></div>
+          <div class="br"><span class="pill" style="background:#7B4FBF;">🌐 INTL Ops</span><p>Email + Teams card for INTL ops (13:00–21:00 filter, Power Automate).</p></div>
+          <div class="br"><span class="pill" style="background:#C0392B;">🔴 Swiss</span><p>Swiss / Swissport scoped brief to DFW OCC.</p></div>
+          <div class="br"><span class="pill" style="background:#2471A3;">🔵 WFS</span><p>WFS scoped brief to WFS DFW OCC.</p></div>
+          <div class="br"><span class="pill" style="background:#2090A8;">🚌 Bus Board</span><p>Bus gate board for D5 &amp; D7 bus station flights.</p></div>
+          <div class="br"><span class="pill" style="background:#D4800A;">👁 Prospect</span><p>Scoped brief for Prospect handler flights.</p></div>
+          <div class="br"><span class="pill" style="background:#F2A900;">📋 Traffic</span><p>Generates a Traffic list for all arrivals within the current TDOP shift window.</p></div>
+          <div class="br"><span class="pill" style="background:#3EB1C8;">🌙 O/N Traffic</span><p>Overnight Traffic list — fixed 21:00–08:00 window, filters arrivals to designated O/N stands only (D6, D8A, D10–D16X, T83–T93). Independent of the shift window picker.</p></div>
+          <div class="br"><span class="pill" style="background:#1565C0;">👁 SeeSay</span><p>Automatically posts a Teams adaptive card in the <strong>Bussing chat</strong> prompting staff to use the SeeSay app for IOC requests. Includes a direct link to the mobile app.</p></div>
+          <div class="br"><span class="pill" style="background:#5D6D7E;">🔧 Equip</span><p>Opens Ground Equipment Notification form.</p></div>
+          <div class="br"><span class="pill" style="background:#888;">☀️/🌙 Theme</span><p>Toggle light / dark display mode.</p></div>
+          <div class="br"><span class="pill" style="background:#888;">🗑 Clear All</span><p>Wipes all state, ETAs, notes, and flags. Use at end of shift.</p></div>
+        </div>
+      </div>
+
+      <!-- COL 2: CARD ANATOMY + WORKFLOW -->
+      <div style="display:flex;flex-direction:column;gap:11px;">
+        <div>
+          <div class="sh"><div class="sh-dot" style="background:#2090A8;"></div><h2>Airline Card Anatomy</h2></div>
+          <div class="card-demo">
+            <div class="cd-hdr">
+              <span class="cd-airline">Qatar Airways · QR</span>
+              <div class="cd-badges">
+                <span class="cd-badge" style="background:#D4920A;color:#fff;">⚠ Gate Changed</span>
+                <span class="cd-badge" style="background:#1A7A5E;color:#fff;">GATED</span>
+              </div>
+            </div>
+            <div class="cd-row">
+              <span class="cd-tag arr">ARR</span>
+              <span class="cd-flight">QR 739</span>
+              <span class="cd-gate">D-16</span>
+              <span style="font-size:9px;color:#888;text-decoration:line-through;">STA 14:35</span>
+              <span class="cd-time cd-eta">ETA 14:52</span>
+            </div>
+            <div class="cd-row">
+              <span class="cd-tag dep">DEP</span>
+              <span class="cd-flight">QR 740</span>
+              <span class="cd-gate">D-16</span>
+              <span style="font-size:9px;color:#888;">STD 16:15</span>
+              <span class="cd-time" style="font-size:9px;color:#aaa;">pax: 289</span>
+            </div>
+          </div>
+          <div class="ann-list">
+            <div class="ann"><div class="an">①</div><p><strong>Header bar</strong> — airline name + IATA. Amber ⚠ when gate/pad changed; green GATED when on hold.</p></div>
+            <div class="ann"><div class="an">②</div><p><strong>ARR / DEP rows</strong> — flight number, gate, STA/STD (crossed out when ETA entered), and ETA/ETD in orange.</p></div>
+            <div class="ann"><div class="an">③</div><p><strong>Pax field</strong> — enter expected pax count per leg. Carries into all exports.</p></div>
+            <div class="ann"><div class="an">④</div><p><strong>✗ Cancel checkbox</strong> — strikes the leg red. Both legs cancelled → card moves to terminal section.</p></div>
+            <div class="ann"><div class="an">⑤</div><p><strong>Note field</strong> — per-leg free text (up to 100 chars). Appears in PDF and email exports.</p></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sh"><div class="sh-dot" style="background:#FF5000;"></div><h2>Shift Start Workflow</h2></div>
+          <div class="steps">
+            <div class="step"><div class="sn">1</div><p><strong>Set Date &amp; Shift Window</strong> in the header. Unlock date if locked from prior session.</p></div>
+            <div class="step"><div class="sn">2</div><p><strong>Click Generate.</strong> Status dot turns green; hardstand (left) and terminal (right) cards populate.</p></div>
+            <div class="step"><div class="sn">3</div><p><strong>Enter ETAs / ETDs</strong> — click any ETA/ETD cell and type time. Overrides STA/STD in all exports.</p></div>
+            <div class="step"><div class="sn">4</div><p><strong>Add Notes &amp; Pax</strong> — per-leg fields. Both appear in PDF and email.</p></div>
+            <div class="step"><div class="sn">5</div><p><strong>Flag Cancellations</strong> — check ✗ on cancelled legs.</p></div>
+            <div class="step"><div class="sn">6</div><p><strong>Send Briefings</strong> — All Ops for full blast; individual buttons for targeted sends.</p></div>
+            <div class="step"><div class="sn">7</div><p><strong>End of shift:</strong> Click 🗑 Clear All to reset for incoming coordinator.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COL 3: TIPS -->
+      <div>
+        <div class="sh"><div class="sh-dot" style="background:#F2A900;"></div><h2>Key Features</h2></div>
+        <div class="tips">
+          <div class="tip"><span class="ti">⚠️</span><div class="tt"><strong>Gate/Pad Changed badge</strong> — amber flag when the API detects a reassignment. Hover the highlighted cell to see the original value.</div></div>
+          <div class="tip"><span class="ti">💾</span><div class="tt"><strong>Auto-save</strong> — every input saves instantly to local storage. Restore any time with <em>Load Saved</em>.</div></div>
+          <div class="tip"><span class="ti">🔴</span><div class="tt"><strong>+1 Next-Day badge</strong> — appears on times crossing midnight so you know it's the following calendar day.</div></div>
+          <div class="tip"><span class="ti">🃏</span><div class="tt"><strong>Gated toggle</strong> — dims a card and strikes through fields to flag an aircraft on hold or blocked at gate.</div></div>
+          <div class="tip"><span class="ti">📋</span><div class="tt"><strong>Multi-select toolbar</strong> — check two or more airline cards to batch-export or email only those flights.</div></div>
+          <div class="tip"><span class="ti">🔓</span><div class="tt"><strong>Date lock</strong> — date field locks after Generate to prevent accidents. Tap 🔓 to unlock if you need to re-generate.</div></div>
+          <div class="tip"><span class="ti">🌐</span><div class="tt"><strong>INTL Ops = dual send</strong> — fires email AND a Power Automate Teams card simultaneously. 13:00–21:00 STA/ETA filter applied.</div></div>
+          <div class="tip"><span class="ti">🚌</span><div class="tt"><strong>Bus Board</strong> — built from existing briefing data for D5/D7 bus station flights. No extra entry needed.</div></div>
+          <div class="tip"><span class="ti">🔧</span><div class="tt"><strong>Equipment button</strong> — opens Ground Equipment Notification form. Select handler, add equipment + location, send formatted email.</div></div>
+          <div class="tip"><span class="ti">⏰</span><div class="tt"><strong>Baseline resets</strong> at 3:00 AM nightly and on Clear All — gate-change flags start fresh each day.</div></div>
+          <div class="tip"><span class="ti">🌙</span><div class="tt"><strong>O/N Traffic</strong> — fixed 21:00–08:00 window, filters to designated overnight stands only (D6, D8A, D10–D16X, T83–T93). Independent of the shift window picker. One-click overnight report — no settings adjustment needed.</div></div>
+          <div class="tip"><span class="ti">👁</span><div class="tt"><strong>SeeSay</strong> — automatically posts a Teams adaptive card in the <strong>Bussing chat</strong> directing staff to submit IOC requests via the SeeSay app. Includes a direct mobile link. No briefing required — always available.</div></div>
+        </div>
+      </div>
+
+    </div><!-- end three-col -->
+  </div><!-- end body -->
+
+  <!-- FOOTER -->
+  <div class="foot">
+    <div class="foot-l">DFW TERMINAL D OPERATIONS &nbsp;·&nbsp; TDOP V1.0.3 &nbsp;·&nbsp; GATE GADGET INITIATIVE &nbsp;·&nbsp; FOR INTERNAL USE ONLY</div>
+    <div class="foot-r">Created by Brad J. Sapit</div>
+  </div>
+
+</div>
+<button class="print-btn no-print" onclick="window.print()">🖨 Print / Save PDF</button>
+</body>
+</html>

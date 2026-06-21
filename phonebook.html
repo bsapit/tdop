@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DFW Airport Phonebook</title>
+<link href="https://fonts.googleapis.com/css2?family=Neue+Haas+Unica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── DFW BRAND TOKENS ─────────────────────────────────────────────── */
+:root {
+  --dfw-orange:    #FF5000;
+  --dfw-lgray:     #E6E6E6;
+  --dfw-dgray:     #585858;
+  --dfw-purple:    #41395F;
+  --dfw-yellow:    #F2A900;
+  --dfw-blue:      #3EB1C8;
+
+  /* Light theme */
+  --bg:            #F7F7F7;
+  --bg2:           #FFFFFF;
+  --bg3:           #EFEFEF;
+  --sidebar-bg:    #FFFFFF;
+  --border:        #DEDEDE;
+  --border2:       #E8E8E8;
+  --text:          #1A1A1A;
+  --text2:         #585858;
+  --text3:         #888888;
+  --card-bg:       #FFFFFF;
+  --card-hover:    #F5F5F5;
+  --header-bg:     #FFFFFF;
+  --shadow:        rgba(0,0,0,0.06);
+  --shadow2:       rgba(0,0,0,0.12);
+  --accent:        #FF5000;
+  --accent-light:  rgba(255,80,0,0.08);
+  --accent-mid:    rgba(255,80,0,0.15);
+  --phone-color:   #1A7A3C;
+  --phone-bg:      rgba(26,122,60,0.07);
+  --email-color:   #0057A8;
+  --email-bg:      rgba(0,87,168,0.07);
+  --badge-text:    #FFFFFF;
+  --section-bg:    #F2F2F2;
+  --input-bg:      #F7F7F7;
+  --pill-bg:       #F0F0F0;
+  --pill-text:     #585858;
+  --active-row:    rgba(255,80,0,0.04);
+  --mark-bg:       rgba(242,169,0,0.35);
+}
+
+[data-theme="dark"] {
+  --bg:            #111111;
+  --bg2:           #1C1C1C;
+  --bg3:           #252525;
+  --sidebar-bg:    #161616;
+  --border:        #2E2E2E;
+  --border2:       #282828;
+  --text:          #F0F0F0;
+  --text2:         #AAAAAA;
+  --text3:         #666666;
+  --card-bg:       #1C1C1C;
+  --card-hover:    #242424;
+  --header-bg:     #141414;
+  --shadow:        rgba(0,0,0,0.3);
+  --shadow2:       rgba(0,0,0,0.5);
+  --accent:        #FF5000;
+  --accent-light:  rgba(255,80,0,0.1);
+  --accent-mid:    rgba(255,80,0,0.2);
+  --phone-color:   #4DCC7A;
+  --phone-bg:      rgba(77,204,122,0.08);
+  --email-color:   #5AB3E8;
+  --email-bg:      rgba(90,179,232,0.08);
+  --badge-text:    #FFFFFF;
+  --section-bg:    #1F1F1F;
+  --input-bg:      #1C1C1C;
+  --pill-bg:       #252525;
+  --pill-text:     #AAAAAA;
+  --active-row:    rgba(255,80,0,0.06);
+  --mark-bg:       rgba(242,169,0,0.3);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Neue Haas Unica', 'Haas Unica', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 14px;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* ── HEADER ──────────────────────────────────────────────────────── */
+header {
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+
+.header-logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.header-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.header-subtitle {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stat-chip {
+  background: var(--pill-bg);
+  color: var(--text2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+}
+
+.stat-chip span { color: var(--accent); font-weight: 700; }
+
+.theme-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--pill-bg);
+  color: var(--text2);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+/* ── LAYOUT ──────────────────────────────────────────────────────── */
+.app {
+  display: grid;
+  grid-template-columns: 288px 1fr;
+  height: calc(100vh - 56px);
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────── */
+.sidebar {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.search-wrap {
+  padding: 12px 12px 0;
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-box input {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 32px 9px 34px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-box input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+.search-box input::placeholder { color: var(--text3); }
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text3);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: none;
+  line-height: 1;
+}
+.search-clear:hover { color: var(--text); }
+.search-clear.visible { display: block; }
+
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.filter-tab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.filter-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.filter-tab:hover:not(.active) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.org-count {
+  padding: 6px 14px 2px;
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+}
+
+.org-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px 12px;
+}
+
+.org-list::-webkit-scrollbar { width: 3px; }
+.org-list::-webkit-scrollbar-track { background: transparent; }
+.org-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── ORG LIST ITEMS ──────────────────────────────────────────────── */
+.org-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+  margin-bottom: 1px;
+  border: 1px solid transparent;
+}
+
+.org-item:hover { background: var(--card-hover); }
+
+.org-item.active {
+  background: var(--accent-light);
+  border-color: rgba(255,80,0,0.25);
+}
+
+.org-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.org-badge-logo {
+  overflow: hidden;
+  padding: 3px;
+}
+
+.badge-favicon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 3px;
+}
+
+.org-info { flex: 1; min-width: 0; }
+
+.org-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.org-meta { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.org-cnt { font-size: 11px; color: var(--text3); font-weight: 600; flex-shrink: 0; }
+
+/* ── SEARCH RESULTS PANEL ────────────────────────────────────────── */
+.search-results-panel {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-results-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 8px 12px;
+}
+
+.search-results-scroll::-webkit-scrollbar { width: 3px; }
+.search-results-scroll::-webkit-scrollbar-track { background: transparent; }
+.search-results-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sr-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text3);
+  padding: 12px 8px 5px;
+}
+
+.sr-section-label:first-child { padding-top: 4px; }
+
+.sr-org-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+  border: 1px solid transparent;
+  margin-bottom: 1px;
+}
+
+.sr-org-item:hover { background: var(--card-hover); border-color: var(--border); }
+
+.sr-person-item {
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+  border: 1px solid transparent;
+  margin-bottom: 3px;
+}
+
+.sr-person-item:hover { background: var(--card-hover); border-color: var(--border); }
+
+.sr-person-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+.sr-person-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.sr-person-title { font-size: 11px; color: var(--text3); }
+.sr-person-org { font-size: 11px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+
+.sr-person-links { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.sr-link {
+  font-size: 11px;
+  text-decoration: none;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sr-link-phone { color: var(--phone-color); background: var(--phone-bg); }
+.sr-link-phone:hover { opacity: 0.8; }
+.sr-link-email { color: var(--email-color); background: var(--email-bg); }
+.sr-link-email:hover { opacity: 0.8; }
+
+.sr-no-results { text-align: center; padding: 32px 16px; color: var(--text3); font-size: 13px; }
+
+mark { background: var(--mark-bg); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+/* ── ADD ORG BUTTON ──────────────────────────────────────────────── */
+.add-org-btn {
+  margin: 6px 8px 8px;
+  padding: 8px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--text3);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  text-align: center;
+}
+.add-org-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+/* ── MAIN PANEL ──────────────────────────────────────────────────── */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── DETAIL PANEL ────────────────────────────────────────────────── */
+.detail-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── WELCOME ─────────────────────────────────────────────────────── */
+.welcome-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: var(--text3);
+}
+
+.welcome-logo { width: 64px; height: 64px; opacity: 0.15; }
+.welcome-state h2 { font-size: 16px; font-weight: 500; color: var(--text2); }
+.welcome-state p { font-size: 13px; color: var(--text3); }
+
+/* ── ORG DETAIL HEADER ───────────────────────────────────────────── */
+.detail-header {
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+
+.detail-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.detail-org-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.detail-type-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 2px 9px;
+  border-radius: 10px;
+  margin-top: 5px;
+}
+
+.type-airline  { background: rgba(62,177,200,0.12); color: #1A7A8A; border: 1px solid rgba(62,177,200,0.3); }
+.type-handler  { background: rgba(242,169,0,0.12); color: #A07000; border: 1px solid rgba(242,169,0,0.3); }
+.type-cargo    { background: rgba(65,57,95,0.1);   color: #41395F; border: 1px solid rgba(65,57,95,0.25); }
+.type-airport  { background: rgba(255,80,0,0.08);  color: #CC3D00; border: 1px solid rgba(255,80,0,0.25); }
+
+[data-theme="dark"] .type-airline  { color: #3EB1C8; }
+[data-theme="dark"] .type-handler  { color: #F2A900; }
+[data-theme="dark"] .type-cargo    { color: #9B94C5; }
+[data-theme="dark"] .type-airport  { color: #FF7A40; }
+
+.primary-contacts { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.primary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.12s;
+  border: 1px solid;
+}
+
+.primary-btn-phone {
+  color: var(--phone-color);
+  background: var(--phone-bg);
+  border-color: rgba(26,122,60,0.2);
+}
+.primary-btn-phone:hover { opacity: 0.8; }
+
+.primary-btn-email {
+  color: var(--email-color);
+  background: var(--email-bg);
+  border-color: rgba(0,87,168,0.2);
+}
+.primary-btn-email:hover { opacity: 0.8; }
+
+/* ── CONTACTS TABLE ──────────────────────────────────────────────── */
+.detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 20px;
+}
+
+.detail-body::-webkit-scrollbar { width: 4px; }
+.detail-body::-webkit-scrollbar-track { background: transparent; }
+.detail-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Airline color banner strip at top of detail body */
+.airline-color-strip {
+  height: 4px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text3);
+  padding: 16px 24px 6px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.contact-row {
+  display: grid;
+  grid-template-columns: 200px 150px 1fr 180px 80px 64px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--border2);
+  transition: background 0.1s;
+}
+
+.contact-row:hover { background: var(--card-hover); }
+.contact-row:last-of-type { border-bottom: none; }
+
+.contact-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.contact-title { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+.contact-phone a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  color: var(--phone-color);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: var(--phone-bg);
+  transition: opacity 0.1s;
+  white-space: nowrap;
+}
+.contact-phone a:hover { opacity: 0.8; }
+.contact-phone .no-val { color: var(--text3); font-size: 12px; padding: 3px 8px; }
+
+.contact-email a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  color: var(--email-color);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: var(--email-bg);
+  transition: opacity 0.1s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+.contact-email a:hover { opacity: 0.8; }
+.contact-email .no-val { color: var(--text3); font-size: 12px; padding: 3px 8px; }
+
+.contact-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.contact-row:hover .contact-actions { opacity: 1; }
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text3);
+  font-size: 12px;
+  transition: all 0.12s;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.icon-btn.del:hover { border-color: #E53935; color: #E53935; background: rgba(229,57,53,0.06); }
+
+.contact-notes-cell { font-size: 11px; color: var(--text3); font-style: italic; line-height: 1.4; word-break: break-word; }
+
+/* Distro list */
+.distro-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--dfw-blue);
+  margin-left: 5px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  title: "On distro list";
+}
+.distro-toggle-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  transition: border-color 0.15s, background 0.15s;
+}
+.distro-toggle-label:has(input:checked) {
+  border-color: var(--dfw-blue);
+  background: rgba(62,177,200,0.07);
+}
+.distro-toggle-label input[type=checkbox] { margin-top: 2px; accent-color: var(--dfw-blue); flex-shrink: 0; }
+.distro-toggle-text { font-size: 13px; font-weight: 600; color: var(--text); }
+.distro-toggle-sub { font-size: 11px; color: var(--text3); display: block; margin-top: 2px; }
+.distro-toggle-text, .distro-toggle-sub { display: block; }
+.distro-toggle-label > div { display: flex; flex-direction: column; }
+
+.email-distro-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(62,177,200,0.1);
+  border: 1px solid rgba(62,177,200,0.35);
+  border-radius: 7px;
+  color: var(--dfw-blue);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.email-distro-btn:hover { background: rgba(62,177,200,0.18); border-color: var(--dfw-blue); }
+.email-distro-btn.disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+.distro-count-badge {
+  background: var(--dfw-blue);
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Operational Notes section */
+.op-notes-section {
+  margin: 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border2);
+  background: var(--section-bg);
+}
+.op-notes-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text3);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.op-notes-label span { color: var(--dfw-orange); }
+.op-notes-textarea {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text);
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+.op-notes-textarea:focus { outline: none; border-color: var(--accent); }
+.op-notes-textarea::placeholder { color: var(--text3); }
+
+/* Contact table column header */
+.contact-table-header {
+  display: grid;
+  grid-template-columns: 200px 150px 1fr 180px 80px 64px;
+  gap: 8px;
+  padding: 6px 24px;
+  background: var(--section-bg);
+  border-bottom: 1px solid var(--border2);
+}
+.contact-table-header span {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text3);
+}
+
+.add-contact-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: transparent;
+  border: none;
+  border-top: 1px dashed var(--border);
+  color: var(--text3);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  width: 100%;
+  text-align: left;
+  margin-top: 4px;
+}
+.add-contact-btn:hover { color: var(--accent); background: var(--accent-light); }
+
+.no-results { text-align: center; padding: 40px 24px; color: var(--text3); font-size: 13px; }
+
+/* ── HEADER ACTION BUTTONS ───────────────────────────────────────── */
+.action-row { display: flex; align-items: center; gap: 6px; }
+
+.hdr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+}
+.hdr-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.hdr-btn.del:hover { border-color: #E53935; color: #E53935; background: rgba(229,57,53,0.06); }
+
+/* ── MODALS ──────────────────────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  width: 520px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px var(--shadow2);
+}
+
+.modal h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 18px;
+  letter-spacing: -0.2px;
+}
+
+.modal h3 span { color: var(--accent); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+
+.form-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 11px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+.form-group textarea { resize: vertical; }
+.form-group select { cursor: pointer; }
+.form-group select option { background: var(--bg2); }
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  border: none;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #E04600; }
+.btn-danger { background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.3); color: #E53935; }
+.btn-danger:hover { background: rgba(229,57,53,0.15); }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--text2); }
+
+/* ── CONFIRM ─────────────────────────────────────────────────────── */
+.confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+}
+.confirm-overlay.open { display: flex; }
+
+.confirm-box {
+  background: var(--bg2);
+  border: 1px solid rgba(229,57,53,0.4);
+  border-radius: 10px;
+  padding: 22px;
+  width: 340px;
+  text-align: center;
+  box-shadow: 0 20px 60px var(--shadow2);
+}
+.confirm-box h3 { font-size: 15px; font-weight: 700; color: #E53935; margin-bottom: 8px; }
+.confirm-box p { font-size: 13px; color: var(--text2); margin-bottom: 18px; }
+.confirm-actions { display: flex; gap: 8px; justify-content: center; }
+
+/* ── TOAST ───────────────────────────────────────────────────────── */
+.save-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #1A7A3C;
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: none;
+  z-index: 400;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  animation: toastIn 0.2s ease;
+}
+
+@keyframes toastIn {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 900px) {
+  .contact-row { grid-template-columns: 1fr 1fr; }
+  .contact-table-header { grid-template-columns: 1fr 1fr; }
+}
+
+.distro-inline-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.distro-inline-toggle input[type=checkbox] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--dfw-blue);
+  cursor: pointer;
+}
+.distro-inline-toggle input[type=checkbox]:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+.distro-inline-toggle.no-email::after {
+  content: '⚠';
+  font-size: 10px;
+  color: var(--text3);
+  margin-left: 3px;
+}
+/* CSS tooltip */
+.distro-inline-toggle[data-tooltip]:hover::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--dfw-dgray);
+  color: #fff;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 5px;
+  pointer-events: none;
+  z-index: 50;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.distro-inline-toggle[data-tooltip]:hover::after {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--dfw-dgray);
+  pointer-events: none;
+  z-index: 50;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo"><svg viewBox="0 0 86.4 86.4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Layer_1" overflow="hidden"><defs></defs><path d="M34.122 17.893C35.218 17.893 36.208 17.117 36.8 15.829 37.735 19 40.686 21.245 44.032 21.245 47.498 21.245 50.477 18.891 51.321 15.569 51.925 16.731 52.856 17.407 53.89 17.407 55.384 17.407 56.622 16.029 57.006 13.96L57.098 13.967 57.113 13.779C57.116 13.737 57.144 13.351 57.129 12.729L57.133 12.667C57.133 12.33 57.107 11.987 57.051 11.63 56.842 9.579 56.13 6.638 53.937 4.266 51.671 1.814 48.365 0.57 44.109 0.57 39.985 0.57 36.731 1.786 34.434 4.182 32.174 6.54 31.361 9.492 31.08 11.534 30.945 12.086 30.881 12.617 30.881 13.153 30.881 15.81 32.305 17.892 34.123 17.892ZM55.13 11.787C55.17 12.146 55.196 12.502 55.205 12.807 55.163 14.445 54.398 15.489 53.89 15.489 53.349 15.489 52.566 14.39 52.566 12.668 52.566 10.946 53.35 9.847 53.89 9.847 54.325 9.847 54.924 10.594 55.131 11.788ZM44.031 8.083C47.132 8.083 49.655 10.605 49.655 13.705 49.655 16.805 47.133 19.326 44.031 19.326 40.929 19.326 38.409 16.805 38.409 13.705 38.409 10.605 40.931 8.083 44.031 8.083ZM33.916 8.427C34.407 7.295 35.048 6.312 35.826 5.503 37.746 3.503 40.533 2.49 44.108 2.49 47.801 2.49 50.629 3.523 52.518 5.56 53.148 6.24 53.678 7.038 54.094 7.94 54.028 7.933 53.959 7.928 53.889 7.928 52.575 7.928 51.434 9.037 50.93 10.743 49.746 7.979 47.045 6.162 44.031 6.162 40.926 6.162 38.125 8.134 37.019 11.027 36.486 9.42 35.39 8.412 34.122 8.412 34.052 8.412 33.984 8.416 33.917 8.425ZM32.853 13.662C32.853 13.655 32.83 12.902 32.979 11.834 33.256 10.848 33.763 10.333 34.122 10.333 34.663 10.333 35.446 11.432 35.446 13.154 35.446 14.876 34.662 15.974 34.122 15.974 33.64 15.974 33.022 15.11 32.851 13.849L32.863 13.849C32.863 13.849 32.854 13.663 32.854 13.663Z" stroke-width="0" fill="#FF5000"/><path d="M7.123 3.02 7.111 3.005C5.438 1.146 3.396 1.238 2.207 2.109 1.113 2.912 0.435 4.623 1.542 6.495L10.161 18.702 10.268 18.851 15.931 15.023 7.123 3.02ZM10.75 16.21 3.168 5.475C2.663 4.596 2.945 3.946 3.344 3.654 3.855 3.28 4.788 3.294 5.625 4.215L13.204 14.549 10.75 16.209Z" stroke-width="0" fill="#FF5000"/><path d="M83.721 56.286 73.309 45.426 68.535 50.408 79.524 60.866C80.377 61.489 81.225 61.804 82.046 61.804 82.808 61.804 83.527 61.511 84.019 61 84.924 60.06 85.217 58.183 83.72 56.288ZM82.637 59.667 82.636 59.667C82.279 60.043 81.493 59.928 80.749 59.396L71.251 50.346 73.309 48.197 82.264 57.528C82.974 58.43 82.986 59.303 82.638 59.667Z" stroke-width="0" fill="#FF5000"/><path d="M52.845 45.164 35.166 45.164C34.076 45.164 33.169 46.017 33.099 47.105L30.946 81.744C30.946 83.843 33.312 84.951 35.51 85.091 37.949 85.235 39.796 84.225 40 82.618L44.395 60.932 48.562 83.275C49.164 85.039 51.231 85.828 53.014 85.828 53.36 85.828 53.695 85.802 54.012 85.747 55.938 85.426 57.134 84.221 57.131 82.589L54.913 47.105C54.846 46.015 53.937 45.163 52.846 45.163ZM35.632 83.176C34.158 83.082 32.865 82.435 32.863 81.803L35.013 47.225C35.017 47.144 35.085 47.08 35.165 47.08L52.844 47.08C52.925 47.08 52.992 47.143 52.996 47.224L55.212 82.648C55.212 83.506 54.151 83.779 53.696 83.856 52.423 84.07 50.709 83.638 50.41 82.791L44.472 50.882 38.107 82.304C38.022 82.971 36.764 83.258 35.63 83.174Z" stroke-width="0" fill="#FF5000"/><path d="M70.432 42.222 55.101 23.305C54.282 22.294 53.068 21.711 51.767 21.707L36.143 21.667C35.312 21.667 34.505 21.906 33.808 22.357L26.128 27.33 19.481 18.973C17.848 17.089 15.41 17.348 13.835 18.387 12.014 19.585 11.427 21.561 12.354 23.444L22.152 37.2C23.103 38.533 24.899 38.929 26.321 38.117L33.648 33.935 33.784 44.136 54.645 43.883 54.825 43.88 55.018 35.955 64.501 46.957C65.277 47.66 66.227 48.031 67.246 48.031 68.244 48.031 69.231 47.669 69.953 47.041 71.386 45.797 71.573 43.906 70.431 42.222ZM52.954 41.986 35.676 42.194 35.522 30.655 25.369 36.451C24.804 36.775 24.095 36.618 23.714 36.088L13.998 22.469C13.484 21.41 14.158 20.469 14.889 19.988 15.788 19.395 17.149 19.212 18.005 20.2L25.605 29.752 25.71 29.885 34.852 23.966C35.237 23.716 35.684 23.584 36.15 23.584L51.764 23.625C52.485 23.626 53.157 23.95 53.61 24.513L68.884 43.351C69.448 44.183 69.381 44.999 68.698 45.591 67.996 46.202 66.76 46.416 65.874 45.619L53.544 31.3 53.226 30.932 52.955 41.986Z" stroke-width="0" fill="#FF5000"/><path d="M38.655 25.782C38.126 25.782 37.697 26.213 37.697 26.741L37.697 40.827C37.697 41.356 38.126 41.786 38.655 41.786 39.184 41.786 39.614 41.355 39.614 40.827L39.614 26.741C39.614 26.212 39.183 25.782 38.655 25.782Z" stroke-width="0" fill="#FF5000"/><path d="M49.621 25.466C49.092 25.466 48.663 25.897 48.663 26.425L48.663 40.827C48.663 41.356 49.092 41.786 49.621 41.786 50.15 41.786 50.58 41.355 50.58 40.827L50.58 26.425C50.58 25.896 50.149 25.466 49.621 25.466Z" stroke-width="0" fill="#FF5000"/></svg></div>
+  <div class="header-divider"></div>
+  <div>
+    <div class="header-title">DFW Airport Phonebook</div>
+    <div class="header-subtitle">Airline &amp; Ground Handler Directory</div>
+  </div>
+  <div class="header-right">
+    <div class="stat-chip"><span id="stat-orgs">54</span> Orgs</div>
+    <div class="stat-chip"><span id="stat-contacts">302</span> Contacts</div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="search-wrap">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="orgSearch" placeholder="Search orgs, names, emails, phones…" oninput="handleSearch()" autocomplete="off">
+        <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Clear">✕</button>
+      </div>
+    </div>
+    <div class="filter-tabs" id="filterTabs">
+      <button class="filter-tab active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-tab" onclick="setFilter('airline', this)">✈ Airlines</button>
+      <button class="filter-tab" onclick="setFilter('handler', this)">🔧 Handlers</button>
+      <button class="filter-tab" onclick="setFilter('cargo', this)">📦 Cargo</button>
+      <button class="filter-tab" onclick="setFilter('airport', this)">🏢 Airports</button>
+    </div>
+    <div class="org-count" id="orgCount"></div>
+    <div class="org-list" id="orgList"></div>
+    <div class="search-results-panel" id="searchResultsPanel" style="display:none;">
+      <div class="search-results-scroll" id="searchResultsScroll"></div>
+    </div>
+    <button class="add-org-btn" onclick="openAddOrg()">+ Add Organization</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="detail-panel" id="detailPanel">
+      <div class="welcome-state" id="welcomeState">
+        <div class="welcome-logo"><svg viewBox="0 0 86.4 86.4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Layer_1" overflow="hidden"><defs></defs><path d="M34.122 17.893C35.218 17.893 36.208 17.117 36.8 15.829 37.735 19 40.686 21.245 44.032 21.245 47.498 21.245 50.477 18.891 51.321 15.569 51.925 16.731 52.856 17.407 53.89 17.407 55.384 17.407 56.622 16.029 57.006 13.96L57.098 13.967 57.113 13.779C57.116 13.737 57.144 13.351 57.129 12.729L57.133 12.667C57.133 12.33 57.107 11.987 57.051 11.63 56.842 9.579 56.13 6.638 53.937 4.266 51.671 1.814 48.365 0.57 44.109 0.57 39.985 0.57 36.731 1.786 34.434 4.182 32.174 6.54 31.361 9.492 31.08 11.534 30.945 12.086 30.881 12.617 30.881 13.153 30.881 15.81 32.305 17.892 34.123 17.892ZM55.13 11.787C55.17 12.146 55.196 12.502 55.205 12.807 55.163 14.445 54.398 15.489 53.89 15.489 53.349 15.489 52.566 14.39 52.566 12.668 52.566 10.946 53.35 9.847 53.89 9.847 54.325 9.847 54.924 10.594 55.131 11.788ZM44.031 8.083C47.132 8.083 49.655 10.605 49.655 13.705 49.655 16.805 47.133 19.326 44.031 19.326 40.929 19.326 38.409 16.805 38.409 13.705 38.409 10.605 40.931 8.083 44.031 8.083ZM33.916 8.427C34.407 7.295 35.048 6.312 35.826 5.503 37.746 3.503 40.533 2.49 44.108 2.49 47.801 2.49 50.629 3.523 52.518 5.56 53.148 6.24 53.678 7.038 54.094 7.94 54.028 7.933 53.959 7.928 53.889 7.928 52.575 7.928 51.434 9.037 50.93 10.743 49.746 7.979 47.045 6.162 44.031 6.162 40.926 6.162 38.125 8.134 37.019 11.027 36.486 9.42 35.39 8.412 34.122 8.412 34.052 8.412 33.984 8.416 33.917 8.425ZM32.853 13.662C32.853 13.655 32.83 12.902 32.979 11.834 33.256 10.848 33.763 10.333 34.122 10.333 34.663 10.333 35.446 11.432 35.446 13.154 35.446 14.876 34.662 15.974 34.122 15.974 33.64 15.974 33.022 15.11 32.851 13.849L32.863 13.849C32.863 13.849 32.854 13.663 32.854 13.663Z" stroke-width="0" fill="#FF5000"/><path d="M7.123 3.02 7.111 3.005C5.438 1.146 3.396 1.238 2.207 2.109 1.113 2.912 0.435 4.623 1.542 6.495L10.161 18.702 10.268 18.851 15.931 15.023 7.123 3.02ZM10.75 16.21 3.168 5.475C2.663 4.596 2.945 3.946 3.344 3.654 3.855 3.28 4.788 3.294 5.625 4.215L13.204 14.549 10.75 16.209Z" stroke-width="0" fill="#FF5000"/><path d="M83.721 56.286 73.309 45.426 68.535 50.408 79.524 60.866C80.377 61.489 81.225 61.804 82.046 61.804 82.808 61.804 83.527 61.511 84.019 61 84.924 60.06 85.217 58.183 83.72 56.288ZM82.637 59.667 82.636 59.667C82.279 60.043 81.493 59.928 80.749 59.396L71.251 50.346 73.309 48.197 82.264 57.528C82.974 58.43 82.986 59.303 82.638 59.667Z" stroke-width="0" fill="#FF5000"/><path d="M52.845 45.164 35.166 45.164C34.076 45.164 33.169 46.017 33.099 47.105L30.946 81.744C30.946 83.843 33.312 84.951 35.51 85.091 37.949 85.235 39.796 84.225 40 82.618L44.395 60.932 48.562 83.275C49.164 85.039 51.231 85.828 53.014 85.828 53.36 85.828 53.695 85.802 54.012 85.747 55.938 85.426 57.134 84.221 57.131 82.589L54.913 47.105C54.846 46.015 53.937 45.163 52.846 45.163ZM35.632 83.176C34.158 83.082 32.865 82.435 32.863 81.803L35.013 47.225C35.017 47.144 35.085 47.08 35.165 47.08L52.844 47.08C52.925 47.08 52.992 47.143 52.996 47.224L55.212 82.648C55.212 83.506 54.151 83.779 53.696 83.856 52.423 84.07 50.709 83.638 50.41 82.791L44.472 50.882 38.107 82.304C38.022 82.971 36.764 83.258 35.63 83.174Z" stroke-width="0" fill="#FF5000"/><path d="M70.432 42.222 55.101 23.305C54.282 22.294 53.068 21.711 51.767 21.707L36.143 21.667C35.312 21.667 34.505 21.906 33.808 22.357L26.128 27.33 19.481 18.973C17.848 17.089 15.41 17.348 13.835 18.387 12.014 19.585 11.427 21.561 12.354 23.444L22.152 37.2C23.103 38.533 24.899 38.929 26.321 38.117L33.648 33.935 33.784 44.136 54.645 43.883 54.825 43.88 55.018 35.955 64.501 46.957C65.277 47.66 66.227 48.031 67.246 48.031 68.244 48.031 69.231 47.669 69.953 47.041 71.386 45.797 71.573 43.906 70.431 42.222ZM52.954 41.986 35.676 42.194 35.522 30.655 25.369 36.451C24.804 36.775 24.095 36.618 23.714 36.088L13.998 22.469C13.484 21.41 14.158 20.469 14.889 19.988 15.788 19.395 17.149 19.212 18.005 20.2L25.605 29.752 25.71 29.885 34.852 23.966C35.237 23.716 35.684 23.584 36.15 23.584L51.764 23.625C52.485 23.626 53.157 23.95 53.61 24.513L68.884 43.351C69.448 44.183 69.381 44.999 68.698 45.591 67.996 46.202 66.76 46.416 65.874 45.619L53.544 31.3 53.226 30.932 52.955 41.986Z" stroke-width="0" fill="#FF5000"/><path d="M38.655 25.782C38.126 25.782 37.697 26.213 37.697 26.741L37.697 40.827C37.697 41.356 38.126 41.786 38.655 41.786 39.184 41.786 39.614 41.355 39.614 40.827L39.614 26.741C39.614 26.212 39.183 25.782 38.655 25.782Z" stroke-width="0" fill="#FF5000"/><path d="M49.621 25.466C49.092 25.466 48.663 25.897 48.663 26.425L48.663 40.827C48.663 41.356 49.092 41.786 49.621 41.786 50.15 41.786 50.58 41.355 50.58 40.827L50.58 26.425C50.58 25.896 50.149 25.466 49.621 25.466Z" stroke-width="0" fill="#FF5000"/></svg></div>
+        <h2>Select an organization</h2>
+        <p>Choose from the sidebar or search for an org or person.</p>
+      </div>
+      <div id="orgDetail" style="display:none; flex-direction:column; height:100%;">
+        <div class="detail-header">
+          <div class="detail-header-top">
+            <div>
+              <div class="detail-org-name" id="detailOrgName"></div>
+              <span class="detail-type-badge" id="detailTypeBadge"></span>
+            </div>
+            <div class="action-row">
+              <button class="email-distro-btn disabled" id="emailDistroBtn" onclick="emailDistro()">📧 Email Distro <span class="distro-count-badge" id="distroCountBadge">0</span></button>
+              <button class="hdr-btn" onclick="openEditOrg()">✏️ Edit</button>
+              <button class="hdr-btn del" onclick="confirmDeleteOrg()">🗑️ Delete</button>
+            </div>
+          </div>
+          <div class="primary-contacts" id="primaryContacts"></div>
+        </div>
+        <div id="airlineColorStrip" class="airline-color-strip"></div>
+        <div class="detail-body" id="detailBody"></div>
+        <div class="op-notes-section" id="opNotesSection"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal">
+    <h3 id="contactModalTitle"><span>✚</span> Add Contact</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="cName" placeholder="Full name">
+      </div>
+      <div class="form-group">
+        <label>Title / Role</label>
+        <input type="text" id="cTitle" placeholder="Station Manager">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="cPhone" placeholder="xxx-xxx-xxxx">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="cEmail" placeholder="name@airline.com">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>Section</label>
+      <select id="cSectionSelect" onchange="handleSectionSelect(this)">
+        <option value="">— None —</option>
+        <option value="Above Wing">Above Wing</option>
+        <option value="Agent">Agent</option>
+        <option value="Below Wing">Below Wing</option>
+        <option value="Catering">Catering</option>
+        <option value="Deicing">Deicing</option>
+        <option value="Fueler">Fueler</option>
+        <option value="Managers">Managers</option>
+        <option value="MX Provider">MX Provider</option>
+        <option value="Operations">Operations</option>
+        <option value="Supervisors">Supervisors</option>
+        <option value="Other">Other…</option>
+      </select>
+      <input type="text" id="cSection" placeholder="Enter custom section name" style="display:none;margin-top:6px;">
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="cNotes" rows="2" placeholder="Optional notes"></textarea>
+    </div>
+    <div class="form-group" style="margin-top:4px;">
+      <label class="distro-toggle-label">
+        <input type="checkbox" id="cDistro">
+        <span class="distro-toggle-text">📧 Add to Distro List</span>
+        <span class="distro-toggle-sub">Include this contact in the one-click group email</span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('contactModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveContact()">Save Contact</button>
+    </div>
+  </div>
+</div>
+
+<!-- Org Modal -->
+<div class="modal-overlay" id="orgModal">
+  <div class="modal">
+    <h3 id="orgModalTitle"><span>✚</span> Add Organization</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Organization Name</label>
+        <input type="text" id="oName" placeholder="Airline Name (XX)">
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="oType">
+          <option value="airline">✈ Airline</option>
+          <option value="handler">🔧 Ground Handler</option>
+          <option value="cargo">📦 Cargo</option>
+          <option value="airport">🏢 Airport</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Primary Phone</label>
+        <input type="tel" id="oPrimaryPhone" placeholder="xxx-xxx-xxxx">
+      </div>
+      <div class="form-group">
+        <label>Primary Email</label>
+        <input type="email" id="oPrimaryEmail" placeholder="ops@airline.com">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('orgModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOrg()">Save Organization</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3>⚠ Confirm Delete</h3>
+    <p id="confirmMsg">Are you sure?</p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" onclick="executeDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="save-toast" id="saveToast">✓ Saved</div>
+
+<script>
+// ── AIRLINE COLOR MAP ─────────────────────────────────────────────────────────
+const AIRLINE_COLORS = {
+  "AA":"#C0C0C0","AC":"#D82F2E","AF":"#002157","AM":"#FFC99B","AS":"#B3D37C",
+  "AV":"#FC0404","AY":"#7F1F89","B6":"#B5D2EE","BA":"#0035AD","BR":"#EA5400",
+  "CX":"#1A7A8A","DL":"#B090B0","EK":"#FEF8D5","F9":"#046444","FJ":"#808000",
+  "IB":"#F9CD03","JL":"#EC8C84","KE":"#71CBEB","KG":"#AEFF6E","LF":"#A5C8BB",
+  "LH":"#f9ba00","MX":"#1F74DF","NK":"#FFEC00","QF":"#FF00FF","QR":"#5C0632",
+  "RJ":"#A6844B","SY":"#F58232","TK":"#C70A0C","UA":"#004B87","WN":"#E31837",
+  "WS":"#0A4C96","XP":"#004E8C","Y4":"#9B2335","2D":"#3A5DA0","NZ":"#00529B",
+  "OY":"#003366","NK":"#FFEC00","GI":"#2E7D32","G6":"#1565C0"
+};
+
+// ── FAVICON DOMAIN MAP ───────────────────────────────────────────────────────
+// Maps sheet code → primary domain for Google favicon service
+const FAVICON_DOMAINS = {
+  "AA":"aa.com","AC":"aircanada.com","AF":"airfrance.com","AM":"aeromexico.com",
+  "AS":"alaskaair.com","AV":"avianca.com","AY":"finnair.com","B6":"jetblue.com",
+  "BA":"britishairways.com","BR":"evaair.com","CX":"cathaypacific.com",
+  "DL":"delta.com","EK":"emirates.com","F9":"flyfrontier.com","FJ":"fijiairways.com",
+  "IB":"iberia.com","JL":"jal.com","KE":"koreanair.com","KG":"denverairconnection.com",
+  "LF":"flycontour.com","LH":"lufthansa.com","MX":"breezeairways.com",
+  "NK":"spirit.com","NZ":"airnewzealand.com","OY":"omniairintl.com",
+  "QF":"qantas.com","QR":"qatarairways.com","SY":"suncountry.com",
+  "TK":"turkishairlines.com","UA":"united.com","VB":"vivaaerobus.com",
+  "WN":"southwest.com","WS":"westjet.com","XP":"aveloair.com","Y4":"volaris.com",
+  "2D":"goeasternair.com","GI":"gridiron-air.com",
+  // Ground handlers & others
+  "AGI":"agi.aero","Allied":"alliedaviation.com","Menzies":"menziesaviation.com",
+  "Swissport":"swissport.com","WFS":"wfs.aero","GAT":"wearegat.net",
+  "Unifi":"unifiservice.com","Hallmark":"hallmark-aviation.com",
+  "ERMC":"unifiservice.com","Daifuku":"daifukuna.com",
+  "G6":"globalxair.com","CopOpt":"copopt.com",
+  "DAL":"dallas-lovefield.com","FX":"fedex.com","5X":"ups.com"
+};
+
+function getFaviconDomain(orgName, sheet) {
+  const code = sheet ? sheet.replace(/\s.*/, '') : '';
+  if (FAVICON_DOMAINS[code]) return FAVICON_DOMAINS[code];
+  // Try full sheet name for handlers
+  if (sheet && FAVICON_DOMAINS[sheet]) return FAVICON_DOMAINS[sheet];
+  // Try extracting code from org name
+  const m = orgName.match(/\(([A-Z0-9]{1,3})\)/);
+  if (m && FAVICON_DOMAINS[m[1]]) return FAVICON_DOMAINS[m[1]];
+  return null;
+}
+
+function faviconUrl(domain) {
+  return 'https://www.google.com/s2/favicons?sz=64&domain=' + domain;
+}
+
+// Badge HTML builder — shows favicon if available, falls back to color+code
+function makeBadgeHTML(orgName, sheet, orgType) {
+  const domain = getFaviconDomain(orgName, sheet);
+  const code = getCodeLabel(orgName, sheet);
+  const color = getAirlineColor(orgName, sheet) ||
+    (orgType === 'handler' ? '#41395F' : orgType === 'cargo' ? '#585858' : orgType === 'airport' ? '#FF5000' : '#3EB1C8');
+  const fg = getContrastColor(color);
+
+  if (domain) {
+    // White badge with favicon image; falls back to letter code if img errors
+    return `<div class="org-badge org-badge-logo" style="background:#fff;border:1px solid #E0E0E0;">` +
+      `<img src="${faviconUrl(domain)}" alt="${code}" class="badge-favicon" ` +
+      `onerror="this.parentElement.innerHTML='<span style=\\'color:${fg}\\'>${code}</span>';this.parentElement.style.background='${color}';this.parentElement.style.border='none';">` +
+      `</div>`;
+  }
+  return `<div class="org-badge" style="background:${color};color:${fg}">${code}</div>`;
+}
+
+function getAirlineColor(orgName, sheet) {
+  // Try sheet code first
+  const code = sheet ? sheet.replace(/\s.*/, '') : '';
+  if (AIRLINE_COLORS[code]) return AIRLINE_COLORS[code];
+  // Try extracting code from name e.g. "American Airlines (AA)"
+  const m = orgName.match(/\(([A-Z0-9]{1,3})\)/);
+  if (m && AIRLINE_COLORS[m[1]]) return AIRLINE_COLORS[m[1]];
+  return null;
+}
+
+function getContrastColor(hex) {
+  // Returns black or white depending on bg lightness
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+  return lum > 0.5 ? '#1A1A1A' : '#FFFFFF';
+}
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const RAW_DATA = [{"sheet":"2D (Eastern)","name":"Eastern Airlines (2D)","type":"airline","primary_phone":"484-836-6506","primary_email":"kmargusity@goeasternair.com","contacts":[{"section":"","title":"Manager, CS","name":"Kyle Margusity","phone":"484-836-6506","email":"kmargusity@goeasternair.com","notes":"O: 816-226-4100"}]},{"sheet":"AA","name":"American Airlines (AA)","type":"airline","primary_phone":"469-784-5000","primary_email":"DL_DFW_HCC_Leadership@aa.com","contacts":[{"section":"Managing Director","title":"","name":"Jim Kritsciun","phone":"469-784-5070","email":"jim.kritscium@aa.com","notes":""},{"section":"MODs","title":"","name":"Noby Ortega","phone":"","email":"noby.ortega@aa.com","notes":""},{"section":"MODs","title":"","name":"John Quetel","phone":"","email":"john.quetel@aa.com","notes":""},{"section":"MODs","title":"","name":"Kyle Chalk","phone":"","email":"kyle.chalk@aa.com","notes":""},{"section":"MODs","title":"","name":"Jonathan Heiser","phone":"","email":"jonathan.heiser@aa.com","notes":""},{"section":"MODs","title":"","name":"Ryan Flahie","phone":"","email":"ryan.flahie@aa.com","notes":""},{"section":"MODs","title":"","name":"Nathifa Lezama","phone":"","email":"nathifa.lezama@aa.com","notes":"C: 214-603-9756"},{"section":"CSMs","title":"","name":"Jeannie Abbate","phone":"","email":"jeannie.abbate@aa.com","notes":""},{"section":"CSMs","title":"","name":"Mike Garcia","phone":"","email":"michael.garcia4@aa.com","notes":"C: 817-456-4684"},{"section":"CSMs","title":"","name":"Alex Alexov","phone":"","email":"alex.alexov@aa.com","notes":"C: 469-679-9126"},{"section":"CSMs","title":"","name":"Sam Cates","phone":"","email":"sam.cates@aa.com","notes":""},{"section":"CSMs","title":"","name":"Jered Fregoso","phone":"","email":"jered.fregoso@aa.com","notes":"C: 817-891-6178"},{"section":"CSMs","title":"","name":"Ricardo de Gannes","phone":"","email":"ricardo.degannes@aa.com","notes":"C: 817-736-7334"},{"section":"CSMs","title":"","name":"Ian Moriarty","phone":"","email":"ian.moriarty@aa.com","notes":""},{"section":"Directors","title":"","name":"Jennifer Acevedo","phone":"682-366-0349","email":"jennifer.acevedo@aa.com","notes":"Sr. Manager, DFW International Ops"},{"section":"Directors","title":"","name":"Vincent Carcaterra","phone":"480-529-3669","email":"vincent.t.carcaterra@aa.com","notes":"Director, Customer Care"},{"section":"Directors","title":"","name":"Jason Annunziata","phone":"646-942-2775","email":"jason.annunziata@aa.com","notes":"Director, Ramp Operations"},{"section":"Directors","title":"","name":"Daniel Schumpert","phone":"682-328-8280","email":"daniel.schumpert@aa.com","notes":"Director, Baggage Ops"},{"section":"Directors","title":"","name":"Joseph Edwards","phone":"817-247-6261","email":"joseph.edwards@aa.com","notes":"Baggage Ops"}]},{"sheet":"AE","name":"American Eagle/Envoy (AE)","type":"airline","primary_phone":"","primary_email":"","contacts":[]},{"sheet":"AC","name":"Air Canada (AC)","type":"airline","primary_phone":"214-837-0142","primary_email":"stephanie.peat@aircanada.ca","contacts":[{"section":"","title":"Station Manager","name":"Stephanie Peat","phone":"305-339-0807","email":"stephanie.peat@aircanada.ca","notes":"Cell"},{"section":"","title":"WFS Manager","name":"Lizet Valdez","phone":"737-203-2861","email":"lizet.valdez@wfs.aero","notes":"Off Sun/Mon"},{"section":"","title":"Supervisor","name":"Brandon Fernandez","phone":"817-726-8326","email":"brandon.fernandez@wfs.aero","notes":"Off Thu/Fri"},{"section":"","title":"Supervisor","name":"Kimberly Lakhani","phone":"817-705-5524","email":"kimberly.lakhni@wfs.aero","notes":"Off Tue/Wed"}]},{"sheet":"AF","name":"Air France (AF)","type":"airline","primary_phone":"646-348-4166","primary_email":"alalghnaimawi@airfrance.fr","contacts":[{"section":"","title":"Station Manager","name":"Ali Alghnaimawi","phone":"934-899-2197","email":"alalghnaimawi@airfrance.fr","notes":""},{"section":"","title":"Supervisor","name":"Mustapha  Benzerfa","phone":"213-371-8088","email":"mustapha.benzerfa@klm.com","notes":""},{"section":"","title":"Supervisor?","name":"Beatriz Romeu","phone":"682-702-4211","email":"","notes":""},{"section":"","title":"","name":"Liza","phone":"469-365-2227","email":"","notes":""},{"section":"","title":"","name":"","phone":"214-897-1535","email":"ttompkins@abbyscatering.com","notes":"Local DFW Rep"},{"section":"","title":"WFS GM","name":"Walter Alonzo","phone":"321-479-1536","email":"","notes":""}]},{"sheet":"AFW","name":"Alliance Airport (AFW)","type":"airline","primary_phone":"817-890-1000","primary_email":"","contacts":[]},{"sheet":"AGI","name":"AGI","type":"handler","primary_phone":"972-849-4076","primary_email":"landre@agi.aero","contacts":[{"section":"","title":"General Manager","name":"Lucinda Decker-Andre","phone":"972-849-4076","email":"landre@agi.aero","notes":"O: 972-973-8720"},{"section":"","title":"Supervisor","name":"Tina Nguyen","phone":"682-234-3224","email":"tinguyen@agi.aero","notes":""},{"section":"","title":"Agent","name":"Felix Francis","phone":"972-876-9951","email":"ffrancis@agi.aero","notes":""}]},{"sheet":"Allied","name":"Allied Aviation Fueling","type":"handler","primary_phone":"972-574-2615","primary_email":"doug.miller@alliedaviation.com","contacts":[{"section":"","title":"General Manager","name":"Doug Miller","phone":"972-574-2610 x2002","email":"doug.miller@alliedaviation.com","notes":""},{"section":"","title":"Ops Manager","name":"Joshua Willinsky","phone":"972-574-2610 x2003","email":"joshua.willinsky@alliedaviation.com","notes":""},{"section":"","title":"Asst. Ops Manager","name":"Daveon Cotton","phone":"618-541-6915","email":"deveon.cotton@alliedaviation.com","notes":""},{"section":"","title":"Duty Manager","name":"James Thompson","phone":"214-883-6237","email":"james.thompson@alliedaviation.com","notes":""},{"section":"","title":"Duty Manager","name":"Sherrod Norton","phone":"214-876-1643","email":"sherrod.norton@alliedaviation.com","notes":""},{"section":"","title":"Duty Manager","name":"Tony Garza","phone":"325-283-9176","email":"tony.garza@alliedaviation.com","notes":""},{"section":"","title":"Duty Manager","name":"Cedrick Baya","phone":"214-892-5343","email":"cedrick.baya@alliedaviation.com","notes":""},{"section":"","title":"GSE Manager","name":"Robert Martin","phone":"972-574-2610 x2004","email":"robert.martin@alliedaviation.com","notes":""},{"section":"","title":"Safety Manager","name":"Iral Hayes","phone":"972-973-7446","email":"iral.hayes@alliedaviation.com","notes":""},{"section":"","title":"Training Manager","name":"Anthony Thomas","phone":"972-973-7444","email":"anthony.thomas@alliedaviation.com","notes":""},{"section":"","title":"Training Supervisor","name":"Chad Swigert","phone":"972-973-7444","email":"chad.swigert@alliedaviation.com","notes":""},{"section":"","title":"","name":"DFW Control Desk","phone":"972-574-2615","email":"dfw.controldesk@alliedaviation.com","notes":"Staffed 24/7"}]},{"sheet":"AM","name":"Aeromexico (AM)","type":"airline","primary_phone":"817-471-4107","primary_email":"vambrosio@aeromexico.com","contacts":[{"section":"","title":"Station Manager","name":"Victor Ambrosio","phone":"817-471-4107","email":"vambrosio@aeromexico.com","notes":""},{"section":"","title":"Supervisor","name":"Carlos Baligad","phone":"469-918-9958","email":"cbaligad@aeromexico.com","notes":""},{"section":"","title":"","name":"Supervisor","phone":"","email":"atodfwsupervisors@aeromexico.com","notes":""},{"section":"","title":"Supervisor","name":"Marielle Sanchez","phone":"469-528-1593","email":"","notes":""},{"section":"","title":"Lead Agent","name":"Xandra","phone":"214-883-7760","email":"","notes":""},{"section":"","title":"Lead Agent","name":"Cindy","phone":"682-248-4278","email":"","notes":""},{"section":"","title":"Agent","name":"Adabayith Martinez","phone":"972-357-4486","email":"","notes":"Caller ID: Tony MTZ"}]},{"sheet":"AV","name":"Avianca (AV)/Taca (TA)/Lacsa (LA)","type":"airline","primary_phone":"786-693-3988","primary_email":"juan.calderon@aviaca.com","contacts":[{"section":"","title":"Station Manager","name":"Juan-Carlos Calderon","phone":"786-693-3988","email":"juan.calderon@aviaca.com","notes":""},{"section":"","title":"Supervisor","name":"Raul Diaz","phone":"469-510-7822","email":"raudel.diaz@avianca.com","notes":""},{"section":"","title":"Pax Service Lead","name":"Kaury Ortega","phone":"817-965-3694","email":"kauri.ortega@avianca.com","notes":"C: 786-874-0590"},{"section":"","title":"WFS Supervisor/Account Manager","name":"Bernardo Arias","phone":"972-815-6021","email":"bernardo.arias@wfs.aero","notes":"Account Manager"},{"section":"","title":"Lead Agent","name":"Maria","phone":"903-806-5423","email":"","notes":""},{"section":"","title":"Agent","name":"Cesar Benetiz","phone":"214-269-6992","email":"","notes":"Shows Cesar Diaz on CID."},{"section":"","title":"Agent","name":"Crystal Ramos","phone":"682-241-4543","email":"","notes":""}]},{"sheet":"AS","name":"Alaska Airlines (AS)","type":"airline","primary_phone":"469-703-6706","primary_email":"aseel.sawalha1@alaskaair.com","contacts":[{"section":"","title":"Station Manager","name":"Aseel Sawalha","phone":"682-559-1112","email":"aseel.sawalha1@alaskaair.com","notes":""},{"section":"","title":"","name":"Torian Pipkin","phone":"","email":"torian.pipkin@alaksaair.com","notes":""},{"section":"","title":"","name":"Dustin Power","phone":"","email":"dustin.power@unifiservice.com","notes":""}]},{"sheet":"AY","name":"Finnair (AY)","type":"airline","primary_phone":"214-663-1985","primary_email":"dfw.ayops@hallmark-aviation.com","contacts":[{"section":"","title":"Station Manager","name":"Magdalena Basiejko","phone":"773-543-4595","email":"magdalena.basiejko@finnair.com","notes":"Not based in DFW"},{"section":"","title":"Duty Manager","name":"Dave Thomas","phone":"469-660-7726","email":"Dave.Thomas@hallmark-aviation.com","notes":""},{"section":"","title":"Assistant Duty Manager","name":"Hasanat","phone":"817-944-6336","email":"","notes":""},{"section":"","title":"Supervisor","name":"Varghese Thomas","phone":"","email":"varghese.thomas@hallmark-aviation.com","notes":""}]},{"sheet":"B6","name":"JetBlue (B6)","type":"airline","primary_phone":"972-849-3304","primary_email":"charles.cavejr@jetblue.com","contacts":[{"section":"","title":"Station Manager","name":"Charles Cave","phone":"343-675-9744","email":"charles.cavejr@jetblue.com","notes":"Covers AUS/HOU/DFW/BNA"},{"section":"","title":"GAT Manager","name":"Lindsay Harmon","phone":"541-520-1642","email":"lindsay.harmon@wearegat.net","notes":""},{"section":"","title":"","name":"All DFW Leadership","phone":"","email":"dfwleadership@jetblue.com","notes":""},{"section":"","title":"Lead Agent","name":"Hamza Ramadan","phone":"972-821-6716","email":"hamza.ramadan@wearegat.net","notes":""}]},{"sheet":"BA","name":"British Airways (BA)","type":"airline","primary_phone":"347-392-9067","primary_email":"","contacts":[{"section":"","title":"Regional Manager","name":"Sabia Cherebin","phone":"347-392-9067","email":"","notes":"Based at IAH"},{"section":"","title":"","name":"","phone":"281-233-3215","email":"","notes":""},{"section":"","title":"Station Manager","name":"Gladstone Adderly","phone":"954-608-3023","email":"gladstone.adderly@ba.com","notes":""},{"section":"","title":"","name":"Jake","phone":"469-456-1213","email":"","notes":""},{"section":"","title":"","name":"Sarah Philip","phone":"945-304-5936","email":"","notes":""},{"section":"","title":"","name":"","phone":"420-2333-43362","email":"ops@eurojet-service.com","notes":"Tel"},{"section":"","title":"","name":"","phone":"420-2333-43102","email":"ops@eurojet-service.com","notes":"Fax"},{"section":"","title":"","name":"Adrian Gibbens","phone":"972-973-4196","email":"adrian.gibbens@ba.com","notes":"972-489-8036"},{"section":"","title":"","name":"Mark Roberts","phone":"972-973-4196","email":"mark.k.roberts@ba.com","notes":"972-998-1181"}]},{"sheet":"CopOpt","name":"Better Airport (Copenhagen Optimization)","type":"handler","primary_phone":"202-990-7251","primary_email":"support@copopt.com","contacts":[{"section":"","title":"Project Manager","name":"Mads Rasmussen","phone":"","email":"rasmussen@copopt.com","notes":""},{"section":"","title":"Developer","name":"Jens Caspersen","phone":"","email":"clausen@copopt.com","notes":""},{"section":"","title":"Developer","name":"Martin Caspersen","phone":"","email":"caspersen@copopt.com","notes":""},{"section":"","title":"","name":"Chad Leque","phone":"","email":"leque@copopt.com","notes":""},{"section":"","title":"Product Value Lead/Consultant","name":"Andreas Axelsen","phone":"","email":"axelsen@copopt.com","notes":""},{"section":"","title":"Consultant","name":"Josephine Cornaby","phone":"","email":"cornaby@copopt.com","notes":"On maternity for 2026"},{"section":"","title":"Consultant","name":"Yu Ueno","phone":"","email":"ueno@copopt.com","notes":""},{"section":"","title":"Consultant","name":"Kevin Sun","phone":"","email":"sun@copopt.com","notes":""},{"section":"","title":"","name":"Technical Support","phone":"202-990-7251","email":"support@copopt.com","notes":""},{"section":"","title":"Dir. Of Delivery & Consultancy","name":"Marti Ferrer","phone":"","email":"navine@copopt.com","notes":""}]},{"sheet":"BR","name":"EVA Air (BR)","type":"airline","primary_phone":"817-917-2892","primary_email":"hcchien@evaair.com","contacts":[{"section":"","title":"Station Manager","name":"Angus Chien","phone":"817-917-2892","email":"hcchien@evaair.com","notes":"886-3-351-8599"},{"section":"","title":"Supervisor","name":"Krisopher Liang","phone":"682-699-3120","email":"krisliang@evaair.com","notes":""},{"section":"","title":"Person from Dallas Office","name":"Victoria Yi","phone":"","email":"victoriayi@evaair.com","notes":""},{"section":"","title":"","name":"Nate Nguyen","phone":"972-973-9543","email":"natenguyen@evaair.com","notes":"ext. 39543"},{"section":"","title":"","name":"Claire Lu","phone":"972-973-9543","email":"clairelu@evaair.com","notes":""},{"section":"","title":"","name":"Emma Lawry","phone":"972-973-9543","email":"emmalawry@evaair.com","notes":""},{"section":"","title":"","name":"Jerry Mu","phone":"972-973-9543","email":"jerrymu@evaair.com","notes":""},{"section":"","title":"","name":"Hannah Lee","phone":"972-973-9543","email":"hannahlee@evaair.com","notes":""},{"section":"","title":"","name":"Tiffany Wang","phone":"972-973-9543","email":"tiffanywang@evaair.com","notes":""},{"section":"","title":"","name":"Damon Seo","phone":"972-973-9543","email":"damonseo@evaair.com","notes":""},{"section":"","title":"","name":"Vu Vo","phone":"972-973-9543","email":"vuvo@evaair.com","notes":""},{"section":"","title":"","name":"Matthew Hsu","phone":"972-973-9543","email":"matthewhsu@evaair.com","notes":""}]},{"sheet":"CX","name":"Cathay Pacific (CX)","type":"airline","primary_phone":"469-745-4383","primary_email":"ricky_ahmed@cathaypacific.com","contacts":[{"section":"","title":"Station Manager","name":"Ricky Ahmed","phone":"415-940-6390","email":"ricky_ahmed@cathaypacific.com","notes":""},{"section":"","title":"Senior Airport Lead","name":"Mahmud Ataullah","phone":"682-442-1585","email":"Mahmud_Ataullah@cathaypacific.com","notes":""},{"section":"","title":"Supervisor","name":"Ajin Mathew Thomas","phone":"","email":"ajin.thomas@hallmark-aviation.com","notes":""},{"section":"","title":"","name":"Arman Pouramiri","phone":"817-233-5869","email":"","notes":""},{"section":"","title":"Agent?","name":"Laiba Ali","phone":"469-335-2227","email":"","notes":""},{"section":"","title":"","name":"Duty Phone","phone":"469-745-4383","email":"","notes":"Available 4p-12a"},{"section":"","title":"WFS GM","name":"Walter Alonzo","phone":"321-479-1536","email":"walter.alonzo@wfs.aero","notes":""}]},{"sheet":"DL","name":"Delta (DL)","type":"airline","primary_phone":"972-615-6051","primary_email":"hal.hayes@delta.com","contacts":[{"section":"","title":"Station Manager","name":"Hal Haynes","phone":"801-330-8056","email":"hal.hayes@delta.com","notes":""},{"section":"","title":"","name":"","phone":"","email":"acsleaders@delta.com","notes":""}]},{"sheet":"DAL","name":"Dallas Love Field (DAL)","type":"airline","primary_phone":"214-670-5683","primary_email":"","contacts":[{"section":"","title":"","name":"Airport Ops","phone":"214-670-5683","email":"","notes":"Staffed 24/7"},{"section":"","title":"","name":"Lost & Found","phone":"214-670-4227","email":"AVILost&Found@dallas.gov","notes":""}]},{"sheet":"Daifuku","name":"Daifuku","type":"handler","primary_phone":"469-690-1451","primary_email":"Ted.Tarrant@elitelineservices.com","contacts":[{"section":"","title":"Regional Manager","name":"Ted Tarrant","phone":"504-301-7380","email":"Ted.Tarrant@elitelineservices.com","notes":""},{"section":"","title":"Site Manager","name":"Reggie Candler","phone":"469-873-2451","email":"rcandler@elitelineservices.com","notes":""},{"section":"","title":"Supervisor","name":"Kurt Bienmueller","phone":"469-670-8270","email":"kbienmueller@DaifukuNA.com","notes":""},{"section":"","title":"","name":"Duty Phone","phone":"469-690-1451","email":"","notes":""}]},{"sheet":"ERMC","name":"ERMC","type":"handler","primary_phone":"470-791-7028","primary_email":"euphrates.moore@unifiservice.com","contacts":[{"section":"","title":"Site Manager","name":"Euphrates Moore","phone":"469-847-0643","email":"euphrates.moore@unifiservice.com","notes":"Contact immediately with any issues with techs/equipment/staging failures."},{"section":"","title":"Supervisor","name":"Kevin Rodriguez","phone":"323-491-8173","email":"kevinr@unifiservice.com","notes":""},{"section":"","title":"","name":"Duty Phone","phone":"470-791-7028","email":"","notes":""}]},{"sheet":"EK","name":"Emirates (EK)","type":"airline","primary_phone":"281-408-6302","primary_email":"dfwops@emirates.com","contacts":[{"section":"","title":"Station Manager","name":"Sherrese Moise","phone":"646-200-1404","email":"sherrese.moise@emirates.com","notes":""},{"section":"","title":"Supervisor","name":"Omar Farghaly","phone":"914-498-8136","email":"ali.omar@emirates.com","notes":""},{"section":"","title":"Supervisor","name":"Idah Celestine Awuor","phone":"469-349-3526","email":"s503665@emirates.com","notes":"972-973-4520"},{"section":"","title":"Supervisor?","name":"Mathew Varghese","phone":"","email":"varghese.mathew2@emirates.com","notes":"972-973-4524?"},{"section":"","title":"Supervisor?","name":"Omer Elbasheer","phone":"402-440-6058","email":"omer.elbasheer@emirates.com","notes":""},{"section":"","title":"Agent?","name":"Joseph Perron III","phone":"","email":"josephperroniii@emirates.com","notes":""},{"section":"","title":"Agent?","name":"Najevi Seyed-Mortaza","phone":"","email":"najevi.seyedmortaza@wfs.aero","notes":""},{"section":"","title":"Agent?","name":"Arman Pouramiri","phone":"","email":"Arman.pouramiri@wfs.aero","notes":""},{"section":"","title":"Agent","name":"Mohamed","phone":"402-440-6058","email":"","notes":"Called 7/20 AM"},{"section":"","title":"Agent","name":"Advaith Vaiccath","phone":"972-505-5143","email":"a.vaiccath@emirates.com","notes":""},{"section":"","title":"Agent","name":"Daniela Abreu","phone":"786-303-4972","email":"daniela.abreu@emirates.com","notes":""}]},{"sheet":"F9","name":"Frontier (F9)","type":"airline","primary_phone":"682-777-1358","primary_email":"dfwf9ops@outlook.com","contacts":[{"section":"","title":"Station Manager","name":"Bryan Ray","phone":"650-814-4697","email":"bryan.ray@flyfrontier.com","notes":""},{"section":"","title":"F9 Manager","name":"Felicia Crawford","phone":"972-210-6779","email":"felicia.crawford@flyfrontier.com","notes":""},{"section":"","title":"F9 Manager","name":"Brittany Mitchell","phone":"","email":"brittany.mitchell@flyfrontier.com","notes":""},{"section":"","title":"Ramp Manager","name":"Chris Pena","phone":"","email":"christopher.pena@menziesaviation.com","notes":""},{"section":"","title":"Ramp Manager","name":"Luis Torres","phone":"","email":"luis.torres1@menziesaviation.com","notes":""},{"section":"","title":"Ramp Supervisor","name":"David Barnett","phone":"682-804-4254","email":"David.Barnett@menziesaviation.com","notes":""},{"section":"","title":"Ops Supervisor","name":"Farris Teas","phone":"682-202-8206","email":"Farris.Teas@menziesaviation.com","notes":""},{"section":"","title":"Ops Supervisor","name":"Destiney Mendez","phone":"","email":"destiney.mendez@menziesaviation.com","notes":""},{"section":"","title":"CS Supervisor","name":"Megan McDade","phone":"","email":"meagan.mcdade@menziesaviation.com","notes":""},{"section":"","title":"CS Supervisor","name":"Kim Davis","phone":"","email":"kim.davis@menziesaviation.com","notes":""},{"section":"","title":"CS Supervisor","name":"Marwa Elsherbiny","phone":"","email":"marwa.elsherbiny@menziesaviation.com","notes":""},{"section":"","title":"","name":"Ops Backup Cell","phone":"682-777-1358","email":"","notes":""},{"section":"","title":"F9 Account Manager","name":"Brian Williams","phone":"","email":"brian.williams@menziesaviation.com","notes":""}]},{"sheet":"FJ","name":"Fiji Airways (FJ)","type":"airline","primary_phone":"586-556-0250","primary_email":"malak.zeaiter@fijiairways.com","contacts":[{"section":"","title":"Manager - Ground Ops","name":"Bonnie Li","phone":"415-533-8956","email":"kunyu.li@fijiairways.com","notes":"Based in SFO"},{"section":"","title":"BM?","name":"Reham Al-Momani","phone":"682-344-5306","email":"reham.al-momani@hallmark-aviation.com","notes":"Based at DFW"},{"section":"","title":"Customer Service Duty Mgr","name":"Malak Zeaiter","phone":"586-556-0250","email":"malak.zeaiter@fijiairways.com","notes":"Based at DFW"},{"section":"","title":"Regional Head of Ground Ops","name":"Marcia Vossough","phone":"310-493-3457","email":"marcia.vossough@fijiairways.com","notes":"Based at LAX"},{"section":"","title":"Supervisor","name":"Varghese Thomas","phone":"214-554-1996","email":"varghese.thomas@hallmark-aviation.com","notes":""},{"section":"","title":"Supervisor","name":"Jonathan","phone":"214-616-9355","email":"","notes":""},{"section":"","title":"Lead Agent","name":"Mohammed","phone":"504-441-9902","email":"","notes":""},{"section":"","title":"Hallmark GM","name":"Miguel Garcia","phone":"","email":"miguel.garcia@hallmark-aviation.com","notes":""}]},{"sheet":"FX","name":"FedEx (FX)","type":"cargo","primary_phone":"","primary_email":"","contacts":[]},{"sheet":"G6","name":"Global Crossing Airlines (G6)","type":"handler","primary_phone":"786-751-8548","primary_email":"occ.dispatch@globalxair.com","contacts":[{"section":"","title":"Ground Ops Manager","name":"Eleser Villarreal","phone":"786-785-5135","email":"eleser.villarreal@globalxair.com","notes":""},{"section":"","title":"Ground Handling Coordinator","name":"Laura Portela","phone":"786-785-5135","email":"laura.portela@globalxair.com","notes":""},{"section":"","title":"","name":"Ground Handling","phone":"","email":"gh@globalxair.com","notes":""},{"section":"","title":"","name":"Customer Service","phone":"","email":"customerservice@globalxair.com","notes":""},{"section":"","title":"","name":"Security","phone":"","email":"security@globalxair.com","notes":""},{"section":"","title":"Security Coordinator","name":"Marelys Mesa","phone":"786-751-8506","email":"marelys.mesa@globalxair.com","notes":"C: 786-351-4620"},{"section":"","title":"???","name":"Dayanis Ojeda","phone":"","email":"dayanis.ojeda@globalxair.com","notes":""},{"section":"","title":"???","name":"Lissette Rivero","phone":"","email":"lissette.rivero@globalxair.com","notes":""}]},{"sheet":"GAT","name":"GAT","type":"handler","primary_phone":"541-520-1642","primary_email":"lindsay.harmon@wearegat.net","contacts":[{"section":"","title":"General Manager","name":"Lindsay Harmon","phone":"541-520-1642","email":"lindsay.harmon@wearegat.net","notes":""}]},{"sheet":"GI","name":"Gridiron Air (GI)","type":"airline","primary_phone":"","primary_email":"","contacts":[{"section":"","title":"Operations Admin","name":"Claire Tanksley","phone":"405-568-9310","email":"claire.tanksley@gridiron-air.com","notes":""}]},{"sheet":"Hallmark","name":"Hallmark Aviation","type":"handler","primary_phone":"","primary_email":"miguelgarcia@hallmark-aviation.com","contacts":[{"section":"","title":"Station Manager","name":"Miguel Garcia","phone":"","email":"miguelgarcia@hallmark-aviation.com","notes":""}]},{"sheet":"IB","name":"Iberia (IB)","type":"airline","primary_phone":"214-240-8344","primary_email":"dfwpax@iberia.es","contacts":[{"section":"","title":"Station Manager","name":"Roberto Cuevas","phone":"","email":"rcuevas@iberia.es","notes":""},{"section":"","title":"Supervisor","name":"Aaron Herrera","phone":"817-235-5426","email":"aaron.herrera@wfs.aero","notes":""},{"section":"","title":"Supervisor","name":"Bernardo Arias","phone":"972-815-6021","email":"bernardo.arias@wfs.aero","notes":""},{"section":"","title":"Supervisor","name":"Marianna Bustillo","phone":"469-992-1055","email":"marianna.bustillo@wfs.aero","notes":"Please call with gate changes"},{"section":"","title":"Lead Agent","name":"Cesar Benetiz","phone":"214-269-6992","email":"","notes":""}]},{"sheet":"JL","name":"Japan Airlines (JL)","type":"airline","primary_phone":"214-769-0918","primary_email":"ayumu.nx93@jal.com","contacts":[{"section":"","title":"Station Manager","name":"Ayumu \"Skip\" Miyoshi","phone":"915-503-9156","email":"ayumu.nx93@jal.com","notes":""},{"section":"","title":"","name":"Duty Phone","phone":"214-769-0918","email":"","notes":""},{"section":"","title":"Agent","name":"Kat Williams","phone":"315-790-2208","email":"williams.pw97@jal.com","notes":""},{"section":"","title":"Agent","name":"Op Pariyanont","phone":"817-627-8889","email":"pariyanont.g5a8@jal.com","notes":""},{"section":"","title":"","name":"JAL Cargo","phone":"469-269-0140","email":"","notes":""}]},{"sheet":"KE","name":"Korean Air (KE)","type":"airline","primary_phone":"214-668-7593","primary_email":"dfwkkkkz@koreanair.com","contacts":[{"section":"","title":"Station Manager","name":"Youngguk Kwon","phone":"469-494-3136","email":"dfwkkkkz@koreanair.com","notes":"Cell"},{"section":"","title":"Supervisor","name":"Joseph Kim","phone":"214-668-7593","email":"dfwkkkkz@koreanair.com","notes":""},{"section":"","title":"Lead Agent","name":"Ashley","phone":"214-783-9336","email":"ayim@koreanair.com","notes":"Cell"},{"section":"","title":"","name":"Ashley Im","phone":"469-939-8185","email":"","notes":"Personal"},{"section":"","title":"","name":"Hung D Le","phone":"972-200-5545","email":"","notes":""},{"section":"","title":"","name":"","phone":"972-973-7051","email":"","notes":""},{"section":"","title":"","name":"Cargo","phone":"972-574-1268","email":"","notes":""},{"section":"","title":"","name":"Abel Tse Gay","phone":"","email":"AbelTsegay@hallmark-aviation.com","notes":""},{"section":"","title":"","name":"Thuy Cao","phone":"","email":"Thuy.cao@hallmark-aviation.com","notes":""},{"section":"","title":"WFS GM","name":"Walter Alonzo","phone":"321-479-1536","email":"walter.alonzo@wfs.aero","notes":""}]},{"sheet":"KG","name":"Denver Air Connection (KG)","type":"airline","primary_phone":"469-514-1034","primary_email":"sounnabi@keylimeair.com","contacts":[{"section":"","title":"Regional Manager","name":"Jim van Schaick","phone":"","email":"jvanschaick@keylimeair.com","notes":""},{"section":"","title":"Station Manager","name":"Saloua Ounnabi","phone":"469-514-1034","email":"sounnabi@keylimeair.com","notes":""},{"section":"","title":"Agent","name":"Reham Al-Momani","phone":"682-344-5306","email":"ralmomani@keylimeair.com","notes":""},{"section":"","title":"Agent","name":"Rowaida","phone":"817-313-0106","email":"","notes":""},{"section":"","title":"Agent","name":"Alexander","phone":"813-770-0694","email":"","notes":""},{"section":"","title":"Agent","name":"Salwa","phone":"267-528-2260","email":"","notes":""},{"section":"","title":"","name":"Dispatch","phone":"866-373-8513","email":"","notes":""}]},{"sheet":"LF","name":"Contour Aviation (LF)","type":"airline","primary_phone":"615-626-8258","primary_email":"dfw@flycontour.com","contacts":[{"section":"","title":"Regional Manager","name":"Angela Little","phone":"707-951-9904","email":"angela.little@flycontour.com","notes":""},{"section":"","title":"Station Manager","name":"Shellie Housewright","phone":"319-560-6921","email":"shellie.housewright@flycontour.com","notes":""},{"section":"","title":"Supervisor","name":"Reggie Richardson","phone":"817-262-8639","email":"reginald.richardson@flycontour.com","notes":""},{"section":"","title":"Agent","name":"Mason Notch","phone":"817-403-5441","email":"","notes":""},{"section":"","title":"Agent","name":"Jaren Spikes","phone":"405-414-0919","email":"","notes":""}]},{"sheet":"LH","name":"Lufthansa (LH)","type":"airline","primary_phone":"214-281-8061","primary_email":"dfwsm@dlh.de","contacts":[{"section":"","title":"Station Manager","name":"Marco (Malk) Malkhomes","phone":"832-479-4993","email":"marco.malkhomes@dlh.de","notes":""},{"section":"","title":"Supervisor","name":"Larry Logan","phone":"832-519-6867","email":"larry.logan@dlh.de","notes":""},{"section":"","title":"Supervisor","name":"Jotessa (Tessa) David","phone":"214-714-0772","email":"jotessa.david@dlh.de","notes":""},{"section":"","title":"Ramp Supervisor","name":"Eri Nashimoto-May","phone":"469-901-1604","email":"eri.nashimoto-may@dlh.de","notes":""},{"section":"","title":"","name":"Tin Nguyen","phone":"","email":"tin.nguyen@dlh.de","notes":""},{"section":"","title":"","name":"Duty Phone","phone":"214-281-8061","email":"dfwsm@dlh.de","notes":""}]},{"sheet":"Menzies","name":"Menzies Aviation","type":"handler","primary_phone":"617-840-1789","primary_email":"brandon.airey@menziesaviation.com","contacts":[]},{"sheet":"MX","name":"Breeze (MX)","type":"airline","primary_phone":"972-821-6716","primary_email":"hamza.ramadan@wearegat.com","contacts":[{"section":"","title":"GAT Manager","name":"Lindsey Harmon","phone":"541-520-1642","email":"lindsay.harmon@wearegat.net","notes":""},{"section":"","title":"OPS Manager","name":"Hamza Ramadan","phone":"972-821-6716","email":"hamza.ramadan@wearegat.net","notes":""}]},{"sheet":"NK","name":"Spirit (NK)","type":"airline","primary_phone":"972-973-8700/02","primary_email":"dfwoperations@spirit.com","contacts":[{"section":"","title":"Station Manager","name":"Patrick Sullivan","phone":"214-790-1159","email":"patrick.sullivan2@spirit.com","notes":""},{"section":"","title":"CS Manager","name":"Omar Lugo","phone":"214-235-8066","email":"omar.lugo@spirit.com","notes":"O: 972-973-8740"},{"section":"","title":"","name":"Ops Managers","phone":"","email":"dfwopsmanagers@spirit.com","notes":""},{"section":"","title":"","name":"Supervisors","phone":"","email":"dfwsupervisor@spirit.com","notes":""},{"section":"","title":"Supervisor","name":"Precious Shipp","phone":"972-973-8745","email":"precious.shipp@spirit.com","notes":""},{"section":"","title":"","name":"Baggage Service","phone":"313-477-0517","email":"","notes":""},{"section":"","title":"","name":"","phone":"972-973-8602","email":"dfwoperations@spirit.com","notes":""},{"section":"","title":"","name":"Allyn Coleman","phone":"","email":"allyn.coleman@spirit.com","notes":""}]},{"sheet":"NZ","name":"Air New Zealand (NZ)","type":"airline","primary_phone":"346-366-4642","primary_email":"","contacts":[{"section":"","title":"Station Manager","name":"Tom Trapp","phone":"346-366-4642","email":"","notes":""}]},{"sheet":"OY","name":"Omni Air International (OY)","type":"airline","primary_phone":"918-836-5393","primary_email":"","contacts":[{"section":"","title":"","name":"Headquarters","phone":"918-836-5393","email":"","notes":""}]},{"sheet":"QF","name":"Qantas (QF)","type":"airline","primary_phone":"773-844-1385","primary_email":"paulknuth@qantas.com.au","contacts":[{"section":"","title":"Station Manager","name":"Paul Knuth","phone":"773-844-1385","email":"paulknuth@qantas.com.au","notes":"972-973-4201"},{"section":"","title":"Supervisor","name":"Lani Kozak","phone":"682-209-8961","email":"lani.kozak@qantas.com.au","notes":"972-973-4204"},{"section":"","title":"Supervisor","name":"Diana Herrera","phone":"972-821-2542","email":"diana.herrera@qantas.com.au","notes":""},{"section":"","title":"Supervisor","name":"Ayla McDonald","phone":"503-437-3048","email":"ayla.mcdonald@qantas.com.au","notes":""},{"section":"","title":"Lead Agent?","name":"Hamza Abdilahi","phone":"682-331-2362","email":"hamza.abdilahi@qantas.com.au","notes":""}]},{"sheet":"QR","name":"Qatar Airways (QR)","type":"airline","primary_phone":"469-321-5260","primary_email":"dfwkkqr@us.qatarairways.com","contacts":[{"section":"","title":"Station Manager","name":"Michael (Mike) Spina","phone":"214-727-6126","email":"dfwkzqr@us.qatarairways.com","notes":""},{"section":"","title":"Supervisor","name":"Beatrice Davis","phone":"","email":"bdavis@us.qatarairways.com","notes":""},{"section":"","title":"Supervisor","name":"Kazi Hoque","phone":"571-398-9532","email":"kahoque@us.qatarairways.com","notes":""},{"section":"","title":"Lead Agent","name":"Felix","phone":"972-876-9951","email":"","notes":""},{"section":"","title":"","name":"Zelica Huntoon","phone":"469-321-5260","email":"","notes":""},{"section":"","title":"Senior Airport Agent","name":"Jobin Mathew","phone":"214-661-0053","email":"jobimathew@us.qatarairways.com","notes":""},{"section":"","title":"","name":"","phone":"214-897-1535","email":"ttomkins@abbyscatering.com","notes":""}]},{"sheet":"SY","name":"Sun Country (SY)","type":"airline","primary_phone":"786-494-7865","primary_email":"dfwops@suncountry.com","contacts":[{"section":"","title":"Station Manager","name":"Randy Mulvey","phone":"773-329-0456","email":"randall.muley@suncountry.com","notes":""},{"section":"","title":"Supervisor","name":"Amber Palacios","phone":"817-793-8527","email":"Amber.Palacios@menziesaviation.com","notes":""},{"section":"","title":"Supervisor","name":"Gail Hill","phone":"972-815-8563","email":"Gail.Hill@menziesaviation.com","notes":""},{"section":"","title":"Supervisor","name":"Wanda Bell","phone":"817-891-7115","email":"Wanda.Bell@menziesaviation.com","notes":""},{"section":"","title":"Supervisor","name":"Tdaisia Watkins","phone":"682-480-6800","email":"Tdaisia.Watkins@menziesaviation.com","notes":"New"},{"section":"","title":"Supervisor","name":"Latash Calhoune","phone":"672-376-6655","email":"Latasha.Calhoune@menziesaviation.com","notes":"New"},{"section":"","title":"SY Account Manager","name":"Bella Reyes","phone":"945-352-6660","email":"belquita.reyes@menziesaviation.com","notes":""},{"section":"","title":"","name":"Adel McGally","phone":"214-533-3771","email":"adel.mcgally@menziesaviation.com","notes":""}]},{"sheet":"Swissport","name":"Swissport","type":"handler","primary_phone":"972-973-4584","primary_email":"dfw.occ@swissport.com","contacts":[{"section":"","title":"General Manager Ground Handling","name":"Sakeena Hubbard","phone":"214-263-4540","email":"sakeena.hubbard@swissport.com","notes":""},{"section":"","title":"Interim GM","name":"John \"JW\" Jones","phone":"737-420-1764","email":"john.jones@swissport.com","notes":""},{"section":"","title":"Interim Support","name":"Chad Swingle","phone":"773-406-0392","email":"chad.swingle@swissport.com","notes":""},{"section":"","title":"AM Duty Manager","name":"Dale Salisbury","phone":"602-549-9362","email":"dale.salisbury@swissport.com","notes":""},{"section":"","title":"PM Duty Manager","name":"Dave Fletcher","phone":"602-784-1566","email":"dave.fletcher@swissport.com","notes":""},{"section":"","title":"PM Duty Manager","name":"Marlon Hart","phone":"972-904-5012","email":"marlon.hart@swissport.com","notes":"Emails bounced back 4/26"},{"section":"","title":"PM Duty Manager","name":"Jessica Chase","phone":"919-510-3547","email":"jessica.chase@swissport.com","notes":""},{"section":"","title":"Ops Agent","name":"Zach Thomas","phone":"","email":"zachary.thomas@swissport.com","notes":""},{"section":"","title":"Ops Agent","name":"Venessa Sioka","phone":"","email":"venessa.sioka@swissport.com","notes":""}]},{"sheet":"TK","name":"Turkish Airlines (TK)","type":"airline","primary_phone":"832-938-9248","primary_email":"mabdulrahman@thy.com","contacts":[{"section":"","title":"Station Manager","name":"Mohammed Abdulrahman","phone":"832-938-9248","email":"mabdulrahman@thy.com","notes":""},{"section":"","title":"Assistant SM","name":"Judy Alkhawam","phone":"817-296-1418","email":"jalkhawam@thy.com","notes":""},{"section":"","title":"Supervisor","name":"Narelys Toledo-Guevara","phone":"","email":"ntoledo@thy.com","notes":""},{"section":"","title":"Supervisor","name":"Sam El-Odat","phone":"346-308-4512","email":"sodat@thy.com","notes":""},{"section":"","title":"Lead Agent?","name":"Asim Aslam","phone":"","email":"aaslam@thy.com","notes":""},{"section":"","title":"Agent?","name":"Amir","phone":"214-277-3827","email":"","notes":""},{"section":"","title":"Agent?","name":"Onay Castro","phone":"","email":"onay.castro@hallmark-aviation.com","notes":""},{"section":"","title":"Agent?","name":"Omar Ramadan","phone":"","email":"omar.ramadan@hallmark-aviation.com","notes":""},{"section":"","title":"Agent?","name":"Maya Alhalawani","phone":"","email":"maya.alhalawani@hallmark-aviation.com","notes":""},{"section":"","title":"Agent?","name":"Fabio Benitez","phone":"469-986-5694","email":"fabio.benitez@hallmark-aviation.com","notes":""},{"section":"","title":"Agent?","name":"Paolo Enero","phone":"","email":"paolo.enero@hallmark-aviation.com","notes":""},{"section":"","title":"","name":"System Operatons","phone":"+90 507 371 11 03","email":"socc@thy.com","notes":""},{"section":"","title":"Maintenance","name":"BA Engineering","phone":"972-973-4196","email":"Mark.K.Roberts@ba.com","notes":"972-998-1181"}]},{"sheet":"UA","name":"United (UA)","type":"airline","primary_phone":"972-456-6342","primary_email":"jennifer.brewer@united.com","contacts":[{"section":"","title":"Station Manager","name":"Jennifer Brewer","phone":"972-456-6350","email":"jennifer.brewer@united.com","notes":""},{"section":"","title":"","name":"All Management","phone":"","email":"DFWMGMT@united.com","notes":""},{"section":"","title":"","name":"","phone":"","email":"DFWMM@united.com","notes":""},{"section":"","title":"Supervisor","name":"Sean Mathieson","phone":"972-456-6347","email":"sean.mathieson@united.com","notes":"469-318-1298 - C"},{"section":"","title":"Charter Coordinator","name":"Vincent Lloyd","phone":"972-456-6382","email":"vincent.lloyd@united.com","notes":""},{"section":"","title":"","name":"United Club","phone":"972-574-2035?","email":"","notes":""},{"section":"","title":"","name":"Operations","phone":"972-456-6342","email":"","notes":""},{"section":"","title":"","name":"Ticket Counters","phone":"972-574-2667/8/9","email":"","notes":""},{"section":"","title":"","name":"DFW Lost & Found","phone":"972-574-7707?","email":"","notes":""}]},{"sheet":"5X","name":"UPS (5X)","type":"cargo","primary_phone":"","primary_email":"","contacts":[{"section":"","title":"","name":"Operations","phone":"972-574-2911","email":"","notes":""},{"section":"","title":"","name":"","phone":"972-574-2917","email":"","notes":""},{"section":"","title":"","name":"","phone":"214-483-6265","email":"","notes":"24/7"},{"section":"","title":"","name":"Maintenance","phone":"972-574-1546","email":"","notes":""},{"section":"","title":"","name":"","phone":"972-574-1547","email":"","notes":""}]},{"sheet":"Unifi","name":"Unifi","type":"handler","primary_phone":"","primary_email":"","contacts":[]},{"sheet":"VB","name":"VivaAerobus (VB)","type":"airline","primary_phone":"","primary_email":"karla.tamez@vivaaerobus.com","contacts":[{"section":"","title":"Station Manager","name":"Karla Tamez","phone":"52-81-1490-3919","email":"karla.tamez@vivaaerobus.com","notes":""},{"section":"","title":"Supervisor","name":"Aaron Herrera","phone":"817-235-5426","email":"aaron.herrera@wfs.aero","notes":""},{"section":"","title":"Supervisor","name":"Bernardo Arias","phone":"972-815-6021","email":"bernardo.arias@wfs.aero","notes":""},{"section":"","title":"Ops Agent","name":"Pedro Castillo","phone":"469-258-6054","email":"pcastillo@wfs.aero","notes":""},{"section":"","title":"Ops Agent","name":"Jennire","phone":"469-894-1384","email":"jennire.gutierrez@wfs.aero","notes":""},{"section":"","title":"Ops Agent","name":"Axel Alvarez","phone":"","email":"axel.alvarez@wfs.aero","notes":""},{"section":"","title":"Ops Agent","name":"Claudia Castillo","phone":"817-896-8036","email":"claudia.castillo@wfs.aero","notes":""}]},{"sheet":"WS","name":"Westjet (WS)","type":"airline","primary_phone":"877-952-0600","primary_email":"opscoord@westjet.com","contacts":[{"section":"","title":"","name":"Operations","phone":"877-952-0600","email":"opscoord@westjet.com","notes":""},{"section":"","title":"","name":"Dispatch","phone":"403-539-7805","email":"","notes":""}]},{"sheet":"WFS","name":"Worldwide Flight Services (WFS)","type":"handler","primary_phone":"469-902-3245","primary_email":"dfwocc@wfs.aero","contacts":[{"section":"","title":"Regional VP","name":"Chris Haynes","phone":"303-888-9730","email":"chaynes@wfs.aero","notes":"O: 303-342-8494"},{"section":"","title":"Area Manager?","name":"Chad Siu","phone":"206-391-4991","email":"csiu@wfs.aero","notes":""},{"section":"","title":"General Manager","name":"Walter Alonzo","phone":"321-479-1536","email":"walter.alonzo@wfs.aero","notes":""},{"section":"","title":"Sr. Ops Manager","name":"Angel Olivieri","phone":"469-798-5492","email":"angel.olivieri@wfs.aero","notes":""},{"section":"","title":"Pax Service Manager","name":"Arman Pouramiri","phone":"817-233-5869","email":"arman.pouramiri@wfs.aero","notes":""},{"section":"","title":"Cargo Manager?","name":"Ben Dawson","phone":"469-418-7803","email":"bdawson@wfs.aero","notes":""},{"section":"","title":"Ops Manager","name":"Brianna Andrade","phone":"310-693-1674","email":"brianna.andrade@wfs.aero","notes":""},{"section":"","title":"Safety Manager","name":"Basit Nadem","phone":"469-628-9147","email":"basit.nadem@wfs.aero","notes":""},{"section":"","title":"Safety Advisor","name":"Carson Bullington","phone":"970-964-7029","email":"carson.bullington@wfs.aero","notes":""},{"section":"","title":"Admin","name":"Lee Ware","phone":"469-658-4759","email":"lee.ware@wfs.aero","notes":""}]},{"sheet":"WN","name":"Southwest (WN) - DAL/NOC","type":"airline","primary_phone":"214-904-5572","primary_email":"","contacts":[{"section":"","title":"","name":"Network Operations","phone":"214-904-5572","email":"","notes":""}]},{"sheet":"XP","name":"Avelo (XP)","type":"airline","primary_phone":"469-618-3725","primary_email":"wyatt.murray@unifiservice.com","contacts":[{"section":"","title":"Station Manager","name":"Dustin Power","phone":"515-805-5362","email":"dustin.power@unifiservice.com","notes":"Off Sunday"},{"section":"","title":"Supervisor","name":"Wyatt Murray","phone":"469-618-3725","email":"wyatt.murray@unifiservice.com","notes":"Call 1st"}]},{"sheet":"Y4","name":"Volaris (Y4)","type":"airline","primary_phone":"945-218-5958","primary_email":"aor.dfw@volaris.com","contacts":[{"section":"","title":"Regional Manager","name":"Jeremias Leiva Espinoza","phone":"415-572-5306","email":"Jefeato.dfw@volaris.com","notes":""},{"section":"","title":"Lead Agent","name":"Paola","phone":"706-870-5424","email":"","notes":""},{"section":"","title":"Lead Agent","name":"Mary","phone":"972-520-0034","email":"lead.dfw@volaris.com","notes":""},{"section":"","title":"Lead Agent","name":"Natalie","phone":"909-647-5768","email":"lead.dfw@volaris.com","notes":""},{"section":"","title":"Lead Agent","name":"Marcella","phone":"832-673-1141","email":"lead.dfw@volaris.com","notes":""},{"section":"","title":"Lead Agent","name":"Veronica Acuna","phone":"786-537-5057","email":"lead.dfw@volaris.com","notes":""},{"section":"","title":"Menzies Aviation","name":"Adel Megally","phone":"682-208-5356","email":"adel.megally@menziesaviation.com","notes":""},{"section":"","title":"","name":"Peter Mannarino","phone":"954-892-1577","email":"peter.mannarino@menziesaviation.com","notes":"Operations Mgr"}]}];
+
+// ── GITHUB STORAGE CONFIG ─────────────────────────────────────────────────────
+const GH_USER    = 'bsapit';
+const GH_REPO    = 'dfw-phonebook';
+const GH_FILE    = 'phonebook.json';
+const GH_TOKEN   = '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';
+const GH_API     = 'https://api.github.com/repos/' + GH_USER + '/' + GH_REPO + '/contents/' + GH_FILE;
+const GH_HEADERS = {
+  'Authorization': 'token ' + GH_TOKEN,
+  'Accept': 'application/vnd.github.v3+json',
+  'Content-Type': 'application/json'
+};
+let ghFileSha = null; // tracks current file SHA for updates
+const CACHE_KEY   = 'dfwPhonebook_v2';
+const CACHE_TS    = 'dfwPhonebook_v2_ts';
+const CACHE_TTL   = 60 * 60 * 1000; // 1 hour
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let data = JSON.parse(JSON.stringify(RAW_DATA));
+let currentFilter = 'all';
+let currentOrgIdx = -1;
+let editingContactIdx = -1;
+let editingOrgMode = false;
+let pendingDeleteType = '';
+let pendingDeleteIdx = -1;
+let saveTimer = null;
+
+// ── SANITIZE ──────────────────────────────────────────────────────────────────
+function sanitize(arr) {
+  if (!Array.isArray(arr)) return RAW_DATA;
+  return arr.map(o => ({
+    ...o,
+    name: o.name || '',
+    contacts: Array.isArray(o.contacts) ? o.contacts : []
+  }));
+}
+
+// ── CACHE ─────────────────────────────────────────────────────────────────────
+function saveToCache(d) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(d));
+    localStorage.setItem(CACHE_TS, Date.now().toString());
+  } catch(e) {}
+}
+
+function loadFromCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function cacheIsStale() {
+  try {
+    const ts = parseInt(localStorage.getItem(CACHE_TS) || '0', 10);
+    return (Date.now() - ts) > CACHE_TTL;
+  } catch(e) { return true; }
+}
+
+// ── SPINNER ───────────────────────────────────────────────────────────────────
+function showSpinner() {
+  const ws = document.getElementById('welcomeState');
+  if (ws) ws.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--text3)"><div style="font-size:28px;animation:spin 1s linear infinite">⏳</div><div style="font-size:14px">Loading from cloud…</div></div>';
+}
+
+// ── APPLY DATA ────────────────────────────────────────────────────────────────
+function applyData(d) {
+  data = sanitize(d);
+  renderOrgList();
+  updateStats();
+  if (currentOrgIdx >= 0 && currentOrgIdx < data.length) renderDetail();
+  else { currentOrgIdx = -1; renderDetail(); }
+}
+
+// ── LOAD FROM CLOUD ───────────────────────────────────────────────────────────
+async function loadFromCloud() {
+  try {
+    const res = await fetch(GH_API, { headers: GH_HEADERS });
+    if (res.status === 404) {
+      // File doesn't exist yet — create it directly (no SHA needed for new files)
+      console.log('No phonebook.json found in GitHub, creating from RAW_DATA…');
+      const createRes = await fetch(GH_API, {
+        method: 'PUT',
+        headers: GH_HEADERS,
+        body: JSON.stringify({
+          message: 'Initialize phonebook',
+          content: btoa(unescape(encodeURIComponent(JSON.stringify(data))))
+        })
+      });
+      if (!createRes.ok) {
+        const errText = await createRes.text().catch(() => '');
+        console.warn('GitHub seed failed:', errText);
+        return;
+      }
+      const createJson = await createRes.json();
+      ghFileSha = createJson.content.sha;
+      saveToCache(data);
+      return;
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    ghFileSha = json.sha;
+    const fetched = JSON.parse(atob(json.content.replace(/\n/g, '')));
+    if (Array.isArray(fetched) && fetched.length > 0) {
+      saveToCache(fetched);
+      applyData(fetched);
+    }
+  } catch(e) {
+    console.warn('GitHub fetch failed, using cache/RAW_DATA:', e);
+  }
+}
+
+// ── SAVE TO CLOUD ─────────────────────────────────────────────────────────────
+async function saveToCloud() {
+  updateSaveToast('saving');
+  try {
+    // If we don't have the SHA yet (e.g. loaded from cache), fetch it first
+    if (!ghFileSha) {
+      const check = await fetch(GH_API, { headers: GH_HEADERS });
+      if (check.ok) {
+        const checkJson = await check.json();
+        ghFileSha = checkJson.sha;
+      }
+      // If 404, the file doesn't exist yet — SHA stays null and GitHub will create it
+    }
+    const body = {
+      message: 'Update phonebook',
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(data)))),
+    };
+    if (ghFileSha) body.sha = ghFileSha;
+    const res = await fetch(GH_API, {
+      method: 'PUT',
+      headers: GH_HEADERS,
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error('HTTP ' + res.status + (errText ? ': ' + errText : ''));
+    }
+    const json = await res.json();
+    ghFileSha = json.content.sha; // update SHA for next save
+    saveToCache(data);
+    updateSaveToast('saved');
+  } catch(e) {
+    console.error('GitHub save failed:', e);
+    updateSaveToast('error', e.message);
+  }
+}
+
+// ── DEBOUNCED SAVE ────────────────────────────────────────────────────────────
+function save() {
+  if (saveTimer) clearTimeout(saveTimer);
+  updateSaveToast('pending');
+  saveTimer = setTimeout(() => { saveToCloud(); }, 5000);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function updateSaveToast(state) {
+  const t = document.getElementById('saveToast');
+  if (state === 'pending') {
+    t.textContent = '⏳ Saving in 5s…';
+    t.style.display = 'block';
+    t.style.background = '#A07000';
+  } else if (state === 'saving') {
+    t.textContent = '⏳ Saving…';
+    t.style.display = 'block';
+    t.style.background = '#A07000';
+  } else if (state === 'saved') {
+    t.textContent = '✓ Saved';
+    t.style.background = '#1A7A3C';
+    setTimeout(() => t.style.display = 'none', 2000);
+  } else if (state === 'error') {
+    t.textContent = '⚠ Save failed' + (arguments[1] ? ' — ' + arguments[1] : '');
+    t.style.background = '#C62828';
+    t.title = arguments[1] || '';
+    setTimeout(() => t.style.display = 'none', 6000);
+  }
+}
+
+function showToast() { /* legacy no-op — save() now handles toasts */ }
+
+// ── INIT: LOAD DATA ───────────────────────────────────────────────────────────
+(function () {
+  const cached = loadFromCache();
+  if (cached && cached.length > 0) {
+    applyData(cached);   // instant render from cache while fresh data loads
+  } else {
+    showSpinner();
+  }
+  loadFromCloud();       // always fetch latest from GitHub on every page load
+  // Poll GitHub every 30s so open tabs stay in sync with changes from other machines
+  setInterval(() => { if (!saveTimer) loadFromCloud(); }, 300000);
+})();
+
+function updateStats() {
+  document.getElementById('stat-orgs').textContent = data.length;
+  document.getElementById('stat-contacts').textContent = data.reduce((s,o) => s+o.contacts.length, 0);
+}
+
+// ── THEME ─────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('themeToggle').textContent = dark ? '🌙' : '☀️';
+  try { localStorage.setItem('dfwTheme', dark ? 'light' : 'dark'); } catch(e) {}
+}
+
+// Load saved theme
+try {
+  const t = localStorage.getItem('dfwTheme');
+  if (t) {
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('themeToggle').textContent = t === 'dark' ? '☀️' : '🌙';
+  }
+} catch(e) {}
+
+// ── ORG LIST ──────────────────────────────────────────────────────────────────
+function getCodeLabel(name, sheet) {
+  const s = sheet || '';
+  const m = s.match(/^([A-Z0-9]{1,4})/);
+  if (m) return m[1];
+  const n = name.match(/\(([A-Z0-9]{1,4})\)/);
+  if (n) return n[1];
+  return name.substring(0,3).toUpperCase();
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrgList();
+}
+
+function clearSearch() {
+  document.getElementById('orgSearch').value = '';
+  handleSearch();
+  document.getElementById('orgSearch').focus();
+}
+
+function handleSearch() {
+  const q = document.getElementById('orgSearch').value.trim();
+  const clearBtn = document.getElementById('searchClear');
+  const orgList = document.getElementById('orgList');
+  const srPanel = document.getElementById('searchResultsPanel');
+  const filterTabs = document.getElementById('filterTabs');
+  const countEl = document.getElementById('orgCount');
+
+  if (!q) {
+    clearBtn.classList.remove('visible');
+    orgList.style.display = 'block';
+    srPanel.style.display = 'none';
+    filterTabs.style.display = 'flex';
+    renderOrgList();
+    return;
+  }
+
+  clearBtn.classList.add('visible');
+  orgList.style.display = 'none';
+  srPanel.style.display = 'flex';
+  filterTabs.style.display = 'none';
+  countEl.textContent = '';
+  renderUnifiedSearch(q);
+}
+
+function hl(text, q) {
+  if (!text || !q) return text || '';
+  const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp('(' + esc + ')', 'gi'), '<mark>$1</mark>');
+}
+
+function renderUnifiedSearch(q) {
+  const ql = q.toLowerCase();
+  const scroll = document.getElementById('searchResultsScroll');
+
+  const orgMatches = data.filter(o => o.name.toLowerCase().includes(ql));
+  const personMatches = [];
+  data.forEach(org => {
+    org.contacts.forEach((c, ci) => {
+      const hay = [c.name, c.title, c.email, c.phone, c.notes].join(' ').toLowerCase();
+      if (hay.includes(ql)) personMatches.push({...c, _orgName: org.name, _orgIdx: data.indexOf(org), _ci: ci});
+    });
+  });
+
+  let html = '';
+
+  if (!orgMatches.length && !personMatches.length) {
+    scroll.innerHTML = '<div class="sr-no-results">No results for &ldquo;' + q + '&rdquo;</div>';
+    return;
+  }
+
+  const total = orgMatches.length + personMatches.length;
+  html += '<div class="sr-section-label">' + total + ' result' + (total!==1?'s':'') + ' for &ldquo;' + q + '&rdquo;</div>';
+
+  if (orgMatches.length) {
+    html += '<div class="sr-section-label">Organizations (' + orgMatches.length + ')</div>';
+    orgMatches.forEach(o => {
+      const idx = data.indexOf(o);
+      html += '<div class="sr-org-item" onclick="selectFromSearch('+idx+')">';
+      html += makeBadgeHTML(o.name, o.sheet, o.type);
+      html += '<div class="org-info"><div class="org-name">'+hl(o.name,q)+'</div>';
+      html += '<div class="org-meta">'+( o.primary_phone ? '📞 '+o.primary_phone : 'No primary phone')+' · '+o.contacts.length+' contacts</div></div></div>';
+    });
+  }
+
+  if (personMatches.length) {
+    html += '<div class="sr-section-label">People (' + personMatches.length + ')</div>';
+    personMatches.forEach(c => {
+      const dn = c.name || c.title || '—';
+      const dt = c.name && c.title ? c.title : '';
+      const ph = c.phone ? c.phone.replace(/[^\d+]/g,'') : '';
+      html += '<div class="sr-person-item" onclick="selectFromSearch('+c._orgIdx+')">';
+      html += '<div class="sr-person-top"><span class="sr-person-name">'+hl(dn,q)+'</span>';
+      if (dt) html += '<span class="sr-person-title">'+hl(dt,q)+'</span>';
+      html += '</div><div class="sr-person-org">'+c._orgName+'</div><div class="sr-person-links">';
+      if (c.phone) html += '<a class="sr-link sr-link-phone" href="tel:'+ph+'" onclick="event.stopPropagation()">📞 '+hl(c.phone,q)+'</a>';
+      if (c.email) html += '<a class="sr-link sr-link-email" href="mailto:'+c.email+'" onclick="event.stopPropagation()">✉ '+hl(c.email,q)+'</a>';
+      if (c.notes) html += '<span style="font-size:11px;color:var(--text3);font-style:italic;">'+hl(c.notes,q)+'</span>';
+      html += '</div></div>';
+    });
+  }
+
+  scroll.innerHTML = html;
+}
+
+function renderOrgList() {
+  const q = document.getElementById('orgSearch').value.toLowerCase();
+  const list = document.getElementById('orgList');
+  const filtered = data.filter(o => {
+    const typeMatch = currentFilter === 'all' || o.type === currentFilter;
+    const nameMatch = !q || o.name.toLowerCase().includes(q);
+    return typeMatch && nameMatch;
+  }).sort((a, b) => a.name.localeCompare(b.name));
+
+  document.getElementById('orgCount').textContent = filtered.length + ' of ' + data.length;
+
+  list.innerHTML = filtered.map(o => {
+    const idx = data.indexOf(o);
+    const active = idx === currentOrgIdx ? ' active' : '';
+    return '<div class="org-item'+active+'" onclick="selectOrg('+idx+')">' +
+      makeBadgeHTML(o.name, o.sheet, o.type) +
+      '<div class="org-info"><div class="org-name">'+o.name+'</div>' +
+      '<div class="org-meta">'+( o.primary_phone || 'No primary phone')+'</div></div>' +
+      '<div class="org-cnt">'+o.contacts.length+'</div></div>';
+  }).join('');
+}
+
+// ── SELECT ORG ────────────────────────────────────────────────────────────────
+function selectFromSearch(idx) {
+  // Set the org and render detail FIRST, then clear the search
+  currentOrgIdx = idx;
+  renderDetail();
+  // Now clear search — this re-renders org list with correct active state
+  document.getElementById('orgSearch').value = '';
+  document.getElementById('searchClear').classList.remove('visible');
+  document.getElementById('orgList').style.display = 'block';
+  document.getElementById('searchResultsPanel').style.display = 'none';
+  document.getElementById('filterTabs').style.display = 'flex';
+  renderOrgList();
+}
+
+function selectOrg(idx) {
+  currentOrgIdx = idx;
+  renderOrgList();
+  renderDetail();
+}
+
+function renderDetail() {
+  const ws = document.getElementById('welcomeState');
+  const od = document.getElementById('orgDetail');
+
+  if (currentOrgIdx < 0) {
+    ws.style.display = 'flex'; od.style.display = 'none'; return;
+  }
+
+  ws.style.display = 'none'; od.style.display = 'flex';
+
+  const org = data[currentOrgIdx];
+  document.getElementById('detailOrgName').textContent = org.name;
+
+  const badge = document.getElementById('detailTypeBadge');
+  badge.textContent = {airline:'✈ Airline', handler:'🔧 Ground Handler', cargo:'📦 Cargo', airport:'🏢 Airport'}[org.type] || org.type;
+  badge.className = 'detail-type-badge type-' + org.type;
+
+  // Airline color strip
+  const strip = document.getElementById('airlineColorStrip');
+  const ac = getAirlineColor(org.name, org.sheet);
+  strip.style.background = ac || 'transparent';
+  strip.style.height = ac ? '4px' : '0';
+
+  // Primary contacts
+  const pc = document.getElementById('primaryContacts');
+  let pcHTML = '';
+  if (org.primary_phone) {
+    const ph = org.primary_phone.replace(/[^\d+]/g,'');
+    pcHTML += '<a href="tel:'+ph+'" class="primary-btn primary-btn-phone">📞 '+org.primary_phone+'</a>';
+  }
+  if (org.primary_email) {
+    pcHTML += '<a href="mailto:'+org.primary_email+'" class="primary-btn primary-btn-email">✉ '+org.primary_email+'</a>';
+  }
+  if (!pcHTML) pcHTML = '<span style="color:var(--text3);font-size:12px;">No primary contact set</span>';
+  pc.innerHTML = pcHTML;
+
+  // Contacts
+  const body = document.getElementById('detailBody');
+  if (!org.contacts.length) {
+    body.innerHTML = '<div class="no-results">No contacts added yet.</div>';
+  } else {
+    const sections = {};
+    org.contacts.forEach((c, i) => {
+      const sec = c.section || '';
+      if (!sections[sec]) sections[sec] = [];
+      sections[sec].push({...c, _idx: i});
+    });
+
+    const SECTION_ORDER = ['Managers','Supervisors','Operations','Agents','Above Wing','Below Wing'];
+    const sortedSectionKeys = Object.keys(sections).sort((a, b) => {
+      const ai = SECTION_ORDER.indexOf(a);
+      const bi = SECTION_ORDER.indexOf(b);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      if (!a) return -1; // unsectioned contacts float to top only if both are unrecognized
+      if (!b) return 1;
+      return a.localeCompare(b);
+    });
+
+    let html = '<div class="contact-table-header"><span>Name / Title</span><span>Phone</span><span>Email</span><span>Notes</span><span style="text-align:center;">📧 Distro</span><span></span></div>';
+    sortedSectionKeys.forEach(sec => {
+      const contacts = sections[sec];
+      if (sec) html += '<div class="section-label">' + sec + '</div>';
+      contacts.forEach(c => {
+        const dn = c.name || c.title || '—';
+        const dt = c.name ? c.title : '';
+        const ph = c.phone ? c.phone.replace(/[^\d+]/g,'') : '';
+        html += '<div class="contact-row">';
+        html += '<div><div class="contact-name">'+dn+'</div>' + (dt ? '<div class="contact-title">'+dt+'</div>' : '')+'</div>';
+        html += '<div class="contact-phone">' + (c.phone ? '<a href="tel:'+ph+'">📞 '+c.phone+'</a>' : '<span class="no-val">—</span>') + '</div>';
+        html += '<div class="contact-email">' + (c.email ? '<a href="mailto:'+c.email+'">✉ '+c.email+'</a>' : '<span class="no-val">—</span>') + '</div>';
+        html += '<div class="contact-notes-cell">' + (c.notes ? c.notes : '<span style="color:var(--border)">—</span>') + '</div>';
+        const hasEmail = !!c.email;
+        const distroChecked = c.distro && hasEmail ? 'checked' : '';
+        const distroDisabled = !hasEmail ? 'disabled' : '';
+        const distroTitle = hasEmail ? 'Add to distro list' : 'No email address — cannot add to distro';
+        html += '<div class="distro-inline-toggle' + (!hasEmail ? ' no-email' : '') + '" data-tooltip="' + distroTitle + '"><input type="checkbox" ' + distroChecked + ' ' + distroDisabled + ' onchange="toggleDistro('+c._idx+', this.checked)"></div>';
+        html += '<div class="contact-actions"><button class="icon-btn" onclick="openEditContact('+c._idx+')">✏️</button><button class="icon-btn del" onclick="confirmDeleteContact('+c._idx+')">🗑️</button></div>';
+        html += '</div>';
+      });
+    });
+    body.innerHTML = html;
+  }
+  body.innerHTML += '<button class="add-contact-btn" onclick="openAddContact()">+ Add Contact</button>';
+
+  // Update distro button
+  const distroEmails = (org.contacts || []).filter(c => c.distro && c.email).map(c => c.email);
+  const btn = document.getElementById('emailDistroBtn');
+  const distroBadge = document.getElementById('distroCountBadge');
+  distroBadge.textContent = distroEmails.length;
+  if (distroEmails.length > 0) {
+    btn.classList.remove('disabled');
+  } else {
+    btn.classList.add('disabled');
+  }
+
+  // Operational Notes section
+  const opNotes = document.getElementById('opNotesSection');
+  opNotes.innerHTML = '<div class="op-notes-label"><span>📋</span> Operational Notes</div>' +
+    '<textarea class="op-notes-textarea" id="opNotesText" placeholder="Add operational notes for this organization..." oninput="saveOpNotes()">' +
+    (org.op_notes ? org.op_notes.replace(/</g,'&lt;').replace(/>/g,'&gt;') : '') + '</textarea>';
+}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+const SECTION_OPTIONS = ['Above Wing','Agent','Below Wing','Catering','Deicing','Fueler','Managers','MX Provider','Operations','Supervisors'];
+
+function handleSectionSelect(sel) {
+  const customInput = document.getElementById('cSection');
+  if (sel.value === 'Other') {
+    customInput.style.display = 'block';
+    customInput.value = '';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+    customInput.value = sel.value;
+  }
+}
+
+function setSectionValue(val) {
+  const sel = document.getElementById('cSectionSelect');
+  const customInput = document.getElementById('cSection');
+  if (!val) {
+    sel.value = '';
+    customInput.style.display = 'none';
+    customInput.value = '';
+  } else if (SECTION_OPTIONS.includes(val)) {
+    sel.value = val;
+    customInput.style.display = 'none';
+    customInput.value = val;
+  } else {
+    sel.value = 'Other';
+    customInput.style.display = 'block';
+    customInput.value = val;
+  }
+}
+
+function openAddContact() {
+  editingContactIdx = -1;
+  document.getElementById('contactModalTitle').innerHTML = '<span>✚</span> Add Contact';
+  ['cName','cTitle','cPhone','cEmail','cNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cDistro').checked = false;
+  setSectionValue('');
+  openModal('contactModal');
+}
+
+function openEditContact(idx) {
+  editingContactIdx = idx;
+  const c = data[currentOrgIdx].contacts[idx];
+  document.getElementById('contactModalTitle').innerHTML = '<span>✏️</span> Edit Contact';
+  document.getElementById('cName').value = c.name || '';
+  document.getElementById('cTitle').value = c.title || '';
+  document.getElementById('cPhone').value = c.phone || '';
+  document.getElementById('cEmail').value = c.email || '';
+  document.getElementById('cNotes').value = c.notes || '';
+  document.getElementById('cDistro').checked = !!c.distro;
+  setSectionValue(c.section || '');
+  openModal('contactModal');
+}
+
+function saveContact() {
+  const sel = document.getElementById('cSectionSelect');
+  const sectionVal = sel.value === 'Other'
+    ? document.getElementById('cSection').value.trim()
+    : document.getElementById('cSection').value.trim();
+  const contact = {
+    section: sectionVal,
+    title:   document.getElementById('cTitle').value.trim(),
+    name:    document.getElementById('cName').value.trim(),
+    phone:   document.getElementById('cPhone').value.trim(),
+    email:   document.getElementById('cEmail').value.trim(),
+    notes:   document.getElementById('cNotes').value.trim(),
+    distro:  document.getElementById('cDistro').checked
+  };
+  if (!contact.name && !contact.title) { alert('Enter a name or title.'); return; }
+  if (editingContactIdx >= 0) data[currentOrgIdx].contacts[editingContactIdx] = contact;
+  else data[currentOrgIdx].contacts.push(contact);
+  closeModal('contactModal'); save(); renderDetail(); updateStats();
+}
+
+function toggleDistro(idx, checked) {
+  if (currentOrgIdx < 0) return;
+  data[currentOrgIdx].contacts[idx].distro = checked;
+  save();
+  // Update the distro button count without re-rendering the whole detail
+  const org = data[currentOrgIdx];
+  const distroEmails = org.contacts.filter(c => c.distro && c.email).map(c => c.email);
+  const btn = document.getElementById('emailDistroBtn');
+  const distroBadge = document.getElementById('distroCountBadge');
+  distroBadge.textContent = distroEmails.length;
+  btn.classList.toggle('disabled', distroEmails.length === 0);
+}
+
+function saveOpNotes() {
+  if (currentOrgIdx < 0) return;
+  const ta = document.getElementById('opNotesText');
+  if (!ta) return;
+  data[currentOrgIdx].op_notes = ta.value;
+  save();
+}
+
+function emailDistro() {
+  if (currentOrgIdx < 0) return;
+  const org = data[currentOrgIdx];
+  const emails = (org.contacts || []).filter(c => c.distro && c.email).map(c => c.email);
+  if (!emails.length) return;
+  window.location.href = 'mailto:' + emails.join(',');
+}
+
+function openAddOrg() {
+  editingOrgMode = false;
+  document.getElementById('orgModalTitle').innerHTML = '<span>✚</span> Add Organization';
+  ['oName','oPrimaryPhone','oPrimaryEmail'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('oType').value = 'airline';
+  openModal('orgModal');
+}
+
+function openEditOrg() {
+  if (currentOrgIdx < 0) return;
+  editingOrgMode = true;
+  const o = data[currentOrgIdx];
+  document.getElementById('orgModalTitle').innerHTML = '<span>✏️</span> Edit Organization';
+  document.getElementById('oName').value = o.name;
+  document.getElementById('oType').value = o.type;
+  document.getElementById('oPrimaryPhone').value = o.primary_phone;
+  document.getElementById('oPrimaryEmail').value = o.primary_email;
+  openModal('orgModal');
+}
+
+function saveOrg() {
+  const name = document.getElementById('oName').value.trim();
+  if (!name) { alert('Organization name is required.'); return; }
+  const org = {
+    sheet: name,
+    name,
+    type: document.getElementById('oType').value,
+    primary_phone: document.getElementById('oPrimaryPhone').value.trim(),
+    primary_email: document.getElementById('oPrimaryEmail').value.trim(),
+    contacts: editingOrgMode ? data[currentOrgIdx].contacts : []
+  };
+  if (editingOrgMode) data[currentOrgIdx] = org;
+  else { data.push(org); currentOrgIdx = data.length - 1; }
+  closeModal('orgModal'); save(); renderOrgList(); renderDetail(); updateStats();
+}
+
+// ── DELETE ────────────────────────────────────────────────────────────────────
+function confirmDeleteContact(idx) {
+  pendingDeleteType = 'contact'; pendingDeleteIdx = idx;
+  document.getElementById('confirmMsg').textContent = 'Delete ' + (data[currentOrgIdx].contacts[idx].name || 'this contact') + '?';
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function confirmDeleteOrg() {
+  if (currentOrgIdx < 0) return;
+  pendingDeleteType = 'org'; pendingDeleteIdx = currentOrgIdx;
+  document.getElementById('confirmMsg').textContent = 'Delete &ldquo;' + data[currentOrgIdx].name + '&rdquo; and all its contacts?';
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('open'); }
+
+function executeDelete() {
+  if (pendingDeleteType === 'contact') {
+    data[currentOrgIdx].contacts.splice(pendingDeleteIdx, 1);
+    save(); renderDetail();
+  } else {
+    data.splice(pendingDeleteIdx, 1);
+    currentOrgIdx = -1;
+    save(); renderOrgList(); renderDetail();
+  }
+  updateStats(); closeConfirm();
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal('contactModal'); closeModal('orgModal'); closeConfirm(); }
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+// Data load + initial render handled by the IIFE above (loadFromCloud / applyData).
+</script>
+</body>
+</html>

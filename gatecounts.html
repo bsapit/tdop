@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DFW Stand &amp; Gate Counter</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=B612+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --dfw-orange:#FF5000;
+  --dfw-lgray:#E6E6E6;
+  --dfw-dgray:#585858;
+  --dfw-purple:#41395F;
+  --dfw-yellow:#F2A900;
+  --dfw-blue:#3EB1C8;
+  --bg:#f4f1eb;--surf:#fff;--surf2:#ece8df;--border:#d0ccbf;--border2:#b8b4a6;
+  --text:#1c1a16;--muted:#6b6760;
+  --arr:#155a30;--dep:#8b1a0e;
+  --radius:6px;--radius-lg:10px;
+}
+body{font-family:"Montserrat",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:21px;line-height:1.5}
+
+/* ── HEADER ── */
+header{
+  background:var(--dfw-purple);
+  position:sticky;top:0;z-index:200;
+}
+.header-top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.75rem;height:54px;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+}
+.logo-area{display:flex;align-items:center;gap:14px}
+.logo-icon{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.logo-icon svg{width:32px;height:32px}
+.logo-text{}
+.logo-title{font-size:27px;font-weight:700;color:#fff;letter-spacing:0.03em;line-height:1.1}
+.logo-sub{font-size:16.5px;color:rgba(255,255,255,0.6);font-weight:500;letter-spacing:0.05em;margin-top:2px}
+.header-right{font-size:16.5px;color:rgba(255,255,255,0.4);font-family:"B612 Mono",monospace}
+
+/* Gate pills strip */
+.gate-strip{
+  padding:6px 1.75rem;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  background:rgba(0,0,0,0.2);
+}
+.gate-strip-label{font-size:13.5px;font-weight:700;letter-spacing:0.12em;color:rgba(255,255,255,0.45);text-transform:uppercase;margin-right:4px;white-space:nowrap}
+.gate-pill{
+  font-family:"B612 Mono",monospace;
+  font-size:16.5px;font-weight:700;
+  background:rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.85);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:4px;
+  padding:2px 7px;
+  letter-spacing:0.04em;
+}
+
+/* ── MAIN ── */
+main{padding:1.5rem;max-width:1600px;margin:0 auto}
+
+/* ── CONTROLS ── */
+.controls{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:1.25rem;padding:1rem 1.25rem;background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.cg{display:flex;flex-direction:column;gap:4px}
+.cl{font-size:15px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+input[type=date],select{font-family:"Montserrat",sans-serif;background:var(--surf2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:0 10px;height:54px;font-size:19.5px;font-weight:500;outline:none}
+input[type=date]:focus,select:focus{border-color:var(--dfw-purple)}
+.btn{font-family:"Montserrat",sans-serif;height:54px;padding:0 16px;border-radius:var(--radius);border:none;font-size:18px;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:opacity .15s,transform .1s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.btn-primary{background:var(--dfw-purple);color:#fff}
+.btn-primary:hover:not(:disabled){opacity:.88}
+.btn-success{background:var(--arr);color:#fff}
+.btn-success:hover:not(:disabled){opacity:.88}
+.sep{width:1px;height:54px;background:var(--border);margin:0 2px}
+.loader{height:5px;background:linear-gradient(90deg,var(--dfw-orange),var(--dfw-yellow),var(--dfw-blue),var(--dfw-orange));background-size:300%;animation:sh 1.5s infinite;border-radius:2px;margin-bottom:.75rem;display:none}
+.loader.on{display:block}
+@keyframes sh{0%{background-position:-300% 0}100%{background-position:300% 0}}
+#status{font-size:18px;font-weight:500;color:var(--muted);min-height:18px;margin-bottom:1rem}
+#status.err{color:var(--dep)}
+
+/* ── CARDS ── */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:1.25rem}
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);padding:.875rem 1rem}
+.card-label{font-size:13.5px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.card-val{font-family:"B612 Mono",monospace;font-size:42px;line-height:1}
+.card-sub{font-size:16.5px;font-weight:500;color:var(--muted);margin-top:4px}
+.card-arr .card-val{color:var(--arr)}
+.card-dep .card-val{color:var(--dep)}
+.card-acc .card-val{color:var(--dfw-purple)}
+.card-icon{width:28px;height:28px;margin-bottom:8px;opacity:0.7}
+
+/* ── MONTH TABS ── */
+.month-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:1rem}
+.tab{font-family:"Montserrat",sans-serif;font-size:16.5px;font-weight:700;letter-spacing:.05em;height:45px;padding:0 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surf);color:var(--muted);cursor:pointer;transition:all .15s;text-transform:uppercase}
+.tab:hover{background:var(--surf2);color:var(--text)}
+.tab.active{background:var(--dfw-purple);color:#fff;border-color:var(--dfw-purple)}
+
+/* ── VIEW TOGGLE ── */
+.view-row{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
+.vtoggle{display:flex;gap:3px;background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:3px}
+.vtoggle .btn{height:39px;padding:0 10px;font-size:15px;border-radius:4px;background:transparent;color:var(--muted);border:none}
+.vtoggle .btn.active{background:var(--dfw-purple);color:#fff}
+
+/* ── TABLE ── */
+.tbl-wrap{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:auto;max-height:70vh;background:var(--surf)}
+table{width:100%;border-collapse:collapse;font-size:21px;min-width:500px}
+thead th{font-family:"Montserrat",sans-serif;background:var(--dfw-purple);color:rgba(255,255,255,.85);padding:10px 14px;font-size:15px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;position:sticky;top:0;z-index:10;border-right:1px solid rgba(255,255,255,.08)}
+thead th:first-child{text-align:left;position:sticky;left:0;z-index:20}
+.sec-row td{font-family:"Montserrat",sans-serif;font-size:15px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:var(--surf2);color:var(--dfw-purple);padding:7px 14px;border-top:2px solid var(--border2)}
+tbody tr{border-top:1px solid var(--border)}
+tbody tr:hover td{background:#f9f7f2}
+td{font-family:"B612 Mono",monospace;padding:9px 14px;white-space:nowrap;font-size:21px}
+td:first-child{font-family:"Montserrat",sans-serif;font-weight:600;font-size:21px;position:sticky;left:0;background:var(--surf);z-index:5;border-right:1px solid var(--border)}
+tbody tr:hover td:first-child{background:#f9f7f2}
+.num{text-align:right}
+.arr{color:var(--arr)}
+.dep{color:var(--dep)}
+.zero{color:var(--border2)}
+.muted{color:var(--muted)}
+.total-row td{font-family:"Montserrat",sans-serif;font-weight:700;font-size:19.5px;background:var(--surf2) !important;border-top:2px solid var(--border2) !important}
+.total-row td.num{font-family:"B612 Mono",monospace}
+.total-row td:first-child{background:var(--surf2) !important}
+.empty{text-align:center;padding:5rem 2rem;color:var(--muted)}
+.empty p{font-size:22.5px;font-weight:500}
+
+/* ── EXPORT ── */
+.export-wrap{position:relative}
+.export-menu{position:absolute;right:0;top:40px;background:var(--surf);border:1px solid var(--border);border-radius:var(--radius-lg);padding:4px;min-width:215px;z-index:300;display:none;flex-direction:column;gap:2px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.export-menu.open{display:flex}
+.export-item{font-family:"Montserrat",sans-serif;padding:9px 12px;border-radius:4px;cursor:pointer;font-size:18px;font-weight:600;transition:background .1s;color:var(--text)}
+.export-item:hover{background:var(--surf2)}
+.export-item small{display:block;color:var(--muted);font-size:16.5px;font-weight:400;margin-top:2px}
+
+/* ── DFW COLOR BAR FOOTER ── */
+footer{
+  margin-top:3rem;
+  display:flex;height:12px;
+}
+.color-bar{flex:1}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo-area">
+      <div class="logo-icon">
+        <svg viewBox="0 0 69 68" width="69" height="68" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" overflow="hidden"><g  ><path d="M1.02 46.5205 27.914 41.072 27.914 44.812C27.914 48.5775 27.914 51.6375 27.9225 56.1935 27.9225 56.1935 27.9055 56.219 27.8545 56.253 26.9365 56.933 26.0185 57.6215 25.1005 58.31 23.987 59.143 22.882 59.976 21.76 60.8005 21.165 61.234 20.9015 61.778 20.9185 62.5005 20.9355 63.4355 20.9355 64.3705 20.927 65.314L20.927 67.0905C20.927 67.354 21.046 67.609 21.2585 67.762 21.4115 67.881 21.59 67.9405 21.777 67.9405 21.8535 67.9405 21.93 67.932 21.998 67.9065L24.888 67.0905C27.8205 66.2575 30.753 65.416 33.6855 64.5915 33.9065 64.532 34.085 64.5235 34.17 64.549 36.108 65.0845 38.046 65.6455 39.9755 66.198L45.9425 67.9065C46.189 67.9745 46.461 67.932 46.6735 67.779 46.886 67.626 47.0135 67.388 47.0305 67.133L47.0305 66.9205C47.056 66.7675 47.056 66.6485 47.0645 66.521L47.0645 65.246C47.0645 64.3025 47.0645 63.359 47.073 62.424 47.0815 61.7695 46.8265 61.2595 46.2995 60.8685 45.3645 60.1715 44.421 59.4745 43.486 58.769 42.3895 57.953 41.3015 57.1285 40.205 56.321 40.069 56.219 40.069 56.2105 40.069 56.066 40.0775 51.3145 40.0775 48.2035 40.0775 44.132L40.0775 41.089 66.98 46.5375C67.2265 46.5885 67.49 46.5205 67.6855 46.359 67.881 46.1975 68 45.9595 68 45.7045L68 40.035C68 39.7375 67.8385 39.457 67.5835 39.304L40.2135 23.069C40.1172 23.0067 40.069 22.9132 40.069 22.7885 40.0775 18.3685 40.0775 14.9005 40.0775 10.9905L40.0775 6.494C40.0775 5.1255 39.7715 3.944 39.1425 2.8985 38.148 1.2325 36.4565 0.187 34.51 0.0255 32.5635-0.136 30.719 0.612 29.4695 2.0825 28.424 3.3065 27.914 4.743 27.914 6.477L27.914 13.362C27.914 16.3965 27.914 19.3375 27.9225 22.8735 27.9225 22.933 27.9225 22.967 27.9225 22.9755 27.914 22.9755 27.8885 23.001 27.8545 23.0265 24.9475 24.82 9.435 34.1275 0.425 39.304 0.1615 39.457-6.03962e-15 39.7375-6.03962e-15 40.0435L-6.03962e-15 45.7045C-6.03962e-15 45.9595 0.119 46.1975 0.3145 46.359 0.51 46.5205 0.7735 46.5885 1.02 46.5375ZM1.7 40.5195C10.778 35.292 25.874 26.231 28.747 24.463 29.3505 24.089 29.6225 23.5875 29.6225 22.865 29.6225 19.3205 29.6225 16.388 29.6225 13.3535L29.6225 6.4685C29.6225 5.1425 29.9795 4.097 30.7615 3.1875 31.654 2.142 32.9715 1.6065 34.3655 1.7255 35.768 1.8445 36.975 2.5925 37.689 3.7825 38.165 4.573 38.3775 5.44 38.3775 6.511L38.3775 10.999C38.3775 14.909 38.3775 18.377 38.369 22.797 38.369 23.5705 38.6665 24.123 39.3295 24.5395L66.3 40.528 66.3 44.6675 39.3975 39.219C39.151 39.168 38.8875 39.236 38.692 39.3975 38.4965 39.559 38.3775 39.797 38.3775 40.052L38.3775 44.132C38.3775 48.212 38.3775 51.3145 38.369 56.066 38.369 56.763 38.6325 57.2815 39.1935 57.698 40.29 58.5055 41.378 59.3215 42.466 60.1375 43.401 60.843 44.3445 61.54 45.288 62.237 45.3475 62.2795 45.3645 62.305 45.3645 62.305 45.3645 62.305 45.3645 62.339 45.3645 62.3985 45.3475 63.3505 45.3475 64.3025 45.356 65.2545L45.356 65.9855 40.4515 64.583C38.5135 64.022 36.5755 63.4695 34.629 62.9255 34.4335 62.8745 34.238 62.849 34.051 62.849 33.7195 62.849 33.4135 62.917 33.235 62.968 30.294 63.7925 27.37 64.634 24.429 65.467L22.6355 65.977 22.6355 65.331C22.6355 64.379 22.644 63.427 22.627 62.475 22.627 62.3135 22.627 62.2965 22.78 62.186 23.902 61.3615 25.0155 60.52 26.129 59.687 27.047 58.9985 27.9565 58.3185 28.8745 57.6385 29.3845 57.2645 29.631 56.7715 29.631 56.151 29.631 51.6545 29.631 48.5945 29.631 44.8375L29.631 40.613C29.631 40.494 29.631 40.375 29.6055 40.222L29.5885 40.001C29.5715 39.7545 29.4525 39.5335 29.257 39.3805 29.0615 39.236 28.815 39.1765 28.5685 39.219L1.7 44.6505 1.7 40.5195 1.7 40.5195Z" stroke="white" stroke-width="0.666667" fill="white" transform="matrix(6.12323e-17 1 -1.01471 6.21328e-17 260.965 182)"/></g></svg>
+      </div>
+      <div class="logo-text">
+        <div class="logo-title">DFW Stand &amp; Gate Counter</div>
+        <div class="logo-sub">Terminal D &amp; E</div>
+      </div>
+    </div>
+    <div class="header-right" id="last-fetch"></div>
+  </div>
+  <div class="gate-strip">
+    <span class="gate-strip-label">Tracking</span>
+    <span class="gate-pill">D6</span><span class="gate-pill">D8A</span><span class="gate-pill">D10</span><span class="gate-pill">D11</span><span class="gate-pill">D11A</span><span class="gate-pill">D11X</span><span class="gate-pill">D14</span><span class="gate-pill">D14A</span><span class="gate-pill">D15</span><span class="gate-pill">D15A</span><span class="gate-pill">D16</span><span class="gate-pill">D16X</span><span class="gate-pill">E2</span><span class="gate-pill">E2A</span><span class="gate-pill">E7</span><span class="gate-pill">E7X</span><span class="gate-pill">E10</span><span class="gate-pill">E32</span><span class="gate-pill">E33</span>
+  </div>
+</header>
+
+<main>
+  <div class="controls">
+    <div class="cg"><label class="cl">From</label><input type="date" id="from-date"/></div>
+    <div class="cg"><label class="cl">To</label><input type="date" id="to-date"/></div>
+    <div class="cg">
+      <label class="cl">Quick select</label>
+      <select id="quick" onchange="applyQuick()">
+        <option value="">Custom</option>
+        <option value="0">This month</option>
+        <option value="1">Last month</option>
+        <option value="7" selected>Last 7 days</option>
+        <option value="14">Last 14 days</option>
+        <option value="30">Last 30 days</option>
+      </select>
+    </div>
+    <div class="sep"></div>
+    <button class="btn btn-primary" id="fetch-btn" onclick="loadData()">Fetch Data</button>
+    <div class="sep"></div>
+    <div class="export-wrap" id="export-wrap">
+      <button class="btn btn-success" id="export-btn" onclick="toggleExportMenu()" disabled>&#8595; Export Excel</button>
+      <div class="export-menu" id="export-menu">
+        <div class="export-item" onclick="exportExcel('current')">Current month (1 sheet)<small>Active month tab as one Excel sheet</small></div>
+        <div class="export-item" onclick="exportExcel('all')">All months (one sheet each)<small>One sheet per month in the loaded range</small></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="loader" id="loader"></div>
+  <div id="status"></div>
+
+  <div class="cards" id="cards" style="display:none">
+    <div class="card card-arr">
+      <div class="card-icon"><svg viewBox="0 0 86.4 86.4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Layer_1" overflow="hidden"><defs></defs><path d="M44.704 6.172C24.381 6.172 7.847 22.707 7.847 43.031 7.847 63.355 24.381 79.888 44.704 79.888 65.027 79.888 81.562 63.354 81.562 43.031 81.562 22.708 65.029 6.172 44.704 6.172ZM78.75 43.031C78.75 61.802 63.478 77.075 44.704 77.075 25.93 77.075 10.659 61.803 10.659 43.031 10.659 24.259 25.931 8.986 44.704 8.986 63.477 8.986 78.75 24.258 78.75 43.032Z" stroke-width="0" fill="#FF5000"/><path d="M58.641 53.476 44.609 46.229 44.609 25.764C44.609 25.075 44.047 24.513 43.356 24.513L43.156 24.513C42.466 24.513 41.904 25.075 41.904 25.764L41.904 47.904 57.398 55.88C57.58 55.973 57.774 56.016 57.965 56.016 58.42 56.016 58.861 55.77 59.085 55.342L59.177 55.164C59.329 54.865 59.358 54.525 59.256 54.208 59.154 53.892 58.937 53.632 58.641 53.477Z" stroke-width="0" fill="#FF5000"/></svg></div>
+      <div class="card-label">Total Arrivals</div>
+      <div class="card-val" id="s-arr">-</div>
+      <div class="card-sub" id="s-arr-sub"></div>
+    </div>
+    <div class="card card-dep">
+      <div class="card-icon"><svg viewBox="0 0 34 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Layer_1" overflow="hidden"><style>
+.MsftOfcThm_Text1_Fill_v2 {
+ fill:white; 
+}
+</style>
+<defs></defs><path d="M0 0 0 64 34 64 34 0 0 0ZM32 2 32 8 2 8 2 2 32 2ZM32 10 32 50 2 50 2 10 32 10ZM2 62 2 52 32 52 32 62 2 62Z" class="MsftOfcThm_Text1_Fill_v2" stroke-width="0" fill="white"/><rect x="13" y="4" width="8" height="2" class="MsftOfcThm_Text1_Fill_v2" stroke-width="0" fill="white"/><path d="M17 54C15.35 54 14 55.35 14 57 14 58.65 15.35 60 17 60 18.65 60 20 58.65 20 57 20 55.35 18.65 54 17 54ZM17 58C16.45 58 16 57.55 16 57 16 56.45 16.45 56 17 56 17.55 56 18 56.45 18 57 18 57.55 17.55 58 17 58Z" class="MsftOfcThm_Text1_Fill_v2" stroke-width="0" fill="white"/></svg></div>
+      <div class="card-label">Total Departures</div>
+      <div class="card-val" id="s-dep">-</div>
+      <div class="card-sub" id="s-dep-sub"></div>
+    </div>
+    <div class="card card-acc">
+      <div class="card-icon"><svg viewBox="0 0 72 74.04" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Layer_1" overflow="hidden"><style>
+.MsftOfcThm_Accent2_Fill_v2 {
+ fill:white; 
+}
+.MsftOfcThm_Background1_Stroke_v2 {
+ stroke:#FFFFFF; 
+}
+</style>
+<defs></defs><path d="M70.5 21 65 21 65 1.5C65 0.67 64.33 0 63.5 0L39.5 0C38.67 0 38 0.67 38 1.5L38 13 28.5 13C27.67 13 27 13.67 27 14.5L27 34 17 34 17 13.5C17 12.67 16.33 12 15.5 12L1.5 12C0.67 12 0 12.67 0 13.5 0 14.33 0.67 15 1.5 15L14 15 14 64.5C14 64.56 14 64.61 14 64.67L14 65C13.98 69.97 17.99 74.02 22.96 74.04 27.93 74.06 31.98 70.05 32 65.08 32 64.72 31.98 64.36 31.94 64.01L54.06 64.01C53.49 68.95 57.03 73.41 61.96 73.99 66.89 74.57 71.36 71.02 71.94 66.09 71.98 65.73 72 65.38 72 65.02L72 64.69C72 64.63 72 64.58 72 64.52L72 22.5C72 21.67 71.33 21 70.5 21ZM69 34 51 34 51 24 69 24 69 34ZM41 3 62 3 62 21 51 21 51 14.5C51 13.67 50.33 13 49.5 13L41 13 41 3ZM30 16 48 16 48 34 30 34 30 16ZM23 71C19.69 71 17 68.31 17 65 17 61.69 19.69 59 23 59 26.31 59 29 61.69 29 65 29 68.31 26.31 71 23 71ZM31.5 61C31.36 61 31.22 61.03 31.08 61.07 28.9 56.6 23.51 54.75 19.04 56.94 18.3 57.3 17.61 57.76 17 58.31L17 37 69 37 69 58.31C65.29 55 59.6 55.32 56.29 59.02 55.76 59.62 55.31 60.28 54.95 61L31.5 61ZM63 71C59.69 71 57 68.31 57 65 57 61.69 59.69 59 63 59 66.31 59 69 61.69 69 65 69 68.31 66.31 71 63 71Z" class="MsftOfcThm_Accent2_Fill_v2 MsftOfcThm_Background1_Stroke_v2" stroke="#FFFFFF" stroke-width="0.716418" fill="white"/></svg></div>
+      <div class="card-label">Total Movements</div>
+      <div class="card-val" id="s-mov">-</div>
+    </div>
+    <div class="card">
+      <div class="card-icon"><svg viewBox="0 0 80.5 80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Capa_1" overflow="hidden"><path d="M79.1 10.7 70.6 10.7C72 9.6 72.9 7.9 72.9 6 72.9 2.7 70.2 -8.88178e-16 66.9 -8.88178e-16 63.6 -8.88178e-16 60.9 2.7 60.9 6 60.9 7.9 61.8 9.6 63.2 10.7L17.2 10.7C18.6 9.6 19.5 7.9 19.5 6 19.5 2.7 16.8 -8.88178e-16 13.5 -8.88178e-16 10.2 -8.88178e-16 7.5 2.7 7.5 6 7.5 7.9 8.4 9.6 9.8 10.7L1 10.7C0.4 10.7 0 11.1 0 11.7L0 26.9C0 27.5 0.4 27.9 1 27.9L7.9 27.9 7.9 79C7.9 79.6 8.3 80 8.9 80L18.3 80C18.9 80 19.3 79.6 19.3 79L19.3 54.5 61.2 54.5 61.2 78.9C61.2 79.5 61.6 79.9 62.2 79.9L71.6 79.9C72.2 79.9 72.6 79.5 72.6 78.9L72.6 27.9 79.5 27.9C80.1 27.9 80.5 27.5 80.5 26.9L80.5 11.7C80.1 11.1 79.7 10.7 79.1 10.7ZM66.8 2C69 2 70.8 3.8 70.8 6 70.8 8.2 69 10 66.8 10 64.6 10 62.8 8.2 62.8 6 62.8 3.8 64.6 2 66.8 2ZM13.3 2C15.5 2 17.3 3.8 17.3 6 17.3 8.2 15.5 10 13.3 10 11.1 10 9.3 8.2 9.3 6 9.3 3.8 11 2 13.3 2ZM54.9 25.9 66.7 12.7 77.1 12.7 65.3 25.9 54.9 25.9ZM15.7 25.9 27.5 12.7 37.9 12.7 26.1 25.9 15.7 25.9ZM2.7 25.9 14.5 12.7 24.8 12.7 13 25.9 2.7 25.9ZM40.6 12.7 51 12.7 39.2 25.9 28.8 25.9 40.6 12.7ZM53.7 12.7 64.1 12.7 52.3 25.9 41.9 25.9 53.7 12.7ZM11.8 12.7 1.8 23.9 1.8 12.7 11.8 12.7ZM9.6 78 9.6 27.9 17 27.9 17 78 9.6 78ZM19 52.5 19 27.9 60.9 27.9 60.9 52.6 19 52.6 19 52.5ZM70.3 78 62.9 78 62.9 27.9 70.3 27.9 70.3 78ZM68 25.9 78.1 14.6 78.1 25.9 68 25.9Z" fill="white"/></svg></div>
+      <div class="card-label">Days with data</div>
+      <div class="card-val" id="s-days">-</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Months</div>
+      <div class="card-val" id="s-months">-</div>
+    </div>
+  </div>
+
+  <div id="month-tabs" class="month-tabs" style="display:none"></div>
+
+  <div class="view-row" id="view-row" style="display:none">
+    <div class="vtoggle">
+      <button class="btn active" onclick="setView('both',this)">Arr &amp; Dep</button>
+      <button class="btn" onclick="setView('arr',this)">Arrivals</button>
+      <button class="btn" onclick="setView('dep',this)">Departures</button>
+    </div>
+  </div>
+
+  <div id="tbl-container"><div class="empty"><p>Select a date range and click <strong>Fetch Data</strong></p></div></div>
+</main>
+
+<footer>
+  <div class="color-bar" style="background:#FF5000"></div>
+  <div class="color-bar" style="background:#F2A900"></div>
+  <div class="color-bar" style="background:#3EB1C8"></div>
+  <div class="color-bar" style="background:#41395F"></div>
+  <div class="color-bar" style="background:#585858"></div>
+  <div class="color-bar" style="background:#E6E6E6"></div>
+</footer>
+
+<script>
+
+var WORKER = 'https://billowing-thunder-d278.bsapit-af2.workers.dev';
+var GATES = ['D6','D8A','D10','D11','D11A','D11X','D14','D14A','D15','D15A','D16','D16X','E2','E2A','E7','E7X','E10','E32','E33'];
+var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var allData = [], byMonth = {}, months = [], activeMonth = null, view = 'both';
+
+function toISO(d) { return d.toISOString().slice(0, 10); }
+(function() {
+  var now = new Date();
+  document.getElementById('to-date').value = toISO(now);
+  var f = new Date(now); f.setDate(f.getDate() - 6);
+  document.getElementById('from-date').value = toISO(f);
+})();
+
+function applyQuick() {
+  var v = document.getElementById('quick').value;
+  if (!v) return;
+  var to = new Date(), fr = new Date();
+  if (v === '0') { fr.setDate(1); }
+  else if (v === '1') { fr.setMonth(fr.getMonth() - 1, 1); to.setDate(0); }
+  else { fr.setDate(fr.getDate() - (parseInt(v) - 1)); }
+  document.getElementById('from-date').value = toISO(fr);
+  document.getElementById('to-date').value = toISO(to);
+}
+function setStatus(msg, err) {
+  var el = document.getElementById('status');
+  el.textContent = msg; el.className = err ? 'err' : '';
+}
+function setLoading(on) {
+  document.getElementById('loader').classList.toggle('on', on);
+  document.getElementById('fetch-btn').disabled = on;
+}
+function toggleExportMenu() { document.getElementById('export-menu').classList.toggle('open'); }
+document.addEventListener('click', function(e) {
+  if (!document.getElementById('export-wrap').contains(e.target))
+    document.getElementById('export-menu').classList.remove('open');
+});
+function loadData() {
+  var from = document.getElementById('from-date').value;
+  var to = document.getElementById('to-date').value;
+  if (!from || !to) { setStatus('Select a date range.', true); return; }
+  if (from > to) { setStatus('From must be before To.', true); return; }
+  setLoading(true); setStatus('Fetching data...');
+  fetch(WORKER + '/api/data?from=' + from + '&to=' + to)
+    .then(function(res) { return res.json().then(function(b) { return {ok: res.ok, b: b}; }); })
+    .then(function(r) {
+      if (!r.ok) throw new Error(r.b.error || 'Request failed');
+      allData = r.b.data || [];
+      if (!allData.length) { setStatus('No data returned.'); return; }
+      processData(); renderAll();
+      setStatus('Loaded ' + allData.length + ' records (' + from + ' to ' + to + ').');
+      document.getElementById('last-fetch').textContent = 'Fetched ' + new Date().toLocaleTimeString();
+      document.getElementById('export-btn').disabled = false;
+    })
+    .catch(function(e) { setStatus('Error: ' + e.message, true); })
+    .finally(function() { setLoading(false); });
+}
+function processData() {
+  byMonth = {};
+  allData.forEach(function(r) {
+    var ym = r.date.slice(0, 7);
+    if (!byMonth[ym]) byMonth[ym] = [];
+    byMonth[ym].push(r);
+  });
+  months = Object.keys(byMonth).sort();
+  activeMonth = months[months.length - 1];
+}
+function renderAll() {
+  renderCards(); renderTabs(); renderTable();
+  document.getElementById('cards').style.display = 'grid';
+  document.getElementById('month-tabs').style.display = 'flex';
+  document.getElementById('view-row').style.display = 'flex';
+}
+function renderCards() {
+  var tA = 0, tD = 0, seen = {};
+  allData.forEach(function(r) { tA += r.arrivals||0; tD += r.departures||0; seen[r.date] = 1; });
+  var days = Object.keys(seen).length;
+  document.getElementById('s-arr').textContent = tA.toLocaleString();
+  document.getElementById('s-dep').textContent = tD.toLocaleString();
+  document.getElementById('s-mov').textContent = (tA + tD).toLocaleString();
+  document.getElementById('s-days').textContent = days;
+  document.getElementById('s-months').textContent = months.length;
+  document.getElementById('s-arr-sub').textContent = days ? 'Avg ' + Math.round(tA / days) + ' / day' : '';
+  document.getElementById('s-dep-sub').textContent = days ? 'Avg ' + Math.round(tD / days) + ' / day' : '';
+}
+function renderTabs() {
+  var el = document.getElementById('month-tabs');
+  el.innerHTML = '';
+  months.forEach(function(ym) {
+    var p = ym.split('-');
+    var btn = document.createElement('button');
+    btn.className = 'tab' + (ym === activeMonth ? ' active' : '');
+    btn.textContent = MN[parseInt(p[1]) - 1] + ' ' + p[0];
+    btn.setAttribute('data-ym', ym);
+    btn.onclick = function() { switchMonth(this.getAttribute('data-ym'), this); };
+    el.appendChild(btn);
+  });
+}
+function switchMonth(ym, btn) {
+  activeMonth = ym;
+  document.querySelectorAll('.tab').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active'); renderTable();
+}
+function setView(v, btn) {
+  view = v;
+  document.querySelectorAll('.vtoggle .btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active'); renderTable();
+}
+function renderTable() {
+  var rows = byMonth[activeMonth] || [];
+  if (!rows.length) {
+    document.getElementById('tbl-container').innerHTML = '<div class="empty"><p>No data for this month.</p></div>';
+    return;
+  }
+  var p = activeMonth.split('-'), mon = parseInt(p[1]), mn = MN[mon - 1];
+  var daySet = {};
+  rows.forEach(function(r) { daySet[parseInt(r.date.slice(8))] = 1; });
+  var days = Object.keys(daySet).map(Number).sort(function(a, b) { return a - b; });
+  var idx = {};
+  rows.forEach(function(r) { idx[r.date + '__' + r.gate] = r; });
+  function dk(d) { return activeMonth + '-' + (d < 10 ? '0' : '') + d; }
+  var gA = {}, gD = {};
+  GATES.forEach(function(g) { gA[g] = {}; gD[g] = {}; });
+  days.forEach(function(d) {
+    GATES.forEach(function(g) {
+      var r = idx[dk(d) + '__' + g] || {arrivals: 0, departures: 0};
+      gA[g][d] = r.arrivals || 0; gD[g][d] = r.departures || 0;
+    });
+  });
+  var tA = {}, tD = {};
+  GATES.forEach(function(g) {
+    tA[g] = days.reduce(function(s, d) { return s + (gA[g][d] || 0); }, 0);
+    tD[g] = days.reduce(function(s, d) { return s + (gD[g][d] || 0); }, 0);
+  });
+  var gA2 = GATES.reduce(function(s, g) { return s + tA[g]; }, 0);
+  var gD2 = GATES.reduce(function(s, g) { return s + tD[g]; }, 0);
+  var showA = view !== 'dep', showD = view !== 'arr';
+  var hdrs = days.map(function(d) { return '<th class="num">' + d + '-' + mn + '</th>'; }).join('');
+  var h = '<div class="tbl-wrap"><table><thead><tr><th>Gate / Stand</th>' + hdrs + '<th class="num">Totals</th><th class="num">Average</th></tr></thead><tbody>';
+  function sec(label, getV, tot, grand, cls) {
+    var s = '<tr class="sec-row"><td colspan="' + (days.length + 3) + '">' + label + '</td></tr>';
+    GATES.forEach(function(g) {
+      var cells = days.map(function(d) {
+        var v = getV(g, d);
+        return '<td class="num ' + cls + (v ? '' : ' zero') + '">' + (v || '&mdash;') + '</td>';
+      }).join('');
+      var t = tot[g], avg = days.length ? (t / days.length).toFixed(2) : '0.00';
+      s += '<tr><td>' + g + '</td>' + cells + '<td class="num ' + cls + '">' + t + '</td><td class="num muted">' + avg + '</td></tr>';
+    });
+    var dtots = days.map(function(d) {
+      return '<td class="num ' + cls + '">' + GATES.reduce(function(s, g) { return s + getV(g, d); }, 0) + '</td>';
+    }).join('');
+    var lbl = label === 'Arrivals' ? 'Total Arrivals' : 'Total Departures';
+    var gavg = days.length ? (grand / days.length).toFixed(2) : '0.00';
+    s += '<tr class="total-row"><td>' + lbl + '</td>' + dtots + '<td class="num ' + cls + '">' + grand + '</td><td class="num muted">' + gavg + '</td></tr>';
+    return s;
+  }
+  if (showA) h += sec('Arrivals', function(g, d) { return gA[g][d] || 0; }, tA, gA2, 'arr');
+  if (showD) h += sec('Departures', function(g, d) { return gD[g][d] || 0; }, tD, gD2, 'dep');
+  h += '</tbody></table></div>';
+  document.getElementById('tbl-container').innerHTML = h;
+}
+function exportExcel(mode) {
+  document.getElementById('export-menu').classList.remove('open');
+  var wb = XLSX.utils.book_new();
+  var target = mode === 'all' ? months : [activeMonth];
+  target.forEach(function(ym) {
+    var rows = byMonth[ym] || [], p = ym.split('-'), mon = parseInt(p[1]), mn = MN[mon - 1];
+    var sn = mn + ' ' + p[0];
+    var daySet = {};
+    rows.forEach(function(r) { daySet[parseInt(r.date.slice(8))] = 1; });
+    var days = Object.keys(daySet).map(Number).sort(function(a, b) { return a - b; });
+    var idx = {};
+    rows.forEach(function(r) { idx[r.date + '__' + r.gate] = r; });
+    function dk(d) { return ym + '-' + (d < 10 ? '0' : '') + d; }
+    var data = [], hdr = [sn];
+    days.forEach(function(d) { hdr.push(d + '-' + mn); });
+    hdr.push('Totals', 'Average'); data.push(hdr);
+    function addSec(label, getV) {
+      data.push([label].concat(days.map(function() { return ''; })).concat(['', '']));
+      GATES.forEach(function(g) {
+        var row = [g], tot = 0;
+        days.forEach(function(d) { var v = getV(g, dk(d)); row.push(v); tot += v; });
+        row.push(tot, days.length ? +(tot / days.length).toFixed(2) : 0);
+        data.push(row);
+      });
+      var tr = [label === 'Arrivals' ? 'Total Arrivals' : 'Total Departures'], grand = 0;
+      days.forEach(function(d) {
+        var v = GATES.reduce(function(s, g) { return s + getV(g, dk(d)); }, 0);
+        tr.push(v); grand += v;
+      });
+      tr.push(grand, days.length ? +(grand / days.length).toFixed(2) : 0);
+      data.push(tr);
+    }
+    addSec('Arrivals', function(g, dkey) { return ((idx[dkey + '__' + g] || {}).arrivals) || 0; });
+    addSec('Departures', function(g, dkey) { return ((idx[dkey + '__' + g] || {}).departures) || 0; });
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{wch: 10}].concat(days.map(function() { return {wch: 9}; })).concat([{wch: 9}, {wch: 9}]);
+    ws['!freeze'] = {xSplit: 1, ySplit: 1};
+    XLSX.utils.book_append_sheet(wb, ws, sn);
+  });
+  var fname = mode === 'all'
+    ? 'StandGate_' + months[0] + '_to_' + months[months.length - 1] + '.xlsx'
+    : 'StandGate_' + activeMonth + '.xlsx';
+  XLSX.writeFile(wb, fname);
+}
+
+</script>
+</body>
+</html>
