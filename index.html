@@ -748,9 +748,9 @@ const AUTH    = 'Basic QnJhZC1BcHA6aldta1lRWHdKVnFNQkJkYUtzWVZ3b2hqNGdFNFdy';
 const BASE    = 'https://betterairport.bsapit-af2.workers.dev/dfw/api/v2/o/3d5d754ed9ba';
 const KV_URL  = 'https://betterairport.bsapit-af2.workers.dev/state';
 const HEADERS = { 'accept':'application/json', 'Authorization': AUTH };
-const PAX_BIN_ID  = '69d48fa4aaba882197d03d5b';
-const PAX_BIN_URL = `https://api.jsonbin.io/v3/b/${PAX_BIN_ID}`;
-const PAX_BIN_KEY = '$2a$10$sU9S1xGueIo2WbWqyyAPF.JPIdVmJHa54tRXKCb16HY5pj8VrsCB.';
+// NOTE: PAX counts used to round-trip through a JSONbin (PAX_BIN_URL/KEY).
+// That's retired — TDOP and GateGadget now share the same Netlify Blob
+// store (GATEGADGET_PAX_URL, declared further down) for both directions.
 
 // ── TEAMS WEBHOOK ─────────────────────────────────────────────────────────────
 // Paste your incoming webhook URL(s) here.
@@ -1083,9 +1083,9 @@ function applyGateGadgetPax(counts) {
     if (!el.id || el.value) return; // already has a value — don't touch
     const m = el.id.match(/^pax_([A-Z0-9]+)_(.+)_(arr|dep)$/);
     if (!m) return;
-    const [, iata, fnum, leg] = m;
+    const [, , fnum, leg] = m; // fnum (group 2) is already the full "IATA+number" flight id — don't re-prefix it
     const legLabel = leg === 'arr' ? 'Arrival' : 'Departure';
-    const val = counts[`${iata}${fnum} (${legLabel})`];
+    const val = counts[`${fnum} (${legLabel})`];
     if (typeof val === 'number' && val > 0) {
       el.value = val;
       filled++;
@@ -1290,46 +1290,51 @@ function kvBuildState() {
   };
 }
 
-// Sync TDOP PAX counts to the shared JSONbin so BusBoard can display them.
-// Translates TDOP input IDs (pax_LF_3694_arr) → GateKeeper key format (LF3694 (Arrival)).
+// Sync TDOP-entered PAX counts to the shared GateGadget Netlify Blob store
+// (same store applyGateGadgetPax() reads from) so GateGadget/GateKeeper see
+// what ops typed in TDOP. Translates TDOP input IDs (pax_F9_F9229_arr) into
+// GateGadget's key format (F9229 (Arrival)) — note the flight-number group
+// captured from the id is already the full "IATA+number" identifier, so it
+// must NOT be re-prefixed with iata again (that was a real bug here before).
 async function paxBinSync() {
   try {
     // Collect all filled PAX inputs
     const counts = {};
     document.querySelectorAll('input.cell-pax-input').forEach(el => {
       if (!el.id || !el.value) return;
-      // ID format: pax_{IATA}_{flightNum}_{arr|dep}
+      // ID format: pax_{IATA}_{flightNum}_{arr|dep} — flightNum already includes IATA
       const m = el.id.match(/^pax_([A-Z0-9]+)_(.+)_(arr|dep)$/);
       if (!m) return;
-      const [, iata, fnum, leg] = m;
+      const [, , fnum, leg] = m;
       const legLabel = leg === 'arr' ? 'Arrival' : 'Departure';
-      const key = `${iata}${fnum} (${legLabel})`;
+      const key = `${fnum} (${legLabel})`;
       const val = parseInt(el.value);
       if (!isNaN(val)) counts[key] = val;
     });
 
     if (Object.keys(counts).length === 0) return; // nothing to write
 
-    // Fetch existing bin to merge (preserve GateKeeper-submitted counts)
+    // Fetch existing store to merge (preserve GateGadget-submitted counts
+    // for flights TDOP hasn't typed a number for)
     let existing = {};
     try {
-      const r = await fetch(`${PAX_BIN_URL}/latest`, { headers: { 'X-Master-Key': PAX_BIN_KEY } });
+      const r = await fetch(GATEGADGET_PAX_URL);
       if (r.ok) {
         const d = await r.json();
-        if (d.record?.date === _today) existing = d.record.counts || {};
+        existing = d.counts || {};
       }
     } catch(e) {}
 
-    // TDOP counts take precedence over GateKeeper counts for same key
-    const merged = { date: _today, counts: { ...existing, ...counts } };
-    await fetch(PAX_BIN_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': PAX_BIN_KEY },
+    // TDOP counts take precedence over GateGadget counts for the same key
+    const merged = { counts: { ...existing, ...counts } };
+    await fetch(GATEGADGET_PAX_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(merged)
     });
-    console.log('TDOP: PAX bin synced —', Object.keys(counts).length, 'counts written');
+    console.log('TDOP: GateGadget PAX store synced —', Object.keys(counts).length, 'counts written');
   } catch(e) {
-    console.warn('TDOP: PAX bin sync failed', e.message);
+    console.warn('TDOP: GateGadget PAX sync failed', e.message);
   }
 }
 
