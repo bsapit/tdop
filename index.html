@@ -165,6 +165,8 @@ html,body{max-width:100%;overflow-x:hidden}
 .al-delete-btn:hover{background:#C0392B;border-color:#fff}
 .al-edit-btn{font-family:var(--sans);font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border:1px solid rgba(255,255,255,.55);border-radius:4px;padding:3px 8px;cursor:pointer;background:rgba(62,177,200,.85);color:#fff;white-space:nowrap;transition:all .15s;flex-shrink:0;margin-left:auto}
 .al-edit-btn:hover{background:#3EB1C8;border-color:#fff}
+.al-demote-btn{font-family:var(--sans);font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border:1px solid rgba(255,255,255,.55);border-radius:4px;padding:3px 8px;cursor:pointer;background:rgba(192,57,43,.85);color:#fff;white-space:nowrap;transition:all .15s;flex-shrink:0;margin-left:6px}
+.al-demote-btn:hover{background:#C0392B;border-color:#fff}
 
 /* ── TABLE INSIDE CARD ── */
 .al-tbl{width:100%;border-collapse:collapse;font-size:.88rem}
@@ -2288,6 +2290,10 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
           <button class="al-gated-btn" id="gatedbtn_${gid}" onclick="toggleGated('${gid}',this)">✈ Gated</button>
           <span class="al-gated-label" id="gatedlbl_${gid}">✓ Flight Gated</span>
         ` : ''}
+        ${isHardstand && e.promoted ? `
+          <button class="al-demote-btn" title="Remove from Hardstand Operations — flight has been gated"
+            onclick="demoteHardstand('${iata}','${(e.arrFlight||'').replace(/'/g,'')}','${(e.depFlight||'').replace(/'/g,'')}')">✕ Un-Hardstand</button>
+        ` : ''}
         ${(!isHardstand && !e.isHardstand) ? `
           <button class="al-promote-btn" title="Flag as hardstand operation"
             onclick="promoteTerminalToHardstand('${iata}','${(e.arrFlight||'').replace(/'/g,'')}','${(e.depFlight||'').replace(/'/g,'')}')">⇪ Make Hardstand</button>
@@ -3781,6 +3787,46 @@ function promoteTerminalToHardstand(iata, arrFlight, depFlight) {
   };
 
   renderBriefing(briefingData, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
+  if (typeof kvSave === 'function') kvSave({ silent: true });
+}
+
+// Reverse a "Make Hardstand" promotion. Removes the entry from
+// briefingData.hardstand and un-marks the terminal mirror so the flight goes
+// back to being a normal Terminal D flight. Because this also drops the
+// `promoted` flag, the entry stops being re-injected on subsequent silent
+// refreshes / pulls — without this, a promoted entry persisted forever even
+// after the flight was actually gated, since the refresh logic blindly
+// re-added any entry still flagged `promoted` regardless of current status.
+function demoteHardstand(iata, arrFlight, depFlight) {
+  if (!briefingData || !Array.isArray(briefingData.hardstand)) return;
+
+  const matches = (t) =>
+    t && t.iata === iata &&
+    (t.arrFlight || '') === (arrFlight || '') &&
+    (t.depFlight || '') === (depFlight || '');
+
+  const hsIdx = briefingData.hardstand.findIndex(h => h.promoted && matches(h));
+  if (hsIdx === -1) { alert('Could not locate that hardstand entry.'); return; }
+
+  const label = `${briefingData.hardstand[hsIdx].airline || iata} ${arrFlight || depFlight}`;
+  if (!confirm(`Remove ${label} from Hardstand Operations?\n\nUse this once the flight has actually been gated — it will revert to a normal Terminal D flight and won't be re-added on refresh.`)) return;
+
+  briefingData.hardstand.splice(hsIdx, 1);
+
+  if (Array.isArray(briefingData.terminal)) {
+    const termIdx = briefingData.terminal.findIndex(t => t.promoted && matches(t));
+    if (termIdx !== -1) {
+      briefingData.terminal[termIdx] = {
+        ...briefingData.terminal[termIdx],
+        isHardstand: false,
+        promoted: false,
+      };
+    }
+  }
+
+  const inputSnap = snapshotInputs();
+  renderBriefing(briefingData, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
+  restoreInputs(inputSnap);
   if (typeof kvSave === 'function') kvSave({ silent: true });
 }
 
