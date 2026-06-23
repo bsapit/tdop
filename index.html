@@ -815,6 +815,13 @@ const INTL_DEST       = new Set(['CUN','GUA','SAL']);
 const ALLOWED_FLIGHTS = { 'QF': new Set(['21','22','7','8']) };
 
 // Hardstand gates — flights using these are hardstand ops
+const HARDSTAND_STANDS = new Set([
+  'T83','T84','T85','T90','T91','T92','T93','T94','T95'
+]);
+function isHardstandStand(s) {
+  const u = (s || '').trim().toUpperCase();
+  return HARDSTAND_STANDS.has(u) || u.startsWith('S');
+}
 // US airport codes — used to determine domestic vs international
 const US_AIRPORTS = new Set([
   'ATL','LAX','ORD','DFW','DEN','JFK','SFO','SEA','LAS','MIA',
@@ -2099,25 +2106,25 @@ function processData(turns, dateFrom, dateTo, timeFrom, timeTo) {
     // Only include Terminal D flights — must have a D-prefix gate (D5, D12, etc.)
     // Exception 1: F9/NK may appear on a T-stand with no D gate yet — include and let
     //   shouldInclude make the final call.
-    // Exception 2: ANY carrier assigned to a T-stand (hardstand) is included regardless
+    // Exception 2: ANY carrier assigned to a hardstand (T83–T95, S-stands) is included regardless
     //   of normal carrier rules — they must show up in the hardstand list and the
     //   Terminal D mirror so ground ops can see them.
     const hasDGate = gate.startsWith('D') || arrGate.startsWith('D') || depGate.startsWith('D');
-    const hasTStand = stand.toUpperCase().startsWith('T') || arrStand.toUpperCase().startsWith('T') || depStand.toUpperCase().startsWith('T');
+    const hasTStand = isHardstandStand(stand) || isHardstandStand(arrStand) || isHardstandStand(depStand);
     const iataEarly = (useArr ? (arr.airline||'') : '') || (useDep ? (dep.airline||'') : '');
     if (!hasDGate && !hasTStand) return;
 
     // Per-leg gate validation: exclude any leg whose assigned gate is not D- or T-prefixed.
     // This prevents a turn that straddles D and E gates from leaking the E-gate leg in.
-    const arrLegOk = !useArr || !arrGate || arrGate.startsWith('D') || arrStand.toUpperCase().startsWith('T');
-    const depLegOk = !useDep || !depGate || depGate.startsWith('D') || depStand.toUpperCase().startsWith('T');
+    const arrLegOk = !useArr || !arrGate || arrGate.startsWith('D') || isHardstandStand(arrStand);
+    const depLegOk = !useDep || !depGate || depGate.startsWith('D') || isHardstandStand(depStand);
     const useArrFinal = useArr && arrLegOk;
     const useDepFinal = useDep && depLegOk;
     if (!useArrFinal && !useDepFinal) return;
 
-    // A leg is a hardstand operation if its stand starts with T (e.g. T84, T93)
-    const arrIsHardstand = useArrFinal && arrStand.toUpperCase().startsWith('T');
-    const depIsHardstand = useDepFinal && depStand.toUpperCase().startsWith('T');
+    // A leg is a hardstand operation if its stand is in the hardstand set (T83–T95, S-stands)
+    const arrIsHardstand = useArrFinal && isHardstandStand(arrStand);
+    const depIsHardstand = useDepFinal && isHardstandStand(depStand);
 
     const arrIata  = useArrFinal ? (arr.airline || '') : '';
     const depIata  = useDepFinal ? (dep.airline || '') : '';
@@ -2137,7 +2144,7 @@ function processData(turns, dateFrom, dateTo, timeFrom, timeTo) {
     // Codeshare guard: exclude flights marketed under an excluded carrier's brand.
     // 1. flightNature='C' (codeshare) or 'G' (common use) with excluded carrier iata.
     // 2. Raw flightNumber has a leading excluded IATA prefix (e.g. "AA1234" on an IB turn).
-    // T-stand override: any flight assigned to a T-stand is always kept.
+    // Hardstand override: any flight assigned to a hardstand is always kept.
     if (!hasTStand) {
       const arrNature = (arr.flightNature || '').toUpperCase();
       const depNature = (dep.flightNature || '').toUpperCase();
