@@ -89,11 +89,11 @@ html,body{max-width:100%;overflow-x:hidden}
 .btn-gatecounts{background:#41395F;color:#fff;border:1px solid #3EB1C8}
 .btn-phonebook{background:#1A7A5E}
 .btn-busneeded{background:#D4800A}
-.btn-alerts{background:#F2A900;color:#1a1a1a;position:relative}
-.btn-alerts-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:130px;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:500;overflow:hidden}
+.btn-alerts{background:#C0392B;color:#fff;position:relative}
+.btn-alerts-dropdown{display:none;position:absolute;top:calc(100% + 4px);right:0;min-width:130px;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:500;overflow:hidden}
 .btn-alerts-dropdown.open{display:block}
-.btn-alerts-dropdown button{display:block;width:100%;text-align:left;padding:9px 14px;font-family:var(--sans);font-size:.8rem;font-weight:700;background:none;border:none;color:var(--text-1);cursor:pointer;white-space:nowrap}
-.btn-alerts-dropdown button:hover{background:var(--surface-alt)}
+.btn-alerts-dropdown button{display:block;width:100%;text-align:left;padding:9px 14px;font-family:var(--sans);font-size:.8rem;font-weight:700;border:none;cursor:pointer;white-space:nowrap}
+.btn-alerts-dropdown button:first-child{border-bottom:1px solid rgba(0,0,0,.1)}
 [data-theme="dark"] .btn-gatecounts{background:#3EB1C8;color:#1a1a1a;border:1px solid #41395F}
 
 /* ── GATE COUNTS MODAL ── */
@@ -325,16 +325,17 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <button class="btn btn-fifa" onclick="openFifaModal()">⚽ Add Charter</button>
     <button class="btn btn-seesay" id="btnSeeSay" onclick="triggerSeeSay()">👁 SeeSay</button>
     <button class="btn btn-busneeded" id="btnBusNeeded" onclick="openBusNeededModal()">🚌 Bus Needed</button>
-    <div class="btn btn-alerts" id="btnAlerts" style="padding:0">
-      <button style="background:none;border:none;color:#fff;font-family:var(--sans);font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:8px 13px;cursor:pointer;white-space:nowrap;width:100%" onclick="toggleAlertsDropdown(event)">🚨 Alerts ▾</button>
-      <div class="btn-alerts-dropdown" id="alertsDropdown">
-        <button onclick="openAlertModal(1)">🔴 Alert I</button>
-        <button onclick="openAlertModal(2)">🟠 Alert II</button>
-      </div>
-    </div>
     <button class="btn btn-equip" id="btnEquip" onclick="window.open('equipment_email.html','_blank')">🔧 Equip</button>
     <button class="btn btn-nightbrief" onclick="window.open('NightBrief.html','_blank')" title="Open NightBrief">🦉 NightBrief</button>
     <button class="btn btn-gatecounts" onclick="openGateCounts()" title="Open Gate &amp; Stand Counter">📊 Gate Counts</button>
+    <div style="margin-left:auto"></div>
+    <div class="btn btn-alerts" id="btnAlerts" style="padding:0;background:#C0392B">
+      <button style="background:none;border:none;color:#fff;font-family:var(--sans);font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:8px 13px;cursor:pointer;white-space:nowrap;width:100%" onclick="toggleAlertsDropdown(event)">🚨 Alerts ▾</button>
+      <div class="btn-alerts-dropdown" id="alertsDropdown">
+        <button style="color:#1a1a1a;background:#F2A900" onclick="openAlertModal(1)">🔴 Alert I</button>
+        <button style="color:#fff;background:#E67E22" onclick="openAlertModal(2)">🟠 Alert II</button>
+      </div>
+    </div>
 
   </div>
 </div>
@@ -721,7 +722,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <div id="alertStatus" style="font-size:.78rem;color:var(--text-2);min-height:18px;margin-top:4px"></div>
     <div class="modal-actions">
       <button class="btn" style="background:var(--text-3)" onclick="closeAlertModal()">Cancel</button>
-      <button class="btn" style="background:#F2A900;color:#1a1a1a" id="alertOkBtn" onclick="submitAlert()">Send to Teams</button>
+      <button class="btn" style="background:#C0392B" id="alertOkBtn" onclick="submitAlert()">Send to Teams</button>
     </div>
   </div>
 </div>
@@ -5529,6 +5530,7 @@ function openAlertModal(level) {
   document.getElementById('alertsDropdown').classList.remove('open');
   document.getElementById('alertModalTitle').textContent = level === 1 ? '🚨 Alert I' : '🟠 Alert II';
   document.getElementById('alertOkBtn').style.background = level === 1 ? '#F2A900' : '#E67E22';
+  document.getElementById('alertOkBtn').style.color = level === 1 ? '#1a1a1a' : '#fff';
   ['alertRunway','alertCallsign','alertAcType','alertIssue','alertFob','alertSob','alertEta'].forEach(id => {
     document.getElementById(id).value = '';
   });
