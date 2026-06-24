@@ -334,6 +334,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
       <div class="btn-alerts-dropdown" id="alertsDropdown">
         <button style="color:#1a1a1a;background:#F2A900" onclick="openAlertModal(1)">🔴 Alert I</button>
         <button style="color:#fff;background:#E67E22" onclick="openAlertModal(2)">🟠 Alert II</button>
+        <button style="color:#fff;background:#1A7A5E;border-top:1px solid rgba(255,255,255,.2)" onclick="submitAlertTerminated()">✅ Alert Terminated</button>
       </div>
     </div>
 
@@ -5542,6 +5543,40 @@ function openAlertModal(level) {
 
 function closeAlertModal() {
   document.getElementById('alertModal').style.display = 'none';
+}
+
+async function submitAlertTerminated() {
+  document.getElementById('alertsDropdown').classList.remove('open');
+
+  const webhookUrl = TEAMS_DESTINATIONS[0]?.url;
+  if (!webhookUrl || webhookUrl.includes('PASTE_')) {
+    console.warn('[TDOP] Teams webhook not configured.');
+    return;
+  }
+
+  const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  const S   = 'font-family:Segoe UI,Arial,sans-serif;';
+
+  const html = `<div style="${S}max-width:420px">
+    <div style="background:#1A7A5E;color:#fff;padding:8px 12px;border-radius:6px 6px 0 0">
+      <div style="font-size:15px;font-weight:700;letter-spacing:.03em">✅ ALERT TERMINATED</div>
+      <div style="font-size:11px;opacity:.85;margin-top:2px">DFW Terminal D &nbsp;·&nbsp; Posted ${now}</div>
+    </div>
+    <div style="border:1px solid #E8E8E8;border-top:none;border-radius:0 0 6px 6px;background:#fff;padding:10px 14px">
+      <p style="${S}font-size:14px;font-weight:700;color:#1C1C1E;margin:0">The alert has been terminated. All clear.</p>
+    </div>
+  </div>`;
+
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: html })
+    });
+    console.log('[TDOP] Alert Terminated sent to Cobus chat.');
+  } catch (err) {
+    console.error('[TDOP] Alert Terminated failed:', err);
+  }
 }
 
 async function submitAlert() {
