@@ -1140,6 +1140,9 @@ function restoreInputs(snap) {
     // and the terminal mirror, so we need to populate all copies.
     Object.entries(snap).forEach(([id, entry]) => {
       if (entry.type !== 'text') return;
+      // PAX counts are sourced live from the Blob store, never from KV.
+      // Skip any pax_ keys that may exist in blobs saved before this fix.
+      if (/^pax_/.test(id)) return;
       // If this is a note id, hit every copy; otherwise use single getById.
       if (/^note_/.test(id)) {
         const copies = document.querySelectorAll(`input.cell-note-input#${CSS.escape(id)}`);
@@ -1272,7 +1275,10 @@ function kvBuildState() {
   // which is why all three exports (Teams card, HS Ops email, combined email)
   // were silently dropping the Note row. getNote() reads the DOM, so as long
   // as the input has a value, everything downstream works.
-  document.querySelectorAll('input.cell-eta, input.cell-pax-input, input.cell-note-input').forEach(el => {
+  // PAX inputs are intentionally excluded — the Blob store (GATEGADGET_PAX_URL)
+  // is the sole source of truth for PAX counts. Saving them to KV would cause
+  // yesterday's counts to restore into today's blank briefing.
+  document.querySelectorAll('input.cell-eta, input.cell-note-input').forEach(el => {
     if (el.id && el.value) inputs[el.id] = { type: 'text', value: el.value };
   });
   document.querySelectorAll('input.cancel-chk').forEach(el => {
@@ -1459,6 +1465,10 @@ async function nuclearClear() {
       body: JSON.stringify({ cleared: true, savedAt: new Date().toISOString() }),
     });
   } catch(e) {}
+  // Wipe PAX Blob store — new briefing starts with a clean slate
+  try {
+    await fetch(GATEGADGET_PAX_URL + '?wipe=true', { method: 'POST' });
+  } catch(e) {}
 
   // 4. Reset UI
   const el  = document.getElementById('saveIndicator');
@@ -1536,6 +1546,10 @@ async function startupNew() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cleared: true, savedAt: new Date().toISOString() }),
     });
+  } catch(e) {}
+  // Wipe PAX Blob store — new briefing starts with a clean slate
+  try {
+    await fetch(GATEGADGET_PAX_URL + '?wipe=true', { method: 'POST' });
   } catch(e) {}
   setStatus('loading', "Pulling fresh briefing…");
   await loadOps();
@@ -1771,6 +1785,10 @@ function scheduleNightlyReset() {
         body: JSON.stringify({ cleared: true, savedAt: new Date().toISOString() }),
       });
     } catch(e) { console.warn('[TDOP] Nightly KV wipe failed:', e.message); }
+    // Wipe PAX Blob store — nightly reset starts the new day with a clean slate
+    try {
+      await fetch(GATEGADGET_PAX_URL + '?wipe=true', { method: 'POST' });
+    } catch(e) { console.warn('[TDOP] Nightly PAX wipe failed:', e.message); }
 
     // Reset all in-memory state
     _kvLastSavedAt          = null;
