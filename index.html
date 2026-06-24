@@ -89,6 +89,11 @@ html,body{max-width:100%;overflow-x:hidden}
 .btn-gatecounts{background:#41395F;color:#fff;border:1px solid #3EB1C8}
 .btn-phonebook{background:#1A7A5E}
 .btn-busneeded{background:#D4800A}
+.btn-alerts{background:#F2A900;color:#1a1a1a;position:relative}
+.btn-alerts-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:130px;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:500;overflow:hidden}
+.btn-alerts-dropdown.open{display:block}
+.btn-alerts-dropdown button{display:block;width:100%;text-align:left;padding:9px 14px;font-family:var(--sans);font-size:.8rem;font-weight:700;background:none;border:none;color:var(--text-1);cursor:pointer;white-space:nowrap}
+.btn-alerts-dropdown button:hover{background:var(--surface-alt)}
 [data-theme="dark"] .btn-gatecounts{background:#3EB1C8;color:#1a1a1a;border:1px solid #41395F}
 
 /* ── GATE COUNTS MODAL ── */
@@ -320,6 +325,13 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <button class="btn btn-fifa" onclick="openFifaModal()">⚽ Add Charter</button>
     <button class="btn btn-seesay" id="btnSeeSay" onclick="triggerSeeSay()">👁 SeeSay</button>
     <button class="btn btn-busneeded" id="btnBusNeeded" onclick="openBusNeededModal()">🚌 Bus Needed</button>
+    <div class="btn btn-alerts" id="btnAlerts" style="padding:0">
+      <button style="background:none;border:none;color:#fff;font-family:var(--sans);font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:8px 13px;cursor:pointer;white-space:nowrap;width:100%" onclick="toggleAlertsDropdown(event)">🚨 Alerts ▾</button>
+      <div class="btn-alerts-dropdown" id="alertsDropdown">
+        <button onclick="openAlertModal(1)">🔴 Alert I</button>
+        <button onclick="openAlertModal(2)">🟠 Alert II</button>
+      </div>
+    </div>
     <button class="btn btn-equip" id="btnEquip" onclick="window.open('equipment_email.html','_blank')">🔧 Equip</button>
     <button class="btn btn-nightbrief" onclick="window.open('NightBrief.html','_blank')" title="Open NightBrief">🦉 NightBrief</button>
     <button class="btn btn-gatecounts" onclick="openGateCounts()" title="Open Gate &amp; Stand Counter">📊 Gate Counts</button>
@@ -671,6 +683,45 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <div class="modal-actions">
       <button class="btn" style="background:var(--text-3)" onclick="closeBusNeededModal()">Cancel</button>
       <button class="btn" style="background:#D4800A" id="busNeededOkBtn" onclick="submitBusNeeded()">OK — Send to Teams</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="alertModal" style="display:none" onclick="if(event.target===this)closeAlertModal()">
+  <div class="modal-box" style="width:340px">
+    <h3 id="alertModalTitle">🚨 Alert I</h3>
+    <div class="modal-field">
+      <label for="alertRunway">Runway</label>
+      <input type="text" id="alertRunway" placeholder="e.g. 17C, 31L…" autocomplete="off" />
+    </div>
+    <div class="modal-field">
+      <label for="alertCallsign">Callsign &amp; Flight #</label>
+      <input type="text" id="alertCallsign" placeholder="e.g. AAL 1234" autocomplete="off" />
+    </div>
+    <div class="modal-field">
+      <label for="alertAcType">A/C Type</label>
+      <input type="text" id="alertAcType" placeholder="e.g. B737, A320…" autocomplete="off" />
+    </div>
+    <div class="modal-field">
+      <label for="alertIssue">Issue</label>
+      <input type="text" id="alertIssue" placeholder="e.g. Gear unsafe, hydraulics…" autocomplete="off" />
+    </div>
+    <div class="modal-field">
+      <label for="alertFob">FOB</label>
+      <input type="text" id="alertFob" placeholder="Fuel on board" autocomplete="off" />
+    </div>
+    <div class="modal-field">
+      <label for="alertSob">SOB</label>
+      <input type="text" id="alertSob" placeholder="Souls on board" autocomplete="off" />
+    </div>
+    <div class="modal-field">
+      <label for="alertEta">ETA</label>
+      <input type="text" id="alertEta" placeholder="e.g. 14:35" autocomplete="off" />
+    </div>
+    <div id="alertStatus" style="font-size:.78rem;color:var(--text-2);min-height:18px;margin-top:4px"></div>
+    <div class="modal-actions">
+      <button class="btn" style="background:var(--text-3)" onclick="closeAlertModal()">Cancel</button>
+      <button class="btn" style="background:#F2A900;color:#1a1a1a" id="alertOkBtn" onclick="submitAlert()">Send to Teams</button>
     </div>
   </div>
 </div>
@@ -5459,6 +5510,122 @@ async function submitBusNeeded() {
     okBtn.disabled = false;
   }
 }
+
+// ── ALERTS ───────────────────────────────────────────────────────────────────
+let _alertLevel = 1;
+
+function toggleAlertsDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('alertsDropdown').classList.toggle('open');
+}
+
+// Close dropdown if user clicks anywhere else
+document.addEventListener('click', function() {
+  document.getElementById('alertsDropdown')?.classList.remove('open');
+});
+
+function openAlertModal(level) {
+  _alertLevel = level;
+  document.getElementById('alertsDropdown').classList.remove('open');
+  document.getElementById('alertModalTitle').textContent = level === 1 ? '🚨 Alert I' : '🟠 Alert II';
+  document.getElementById('alertOkBtn').style.background = level === 1 ? '#F2A900' : '#E67E22';
+  ['alertRunway','alertCallsign','alertAcType','alertIssue','alertFob','alertSob','alertEta'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('alertStatus').textContent = '';
+  document.getElementById('alertOkBtn').disabled = false;
+  document.getElementById('alertModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('alertRunway').focus(), 80);
+}
+
+function closeAlertModal() {
+  document.getElementById('alertModal').style.display = 'none';
+}
+
+async function submitAlert() {
+  const fields = {
+    runway:   document.getElementById('alertRunway').value.trim(),
+    callsign: document.getElementById('alertCallsign').value.trim(),
+    acType:   document.getElementById('alertAcType').value.trim(),
+    issue:    document.getElementById('alertIssue').value.trim(),
+    fob:      document.getElementById('alertFob').value.trim(),
+    sob:      document.getElementById('alertSob').value.trim(),
+    eta:      document.getElementById('alertEta').value.trim(),
+  };
+  const statEl = document.getElementById('alertStatus');
+  const okBtn  = document.getElementById('alertOkBtn');
+
+  // At least one field must have a value
+  if (!Object.values(fields).some(v => v)) {
+    statEl.style.color = 'var(--red)';
+    statEl.textContent = '⚠ Enter at least one field before sending.';
+    return;
+  }
+
+  const webhookUrl = TEAMS_DESTINATIONS[0]?.url;
+  if (!webhookUrl || webhookUrl.includes('PASTE_')) {
+    statEl.style.color = 'var(--red)';
+    statEl.textContent = '⚠ Teams webhook URL not configured.';
+    return;
+  }
+
+  okBtn.disabled = true;
+  statEl.style.color = 'var(--text-2)';
+  statEl.textContent = '⌛ Sending to Teams…';
+
+  const now      = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  const lvlLabel = _alertLevel === 1 ? 'ALERT I' : 'ALERT II';
+  const accent   = _alertLevel === 1 ? '#F2A900' : '#E67E22'; // Alert I = yellow, Alert II = orange
+  const S        = 'font-family:Segoe UI,Arial,sans-serif;';
+
+  // All fields always shown — blank entries display as N/A
+  const rows = [
+    ['Runway',          fields.runway],
+    ['Callsign / Flt',  fields.callsign],
+    ['A/C Type',        fields.acType],
+    ['Issue',           fields.issue],
+    ['FOB',             fields.fob],
+    ['SOB',             fields.sob],
+    ['ETA',             fields.eta],
+  ].map(([label, val]) => `
+        <tr>
+          <td style="${S}font-size:11px;font-weight:700;color:#8A8A96;text-transform:uppercase;letter-spacing:.06em;padding:3px 0 1px">${label}</td>
+        </tr>
+        <tr>
+          <td style="${S}font-size:14px;font-weight:700;color:${val ? '#1C1C1E' : '#AAAAAA'};padding-bottom:8px">${val || 'N/A'}</td>
+        </tr>`).join('');
+
+  const html = `<div style="${S}max-width:420px">
+    <div style="background:${accent};color:#fff;padding:8px 12px;border-radius:6px 6px 0 0">
+      <div style="font-size:15px;font-weight:700;letter-spacing:.03em">🚨 ${lvlLabel}</div>
+      <div style="font-size:11px;opacity:.85;margin-top:2px">DFW Terminal D &nbsp;·&nbsp; Posted ${now}</div>
+    </div>
+    <div style="border:1px solid #E8E8E8;border-top:none;border-radius:0 0 6px 6px;background:#fff;padding:10px 14px">
+      <table cellpadding="0" cellspacing="0" border="0" style="width:100%">${rows}
+      </table>
+    </div>
+  </div>`;
+
+  const payload = { text: html };
+
+  try {
+    const resp = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    statEl.style.color = 'var(--green)';
+    statEl.textContent = `✓ ${lvlLabel} sent to Cobus chat!`;
+    setTimeout(() => closeAlertModal(), 1600);
+  } catch (err) {
+    statEl.style.color = 'var(--red)';
+    statEl.textContent = '✗ Failed to send. Check console.';
+    console.error('[TDOP Alert]', err);
+    okBtn.disabled = false;
+  }
+}
+
 
 async function triggerSeeSay() {
   const btn = document.getElementById('btnSeeSay');
