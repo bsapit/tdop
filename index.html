@@ -3415,8 +3415,9 @@ function _bbReadChecked(id) {
   return el ? !!el.checked : false;
 }
 
-function _bbBuildTurn(e) {
+function _bbBuildTurn(e, blobPax) {
   // e is a hardstand entry from briefingData.hardstand.
+  // blobPax is the counts object from the Netlify pax blob (may be undefined).
   const iata = e.iata;
   const arrFlightNum = e.arrFlight || '';
   const depFlightNum = e.depFlight || '';
@@ -3436,8 +3437,22 @@ function _bbBuildTurn(e) {
     ? _bbReadLive(`etd_${iata}_${depFlightNum}_dep`) || e.depEstTime || ''
     : '';
 
-  const arrPax = arrFlightNum ? _bbReadLive(`pax_${iata}_${arrFlightNum}_arr`) : '';
-  const depPax = depFlightNum ? _bbReadLive(`pax_${iata}_${depFlightNum}_dep`) : '';
+  // PAX: prefer the live DOM input (op is actively typing), fall back to the
+  // Netlify blob (covers GateKeeper-entered counts and counts from a previous
+  // TDOP session that was refreshed, clearing the DOM inputs).
+  // Blob keys: "{flightNum} (Arrival)" / "{flightNum} (Departure)"
+  const _pax = (domId, blobKey) => {
+    const domVal = _bbReadLive(domId);
+    if (domVal !== '') return domVal;
+    if (blobPax && blobPax[blobKey] != null) return String(blobPax[blobKey]);
+    return '';
+  };
+  const arrPax = arrFlightNum
+    ? _pax(`pax_${iata}_${arrFlightNum}_arr`, `${arrFlightNum} (Arrival)`)
+    : '';
+  const depPax = depFlightNum
+    ? _pax(`pax_${iata}_${depFlightNum}_dep`, `${depFlightNum} (Departure)`)
+    : '';
 
   const arrCanceled = arrFlightNum ? _bbReadChecked(`cancel_${iata}_${arrFlightNum}`) : false;
   const depCanceled = depFlightNum ? _bbReadChecked(`cancel_${iata}_${depFlightNum}`) : false;
@@ -3508,8 +3523,23 @@ async function publishToBusBoard() {
   btn.disabled = true;
   _bbSetStatus('Publishing…', '');
 
+  // Fetch the pax blob so counts entered by GateKeeper — or entered in a
+  // previous TDOP session (before a page refresh cleared the DOM inputs) —
+  // are included even when the DOM inputs are currently empty.
+  // Key format in the blob: "AV9955 (Arrival)" / "AV9955 (Departure)"
+  let blobPax = {};
+  try {
+    const r = await fetch(GATEGADGET_PAX_URL);
+    if (r.ok) {
+      const d = await r.json();
+      blobPax = d.counts || {};
+    }
+  } catch(e) {
+    console.warn('[BusBoard] pax blob fetch failed — publishing without blob pax:', e.message);
+  }
+
   // Build payload from hardstand list only
-  const turns = briefingData.hardstand.map(_bbBuildTurn);
+  const turns = briefingData.hardstand.map(e => _bbBuildTurn(e, blobPax));
 
   // Drop fully-canceled turns. Comment out this filter to keep them visible
   // on BusBoard (BusBoard already knows how to render strike-through).
