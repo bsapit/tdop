@@ -5134,7 +5134,6 @@ function getTowInfo(e) {
 }
 
 function toggleTrafficMenu() {
-  // Refresh the Custom label with the current picker values before opening.
   const tf = document.getElementById('timeFrom')?.value || '04:30';
   const tt = document.getElementById('timeTo')?.value   || '23:59';
   const df = document.getElementById('dateFrom')?.value || '';
@@ -5161,10 +5160,10 @@ function hasONStand(e) {
 // Fixed shift windows — always relative to these clock times, regardless of
 // whatever date-range/shift the rest of TDOP is currently displaying.
 const TRAFFIC_WINDOWS = {
-  AM:     { from: '04:30', to: '14:30', label: 'AM Traffic — Terminal D',     accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0', standOnly: false },
-  PM:     { from: '14:00', to: '23:59', label: 'PM Traffic — Terminal D',     accent: '#FF5000', accentDk: '#C03E00', headBg: '#FFEFE8', altBg: '#FFF6F2', standOnly: false },
-  ON:     { from: '21:00', to: '04:30', label: 'O/N Traffic — Terminal D',    accent: '#3EB1C8', accentDk: '#1A7080', headBg: '#E8F8FC', altBg: '#F0FBFD', standOnly: true  },
-  CUSTOM: { from: null,    to: null,    label: 'Traffic — Terminal D',         accent: '#7B68EE', accentDk: '#4B3BAE', headBg: '#F0EEFF', altBg: '#F8F6FF', standOnly: false },
+  AM:     { from: '04:30', to: '14:30', label: 'AM Traffic — Terminal D',  accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0', standOnly: false },
+  PM:     { from: '14:00', to: '23:59', label: 'PM Traffic — Terminal D',  accent: '#FF5000', accentDk: '#C03E00', headBg: '#FFEFE8', altBg: '#FFF6F2', standOnly: false },
+  ON:     { from: '21:00', to: '04:30', label: 'O/N Traffic — Terminal D', accent: '#3EB1C8', accentDk: '#1A7080', headBg: '#E8F8FC', altBg: '#F0FBFD', standOnly: true  },
+  CUSTOM: { from: null,    to: null,    label: 'Traffic — Terminal D',      accent: '#7B68EE', accentDk: '#4B3BAE', headBg: '#F0EEFF', altBg: '#F8F6FF', standOnly: false },
 };
 
 function exportTrafficWindow(period) {
@@ -5173,7 +5172,7 @@ function exportTrafficWindow(period) {
 
   const cfg = TRAFFIC_WINDOWS[period];
 
-  // CUSTOM: read times (and optionally dates) straight from the picker inputs.
+  // CUSTOM: read times and dates straight from the picker inputs.
   let winFrom = cfg.from, winTo = cfg.to;
   let customDateFrom = briefingData.dateFrom;
   let customDateTo   = briefingData.dateFrom;
@@ -5183,6 +5182,7 @@ function exportTrafficWindow(period) {
     customDateFrom = document.getElementById('dateFrom')?.value || briefingData.dateFrom;
     customDateTo   = document.getElementById('dateTo')?.value   || customDateFrom;
   }
+
   const fromM   = toMins(winFrom);
   const toM     = toMins(winTo);
   const wraps   = toM < fromM; // window crosses midnight
@@ -5194,12 +5194,21 @@ function exportTrafficWindow(period) {
     return m >= fromM && m <= toM;
   }
 
+  // Returns the best available arrival time string for a flight —
+  // live ETA input first, then API estimate, then STA.
+  function bestArrTime(e) {
+    const live = getVal(`eta_${e.iata}_${e.arrFlight}_arr`) || getVal(`term_eta_${e.iata}_${e.arrFlight}`);
+    if (live && toMins(live) !== null) return live;
+    if (e.arrEstTime) return e.arrEstTime;
+    return e.arrTime;
+  }
+
   const seen = new Set();
   const arrivals = [];
   [...briefingData.terminal, ...briefingData.hardstand].forEach(e => {
     if (!e.arrFlight || seen.has(e.arrFlight)) return;
     if (getChk(`cancel_${e.iata}_${e.arrFlight}`)) return;
-    if (!inWindow(e.arrTime)) return;
+    if (!inWindow(bestArrTime(e))) return;
     if (cfg.standOnly && !hasONStand(e)) return;
     seen.add(e.arrFlight);
     arrivals.push(e);
@@ -5227,9 +5236,9 @@ function exportTrafficWindow(period) {
   }
 
   const shiftLabel  = `${winFrom}–${winTo}${wraps ? ' (+1)' : ''}`;
-  const dk          = period === 'CUSTOM' ? customDateFrom : briefingData.dateFrom;
-  const dkTo        = period === 'CUSTOM' ? customDateTo   : briefingData.dateFrom;
-  const dateLong    = dk !== dkTo ? `${fmtDateLong(dk)} – ${fmtDateLong(dkTo)}` : fmtDateLong(dk);
+  const dk       = period === 'CUSTOM' ? customDateFrom : briefingData.dateFrom;
+  const dkTo     = period === 'CUSTOM' ? customDateTo   : briefingData.dateFrom;
+  const dateLong = dk !== dkTo ? `${fmtDateLong(dk)} – ${fmtDateLong(dkTo)}` : fmtDateLong(dk);
   const now         = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
   const accentColor = cfg.accent;
   const S = 'font-family:Arial,sans-serif;font-size:11px;';
