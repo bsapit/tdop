@@ -3547,6 +3547,38 @@ function _bbSetStatus(msg, kind) {
                      'var(--text-3, #888)';
 }
 
+// ── BUSBOARD AUTO-PUBLISH ────────────────────────────────────────────────────
+// Watches every pax / eta / etd / cancel / note field. After a 3-second quiet
+// period following the last change, silently re-publishes to BusBoard so the
+// display is always in sync without requiring a manual button press.
+
+const _BB_DEBOUNCE_MS = 3000;
+let   _bbAutoTimer    = null;
+
+function _bbScheduleAutoPublish() {
+  // Bail out if no briefing is loaded yet
+  if (!briefingData || !Array.isArray(briefingData.hardstand)) return;
+  clearTimeout(_bbAutoTimer);
+  _bbAutoTimer = setTimeout(() => {
+    publishToBusBoard();
+  }, _BB_DEBOUNCE_MS);
+}
+
+// Delegated listener — catches all matching fields even after the DOM is
+// re-rendered (e.g. after a briefing reload or turn add/remove).
+(function _bbAttachAutoPublish() {
+  function _onBBFieldEvent(e) {
+    const id = e.target && e.target.id || '';
+    // Match the exact field IDs that _bbBuildTurn / getNote read from the DOM
+    if (/^(pax_|eta_|etd_|cancel_|note_)/.test(id)) {
+      _bbScheduleAutoPublish();
+    }
+  }
+  // 'change' covers checkboxes (cancel) and selects; 'input' covers text fields
+  document.addEventListener('change', _onBBFieldEvent);
+  document.addEventListener('input',  _onBBFieldEvent);
+})();
+
 function buildTeamsAdaptiveCard(turns) {
   const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   const dateStr = document.getElementById('dateFrom')?.value || '';
