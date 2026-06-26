@@ -74,13 +74,6 @@ html,body{max-width:100%;overflow-x:hidden}
 .btn-pdf{background:#585858}.btn-email{background:var(--orange)}.btn-hsops{background:var(--purple)}
 .btn-lfops{background:var(--green)}.btn-intl{background:#7B4FBF}.btn-swiss{background:#C0392B}
 .btn-wfs{background:#2471A3}.btn-prospect{background:#D4800A}.btn-traffic{background:var(--gold)}
-.traffic-wrap{position:relative;display:inline-block}
-.traffic-menu{display:none;flex-direction:column;gap:2px;position:absolute;top:calc(100% + 4px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px;min-width:230px;z-index:300;box-shadow:var(--shadow)}
-.traffic-menu.open{display:flex}
-.traffic-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--text-1);transition:background .12s}
-.traffic-item:hover{background:var(--surface-alt)}
-.traffic-item small{margin-left:auto;font-weight:400;font-size:.68rem;color:var(--text-3);white-space:nowrap}
-.traffic-item-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .btn-seesay{background:#1565C0}
 .btn-fifa{background:#E6A817;color:#1a1a1a}
 .btn-equip{background:#5D6D7E}
@@ -314,15 +307,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <span id="busBoardStatus" style="font-size:.75rem;color:var(--text-3);margin-left:4px;align-self:center"></span>
     <button class="btn btn-lfops" id="btnLFOps" onclick="exportLFOps()" disabled>✉ LF Ops</button>
     <button class="btn btn-intl" id="btnIntlOps" onclick="exportIntlOps()" disabled>🌐 Intl Ops</button>
-    <div class="traffic-wrap" id="trafficWrap">
-      <button class="btn btn-traffic" id="btnTraffic" onclick="toggleTrafficMenu()" disabled>Traffic ▾</button>
-      <div class="traffic-menu" id="trafficMenu">
-        <div class="traffic-item" onclick="exportTrafficWindow('AM')"><span class="traffic-item-dot" style="background:#F2A900"></span>AM Traffic<small>04:30 – 14:30</small></div>
-        <div class="traffic-item" onclick="exportTrafficWindow('PM')"><span class="traffic-item-dot" style="background:#FF5000"></span>PM Traffic<small>14:00 – 23:59</small></div>
-        <div class="traffic-item" onclick="exportTrafficWindow('ON')"><span class="traffic-item-dot" style="background:#3EB1C8"></span>O/N Traffic<small>21:00 – 04:30 &middot; overnight stands only</small></div>
-        <div class="traffic-item" onclick="exportTrafficWindow('CUSTOM')"><span class="traffic-item-dot" style="background:#7B68EE"></span>Custom<small id="trafficCustomLabel">picker times</small></div>
-      </div>
-    </div>
+    <button class="btn btn-traffic" id="btnTraffic" onclick="exportTrafficWindow('CUSTOM')" disabled>Traffic</button>
     <button class="btn btn-fifa" onclick="openFifaModal()">⚽ Add Charter</button>
     <button class="btn btn-seesay" id="btnSeeSay" onclick="triggerSeeSay()">👁 SeeSay</button>
     <button class="btn btn-busneeded" id="btnBusNeeded" onclick="openBusNeededModal()">🚌 Bus Needed</button>
@@ -5133,19 +5118,7 @@ function getTowInfo(e) {
   };
 }
 
-function toggleTrafficMenu() {
-  const tf = document.getElementById('timeFrom')?.value || '04:30';
-  const tt = document.getElementById('timeTo')?.value   || '23:59';
-  const df = document.getElementById('dateFrom')?.value || '';
-  const dt = document.getElementById('dateTo')?.value   || df;
-  const lbl = document.getElementById('trafficCustomLabel');
-  if (lbl) lbl.textContent = df !== dt ? `${df} ${tf} – ${dt} ${tt}` : `${tf} – ${tt}`;
-  document.getElementById('trafficMenu').classList.toggle('open');
-}
-document.addEventListener('click', (e) => {
-  const wrap = document.getElementById('trafficWrap');
-  if (wrap && !wrap.contains(e.target)) document.getElementById('trafficMenu').classList.remove('open');
-});
+
 
 const ON_STANDS = new Set([
   'D6','D8A','D10','D11','D11A','D14','D14A',
@@ -5163,11 +5136,11 @@ const TRAFFIC_WINDOWS = {
   AM:     { from: '04:30', to: '14:30', label: 'AM Traffic — Terminal D',  accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0', standOnly: false },
   PM:     { from: '14:00', to: '23:59', label: 'PM Traffic — Terminal D',  accent: '#FF5000', accentDk: '#C03E00', headBg: '#FFEFE8', altBg: '#FFF6F2', standOnly: false },
   ON:     { from: '21:00', to: '04:30', label: 'O/N Traffic — Terminal D', accent: '#3EB1C8', accentDk: '#1A7080', headBg: '#E8F8FC', altBg: '#F0FBFD', standOnly: true  },
-  CUSTOM: { from: null,    to: null,    label: 'Traffic — Terminal D',      accent: '#7B68EE', accentDk: '#4B3BAE', headBg: '#F0EEFF', altBg: '#F8F6FF', standOnly: false },
+  CUSTOM: { from: null,    to: null,    label: 'Traffic — Terminal D',      accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0', standOnly: false },
 };
 
 function exportTrafficWindow(period) {
-  document.getElementById('trafficMenu').classList.remove('open');
+  document.getElementById('trafficMenu')?.classList.remove('open');
   if (!briefingData) return;
 
   const cfg = TRAFFIC_WINDOWS[period];
@@ -5187,15 +5160,14 @@ function exportTrafficWindow(period) {
   const toM     = toMins(winTo);
   const wraps   = toM < fromM; // window crosses midnight
 
-  function inWindow(arrTime) {
-    const m = toMins(arrTime);
+  function inWindow(t) {
+    const m = toMins(t);
     if (m === null) return false;
     if (wraps) return m >= fromM || m <= toM;
     return m >= fromM && m <= toM;
   }
 
-  // Returns the best available arrival time string for a flight —
-  // live ETA input first, then API estimate, then STA.
+  // Returns the best arrival time for filtering — ETA first, then STA.
   function bestArrTime(e) {
     const live = getVal(`eta_${e.iata}_${e.arrFlight}_arr`) || getVal(`term_eta_${e.iata}_${e.arrFlight}`);
     if (live && toMins(live) !== null) return live;
