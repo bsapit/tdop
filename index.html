@@ -315,11 +315,12 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <button class="btn btn-lfops" id="btnLFOps" onclick="exportLFOps()" disabled>✉ LF Ops</button>
     <button class="btn btn-intl" id="btnIntlOps" onclick="exportIntlOps()" disabled>🌐 Intl Ops</button>
     <div class="traffic-wrap" id="trafficWrap">
-      <button class="btn btn-traffic" id="btnTraffic" onclick="toggleTrafficMenu()" disabled>📋 Traffic ▾</button>
+      <button class="btn btn-traffic" id="btnTraffic" onclick="toggleTrafficMenu()" disabled>Traffic ▾</button>
       <div class="traffic-menu" id="trafficMenu">
         <div class="traffic-item" onclick="exportTrafficWindow('AM')"><span class="traffic-item-dot" style="background:#F2A900"></span>AM Traffic<small>04:30 – 14:30</small></div>
         <div class="traffic-item" onclick="exportTrafficWindow('PM')"><span class="traffic-item-dot" style="background:#FF5000"></span>PM Traffic<small>14:00 – 23:59</small></div>
         <div class="traffic-item" onclick="exportTrafficWindow('ON')"><span class="traffic-item-dot" style="background:#3EB1C8"></span>O/N Traffic<small>21:00 – 04:30 &middot; overnight stands only</small></div>
+        <div class="traffic-item" onclick="exportTrafficWindow('CUSTOM')"><span class="traffic-item-dot" style="background:#7B68EE"></span>Custom<small id="trafficCustomLabel">picker times</small></div>
       </div>
     </div>
     <button class="btn btn-fifa" onclick="openFifaModal()">⚽ Add Charter</button>
@@ -3415,9 +3416,8 @@ function _bbReadChecked(id) {
   return el ? !!el.checked : false;
 }
 
-function _bbBuildTurn(e, blobPax) {
+function _bbBuildTurn(e) {
   // e is a hardstand entry from briefingData.hardstand.
-  // blobPax is the counts object from the Netlify pax blob (may be undefined).
   const iata = e.iata;
   const arrFlightNum = e.arrFlight || '';
   const depFlightNum = e.depFlight || '';
@@ -3437,22 +3437,8 @@ function _bbBuildTurn(e, blobPax) {
     ? _bbReadLive(`etd_${iata}_${depFlightNum}_dep`) || e.depEstTime || ''
     : '';
 
-  // PAX: prefer the live DOM input (op is actively typing), fall back to the
-  // Netlify blob (covers GateKeeper-entered counts and counts from a previous
-  // TDOP session that was refreshed, clearing the DOM inputs).
-  // Blob keys: "{flightNum} (Arrival)" / "{flightNum} (Departure)"
-  const _pax = (domId, blobKey) => {
-    const domVal = _bbReadLive(domId);
-    if (domVal !== '') return domVal;
-    if (blobPax && blobPax[blobKey] != null) return String(blobPax[blobKey]);
-    return '';
-  };
-  const arrPax = arrFlightNum
-    ? _pax(`pax_${iata}_${arrFlightNum}_arr`, `${arrFlightNum} (Arrival)`)
-    : '';
-  const depPax = depFlightNum
-    ? _pax(`pax_${iata}_${depFlightNum}_dep`, `${depFlightNum} (Departure)`)
-    : '';
+  const arrPax = arrFlightNum ? _bbReadLive(`pax_${iata}_${arrFlightNum}_arr`) : '';
+  const depPax = depFlightNum ? _bbReadLive(`pax_${iata}_${depFlightNum}_dep`) : '';
 
   const arrCanceled = arrFlightNum ? _bbReadChecked(`cancel_${iata}_${arrFlightNum}`) : false;
   const depCanceled = depFlightNum ? _bbReadChecked(`cancel_${iata}_${depFlightNum}`) : false;
@@ -3523,23 +3509,8 @@ async function publishToBusBoard() {
   btn.disabled = true;
   _bbSetStatus('Publishing…', '');
 
-  // Fetch the pax blob so counts entered by GateKeeper — or entered in a
-  // previous TDOP session (before a page refresh cleared the DOM inputs) —
-  // are included even when the DOM inputs are currently empty.
-  // Key format in the blob: "AV9955 (Arrival)" / "AV9955 (Departure)"
-  let blobPax = {};
-  try {
-    const r = await fetch(GATEGADGET_PAX_URL);
-    if (r.ok) {
-      const d = await r.json();
-      blobPax = d.counts || {};
-    }
-  } catch(e) {
-    console.warn('[BusBoard] pax blob fetch failed — publishing without blob pax:', e.message);
-  }
-
   // Build payload from hardstand list only
-  const turns = briefingData.hardstand.map(e => _bbBuildTurn(e, blobPax));
+  const turns = briefingData.hardstand.map(_bbBuildTurn);
 
   // Drop fully-canceled turns. Comment out this filter to keep them visible
   // on BusBoard (BusBoard already knows how to render strike-through).
@@ -5163,6 +5134,13 @@ function getTowInfo(e) {
 }
 
 function toggleTrafficMenu() {
+  // Refresh the Custom label with the current picker values before opening.
+  const tf = document.getElementById('timeFrom')?.value || '04:30';
+  const tt = document.getElementById('timeTo')?.value   || '23:59';
+  const df = document.getElementById('dateFrom')?.value || '';
+  const dt = document.getElementById('dateTo')?.value   || df;
+  const lbl = document.getElementById('trafficCustomLabel');
+  if (lbl) lbl.textContent = df !== dt ? `${df} ${tf} – ${dt} ${tt}` : `${tf} – ${tt}`;
   document.getElementById('trafficMenu').classList.toggle('open');
 }
 document.addEventListener('click', (e) => {
@@ -5183,17 +5161,28 @@ function hasONStand(e) {
 // Fixed shift windows — always relative to these clock times, regardless of
 // whatever date-range/shift the rest of TDOP is currently displaying.
 const TRAFFIC_WINDOWS = {
-  AM: { from: '04:30', to: '14:30', label: 'AM Traffic — Terminal D',  accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0', standOnly: false },
-  PM: { from: '14:00', to: '23:59', label: 'PM Traffic — Terminal D',  accent: '#FF5000', accentDk: '#C03E00', headBg: '#FFEFE8', altBg: '#FFF6F2', standOnly: false },
-  ON: { from: '21:00', to: '04:30', label: 'O/N Traffic — Terminal D', accent: '#3EB1C8', accentDk: '#1A7080', headBg: '#E8F8FC', altBg: '#F0FBFD', standOnly: true  },
+  AM:     { from: '04:30', to: '14:30', label: 'AM Traffic — Terminal D',     accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0', standOnly: false },
+  PM:     { from: '14:00', to: '23:59', label: 'PM Traffic — Terminal D',     accent: '#FF5000', accentDk: '#C03E00', headBg: '#FFEFE8', altBg: '#FFF6F2', standOnly: false },
+  ON:     { from: '21:00', to: '04:30', label: 'O/N Traffic — Terminal D',    accent: '#3EB1C8', accentDk: '#1A7080', headBg: '#E8F8FC', altBg: '#F0FBFD', standOnly: true  },
+  CUSTOM: { from: null,    to: null,    label: 'Traffic — Terminal D',         accent: '#7B68EE', accentDk: '#4B3BAE', headBg: '#F0EEFF', altBg: '#F8F6FF', standOnly: false },
 };
 
 function exportTrafficWindow(period) {
   document.getElementById('trafficMenu').classList.remove('open');
   if (!briefingData) return;
 
-  const cfg     = TRAFFIC_WINDOWS[period];
-  const winFrom = cfg.from, winTo = cfg.to;
+  const cfg = TRAFFIC_WINDOWS[period];
+
+  // CUSTOM: read times (and optionally dates) straight from the picker inputs.
+  let winFrom = cfg.from, winTo = cfg.to;
+  let customDateFrom = briefingData.dateFrom;
+  let customDateTo   = briefingData.dateFrom;
+  if (period === 'CUSTOM') {
+    winFrom        = document.getElementById('timeFrom')?.value || '04:30';
+    winTo          = document.getElementById('timeTo')?.value   || '23:59';
+    customDateFrom = document.getElementById('dateFrom')?.value || briefingData.dateFrom;
+    customDateTo   = document.getElementById('dateTo')?.value   || customDateFrom;
+  }
   const fromM   = toMins(winFrom);
   const toM     = toMins(winTo);
   const wraps   = toM < fromM; // window crosses midnight
@@ -5238,8 +5227,9 @@ function exportTrafficWindow(period) {
   }
 
   const shiftLabel  = `${winFrom}–${winTo}${wraps ? ' (+1)' : ''}`;
-  const dk          = briefingData.dateFrom;
-  const dateLong    = fmtDateLong(dk);
+  const dk          = period === 'CUSTOM' ? customDateFrom : briefingData.dateFrom;
+  const dkTo        = period === 'CUSTOM' ? customDateTo   : briefingData.dateFrom;
+  const dateLong    = dk !== dkTo ? `${fmtDateLong(dk)} – ${fmtDateLong(dkTo)}` : fmtDateLong(dk);
   const now         = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
   const accentColor = cfg.accent;
   const S = 'font-family:Arial,sans-serif;font-size:11px;';
