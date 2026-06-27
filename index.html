@@ -74,6 +74,13 @@ html,body{max-width:100%;overflow-x:hidden}
 .btn-pdf{background:#585858}.btn-email{background:var(--orange)}.btn-hsops{background:var(--purple)}
 .btn-lfops{background:var(--green)}.btn-intl{background:#7B4FBF}.btn-swiss{background:#C0392B}
 .btn-wfs{background:#2471A3}.btn-prospect{background:#D4800A}.btn-traffic{background:var(--gold)}
+.traffic-wrap{position:relative;display:inline-block}
+.traffic-menu{display:none;flex-direction:column;gap:2px;position:absolute;top:calc(100% + 4px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px;min-width:230px;z-index:300;box-shadow:var(--shadow)}
+.traffic-menu.open{display:flex}
+.traffic-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--text-1);transition:background .12s}
+.traffic-item:hover{background:var(--surface-alt)}
+.traffic-item small{margin-left:auto;font-weight:400;font-size:.68rem;color:var(--text-3);white-space:nowrap}
+.traffic-item-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .btn-seesay{background:#1565C0}
 .btn-fifa{background:#E6A817;color:#1a1a1a}
 .btn-equip{background:#5D6D7E}
@@ -307,7 +314,14 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <span id="busBoardStatus" style="font-size:.75rem;color:var(--text-3);margin-left:4px;align-self:center"></span>
     <button class="btn btn-lfops" id="btnLFOps" onclick="exportLFOps()" disabled>✉ LF Ops</button>
     <button class="btn btn-intl" id="btnIntlOps" onclick="exportIntlOps()" disabled>🌐 Intl Ops</button>
-    <button class="btn btn-traffic" id="btnTraffic" onclick="exportTrafficWindow('CUSTOM')" disabled>Traffic</button>
+    <div class="traffic-wrap" id="trafficWrap">
+      <button class="btn btn-traffic" id="btnTraffic" onclick="toggleTrafficMenu()" disabled>📋 Traffic ▾</button>
+      <div class="traffic-menu" id="trafficMenu">
+        <div class="traffic-item" onclick="exportTrafficWindow('AM')"><span class="traffic-item-dot" style="background:#F2A900"></span>AM Traffic<small>04:30 – 14:30</small></div>
+        <div class="traffic-item" onclick="exportTrafficWindow('PM')"><span class="traffic-item-dot" style="background:#FF5000"></span>PM Traffic<small>14:00 – 23:59</small></div>
+        <div class="traffic-item" onclick="exportTrafficWindow('ON')"><span class="traffic-item-dot" style="background:#3EB1C8"></span>O/N Traffic<small>21:00 – 04:30 &middot; overnight stands only</small></div>
+      </div>
+    </div>
     <button class="btn btn-fifa" onclick="openFifaModal()">⚽ Add Charter</button>
     <button class="btn btn-seesay" id="btnSeeSay" onclick="triggerSeeSay()">👁 SeeSay</button>
     <button class="btn btn-busneeded" id="btnBusNeeded" onclick="openBusNeededModal()">🚌 Bus Needed</button>
@@ -1139,13 +1153,7 @@ function applyGateGadgetPax(counts) {
       filled++;
     }
   });
-  if (filled) {
-    console.log(`TDOP: GateGadget auto-filled ${filled} PAX field(s)`);
-    // Notify auto-publish so BusBoard picks up these counts without a
-    // manual button press. The delegated input listener can't see
-    // programmatic value assignments, so we call directly.
-    if (typeof _bbScheduleAutoPublish === 'function') _bbScheduleAutoPublish();
-  }
+  if (filled) console.log(`TDOP: GateGadget auto-filled ${filled} PAX field(s)`);
 }
 
 async function pollGateGadgetPax() {
@@ -1713,19 +1721,15 @@ async function silentRefresh() {
     renderBriefing(briefingData, dateFrom, dateTo, timeFrom, timeTo);
     // Pre-fill from API estimates, then let user inputs overwrite
     prefillApiEstimates(briefingData);
+    // Blob is always the authority for pax — await before restoreInputs.
+    await pollGateGadgetPax();
     // Restore only what the user actually typed on this machine (_userInputs)
     restoreInputs(_userInputs);
-
 
     // Re-attach delegated input recording
     const out = document.getElementById('out');
     out.oninput  = (e) => { recordInputEvent(e); };
     out.onchange = (e) => { recordInputEvent(e); };
-
-    // Fill any still-blank PAX fields from GateGadget (manual entries win,
-    // already handled inside applyGateGadgetPax — fire-and-forget, doesn't
-    // block the refresh).
-    pollGateGadgetPax();
 
     // Show refresh timestamp in save indicator
     const t = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
@@ -2048,6 +2052,10 @@ async function loadOps() {
         Object.assign(_userInputs, window._kvPendingInputs);
         window._kvPendingInputs = {};
       }
+      // Blob is always the authority for pax on the current ops day.
+      // Await before restoreInputs so fields are pre-filled from the blob;
+      // restoreInputs skips pax_ keys so KV never overwrites blob counts.
+      await pollGateGadgetPax();
       restoreInputs(_userInputs);
     }
     // Auto-save so other devices can sync — but NOT on a clean pull.
@@ -2062,9 +2070,6 @@ async function loadOps() {
     const out = document.getElementById('out');
     out.oninput  = (e) => { recordInputEvent(e); };
     out.onchange = (e) => { recordInputEvent(e); };
-    // Fill any blank PAX fields from GateGadget (fire-and-forget; manual
-    // entries are never overwritten — see applyGateGadgetPax).
-    pollGateGadgetPax();
     setStatus('success',
       `Briefing generated — ${briefingData.hardstand.length} hardstand operation(s), ` +
       `${briefingData.terminal.length} terminal turn(s).`);
@@ -5124,7 +5129,13 @@ function getTowInfo(e) {
   };
 }
 
-
+function toggleTrafficMenu() {
+  document.getElementById('trafficMenu').classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('trafficWrap');
+  if (wrap && !wrap.contains(e.target)) document.getElementById('trafficMenu').classList.remove('open');
+});
 
 const ON_STANDS = new Set([
   'D6','D8A','D10','D11','D11A','D14','D14A',
@@ -5139,46 +5150,26 @@ function hasONStand(e) {
 // Fixed shift windows — always relative to these clock times, regardless of
 // whatever date-range/shift the rest of TDOP is currently displaying.
 const TRAFFIC_WINDOWS = {
-  AM:     { from: '04:30', to: '14:30', label: 'AM Traffic — Terminal D',  accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0', standOnly: false },
-  PM:     { from: '14:00', to: '23:59', label: 'PM Traffic — Terminal D',  accent: '#FF5000', accentDk: '#C03E00', headBg: '#FFEFE8', altBg: '#FFF6F2', standOnly: false },
-  ON:     { from: '21:00', to: '04:30', label: 'O/N Traffic — Terminal D', accent: '#3EB1C8', accentDk: '#1A7080', headBg: '#E8F8FC', altBg: '#F0FBFD', standOnly: true  },
-  CUSTOM: { from: null,    to: null,    label: 'Traffic — Terminal D',      accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0', standOnly: false },
+  AM: { from: '04:30', to: '14:30', label: 'AM Traffic — Terminal D',  accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0', standOnly: false },
+  PM: { from: '14:00', to: '23:59', label: 'PM Traffic — Terminal D',  accent: '#FF5000', accentDk: '#C03E00', headBg: '#FFEFE8', altBg: '#FFF6F2', standOnly: false },
+  ON: { from: '21:00', to: '04:30', label: 'O/N Traffic — Terminal D', accent: '#3EB1C8', accentDk: '#1A7080', headBg: '#E8F8FC', altBg: '#F0FBFD', standOnly: true  },
 };
 
 function exportTrafficWindow(period) {
-  document.getElementById('trafficMenu')?.classList.remove('open');
+  document.getElementById('trafficMenu').classList.remove('open');
   if (!briefingData) return;
 
-  const cfg = TRAFFIC_WINDOWS[period];
-
-  // CUSTOM: read times and dates straight from the picker inputs.
-  let winFrom = cfg.from, winTo = cfg.to;
-  let customDateFrom = briefingData.dateFrom;
-  let customDateTo   = briefingData.dateFrom;
-  if (period === 'CUSTOM') {
-    winFrom        = document.getElementById('timeFrom')?.value || '04:30';
-    winTo          = document.getElementById('timeTo')?.value   || '23:59';
-    customDateFrom = document.getElementById('dateFrom')?.value || briefingData.dateFrom;
-    customDateTo   = document.getElementById('dateTo')?.value   || customDateFrom;
-  }
-
+  const cfg     = TRAFFIC_WINDOWS[period];
+  const winFrom = cfg.from, winTo = cfg.to;
   const fromM   = toMins(winFrom);
   const toM     = toMins(winTo);
   const wraps   = toM < fromM; // window crosses midnight
 
-  function inWindow(t) {
-    const m = toMins(t);
+  function inWindow(arrTime) {
+    const m = toMins(arrTime);
     if (m === null) return false;
     if (wraps) return m >= fromM || m <= toM;
     return m >= fromM && m <= toM;
-  }
-
-  // Returns the best arrival time for filtering — ETA first, then STA.
-  function bestArrTime(e) {
-    const live = getVal(`eta_${e.iata}_${e.arrFlight}_arr`) || getVal(`term_eta_${e.iata}_${e.arrFlight}`);
-    if (live && toMins(live) !== null) return live;
-    if (e.arrEstTime) return e.arrEstTime;
-    return e.arrTime;
   }
 
   const seen = new Set();
@@ -5186,7 +5177,7 @@ function exportTrafficWindow(period) {
   [...briefingData.terminal, ...briefingData.hardstand].forEach(e => {
     if (!e.arrFlight || seen.has(e.arrFlight)) return;
     if (getChk(`cancel_${e.iata}_${e.arrFlight}`)) return;
-    if (!inWindow(bestArrTime(e))) return;
+    if (!inWindow(e.arrTime)) return;
     if (cfg.standOnly && !hasONStand(e)) return;
     seen.add(e.arrFlight);
     arrivals.push(e);
@@ -5214,9 +5205,8 @@ function exportTrafficWindow(period) {
   }
 
   const shiftLabel  = `${winFrom}–${winTo}${wraps ? ' (+1)' : ''}`;
-  const dk       = period === 'CUSTOM' ? customDateFrom : briefingData.dateFrom;
-  const dkTo     = period === 'CUSTOM' ? customDateTo   : briefingData.dateFrom;
-  const dateLong = dk !== dkTo ? `${fmtDateLong(dk)} – ${fmtDateLong(dkTo)}` : fmtDateLong(dk);
+  const dk          = briefingData.dateFrom;
+  const dateLong    = fmtDateLong(dk);
   const now         = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
   const accentColor = cfg.accent;
   const S = 'font-family:Arial,sans-serif;font-size:11px;';
