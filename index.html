@@ -1884,15 +1884,26 @@ let _userInputs = {};
 
 // Apply only input changes (ETAs, PAX, cancellations, gated) — no API re-pull
 function applySyncedInputs(inputs) {
-  // Merge synced inputs into _userInputs so they survive re-renders
-  Object.assign(_userInputs, inputs);
+  // Merge synced inputs into _userInputs so they survive re-renders.
+  // Strip pax_ keys — the Blob store is the sole authority for PAX counts;
+  // KV may hold stale values that would poison _userInputs and overwrite real counts.
+  const inputsWithoutPax = Object.fromEntries(
+    Object.entries(inputs || {}).filter(([id]) => !id.startsWith('pax_'))
+  );
+  Object.assign(_userInputs, inputsWithoutPax);
   _applyingSyncedInputs = true;
   try {
     const remoteInputs = inputs || {};
 
-    // ── Text inputs: ETAs, ETDs, PAX, Notes ────────────────────────────────
+    // ── Text inputs: ETAs, ETDs, Notes ──────────────────────────────────────
+    // PAX counts are intentionally excluded — the Blob store (GATEGADGET_PAX_URL)
+    // is the sole authority for PAX. Letting live-sync overwrite pax_ fields
+    // from KV caused stale/old counts (e.g. from a prior save) to silently
+    // clobber real GateGadget or manually-typed values mid-shift.
     Object.entries(remoteInputs).forEach(([id, entry]) => {
       if (entry.type !== 'text') return;
+      // Never overwrite PAX fields from KV sync — Blob store owns those.
+      if (id.startsWith('pax_')) return;
       // Note inputs can exist in two DOM places (hardstand card + terminal
       // mirror) sharing the same id. getElementById returns only the first;
       // querySelectorAll with the id selector hits both. Keep them in lockstep.
