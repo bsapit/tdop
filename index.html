@@ -1183,9 +1183,12 @@ function restoreInputs(snap) {
     // and the terminal mirror, so we need to populate all copies.
     Object.entries(snap).forEach(([id, entry]) => {
       if (entry.type !== 'text') return;
-      // PAX counts are sourced live from the Blob store, never from KV.
-      // Skip any pax_ keys that may exist in blobs saved before this fix.
-      if (/^pax_/.test(id)) return;
+      // PAX counts recorded in _userInputs (i.e. actually typed on this
+      // machine during this session) are restored here just like ETAs and
+      // notes. This runs after pollGateGadgetPax(), so a value the user
+      // typed always wins over whatever the shared blob store has — and,
+      // critically, it means PAX no longer depends on that network round
+      // trip surviving between typing and the next Refresh/auto-refresh.
       // If this is a note id, hit every copy; otherwise use single getById.
       if (/^note_/.test(id)) {
         const copies = document.querySelectorAll(`input.cell-note-input#${CSS.escape(id)}`);
