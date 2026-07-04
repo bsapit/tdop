@@ -1133,7 +1133,7 @@ function applyGateGadgetPax(counts) {
   let filled = 0;
   document.querySelectorAll('input.cell-pax-input').forEach(el => {
     if (!el.id || el.value) return; // already has a value — don't touch
-    const m = el.id.match(/^pax_([A-Z0-9]+)_(.+)_(arr|dep)$/);
+    const m = el.id.match(/^pax_(?:fifa_)?([A-Z0-9]+)_(.+)_(arr|dep)$/);
     if (!m) return;
     const [, , fnum, leg] = m; // fnum (group 2) is already the full "IATA+number" flight id — don't re-prefix it
     const legLabel = leg === 'arr' ? 'Arrival' : 'Departure';
@@ -1321,10 +1321,16 @@ function kvBuildState() {
   // which is why all three exports (Teams card, HS Ops email, combined email)
   // were silently dropping the Note row. getNote() reads the DOM, so as long
   // as the input has a value, everything downstream works.
-  // PAX inputs are intentionally excluded — the Blob store (GATEGADGET_PAX_URL)
-  // is the sole source of truth for PAX counts. Saving them to KV would cause
-  // yesterday's counts to restore into today's blank briefing.
-  document.querySelectorAll('input.cell-eta, input.cell-note-input').forEach(el => {
+  // PAX inputs are now included too. They previously relied solely on the
+  // external Blob store (GATEGADGET_PAX_URL) as their only persistence, which
+  // meant a failed/raced/late sync to that store had no local backup at all —
+  // Save didn't actually save PAX. PAX now saves and restores exactly like
+  // ETA/notes; the Blob store sync (paxBinSync/applyGateGadgetPax) still runs
+  // alongside this purely so GateGadget/GateKeeper can see counts, but it is
+  // no longer the only copy of the data. _cleanPull already wipes _userInputs
+  // on New Briefing / nightly reset, so this doesn't reintroduce stale
+  // cross-day counts.
+  document.querySelectorAll('input.cell-eta, input.cell-note-input, input.cell-pax-input').forEach(el => {
     if (el.id && el.value) inputs[el.id] = { type: 'text', value: el.value };
   });
   document.querySelectorAll('input.cancel-chk').forEach(el => {
@@ -1363,8 +1369,9 @@ async function paxBinSync() {
     const counts = {};
     document.querySelectorAll('input.cell-pax-input').forEach(el => {
       if (!el.id || !el.value) return;
-      // ID format: pax_{IATA}_{flightNum}_{arr|dep} — flightNum already includes IATA
-      const m = el.id.match(/^pax_([A-Z0-9]+)_(.+)_(arr|dep)$/);
+      // ID format: pax_{IATA}_{flightNum}_{arr|dep}, or pax_fifa_{IATA}_{flightNum}_{arr|dep}
+      // for charter rows — flightNum already includes IATA
+      const m = el.id.match(/^pax_(?:fifa_)?([A-Z0-9]+)_(.+)_(arr|dep)$/);
       if (!m) return;
       const [, , fnum, leg] = m;
       const legLabel = leg === 'arr' ? 'Arrival' : 'Departure';
@@ -1888,25 +1895,16 @@ let _userInputs = {};
 // Apply only input changes (ETAs, PAX, cancellations, gated) — no API re-pull
 function applySyncedInputs(inputs) {
   // Merge synced inputs into _userInputs so they survive re-renders.
-  // Strip pax_ keys — the Blob store is the sole authority for PAX counts;
-  // KV may hold stale values that would poison _userInputs and overwrite real counts.
-  const inputsWithoutPax = Object.fromEntries(
-    Object.entries(inputs || {}).filter(([id]) => !id.startsWith('pax_'))
-  );
-  Object.assign(_userInputs, inputsWithoutPax);
+  // PAX is now a normal KV-backed field (see kvBuildState) instead of relying
+  // solely on the Blob store, so it's no longer stripped out here.
+  Object.assign(_userInputs, inputs || {});
   _applyingSyncedInputs = true;
   try {
     const remoteInputs = inputs || {};
 
-    // ── Text inputs: ETAs, ETDs, Notes ──────────────────────────────────────
-    // PAX counts are intentionally excluded — the Blob store (GATEGADGET_PAX_URL)
-    // is the sole authority for PAX. Letting live-sync overwrite pax_ fields
-    // from KV caused stale/old counts (e.g. from a prior save) to silently
-    // clobber real GateGadget or manually-typed values mid-shift.
+    // ── Text inputs: ETAs, ETDs, Notes, PAX ─────────────────────────────────
     Object.entries(remoteInputs).forEach(([id, entry]) => {
       if (entry.type !== 'text') return;
-      // Never overwrite PAX fields from KV sync — Blob store owns those.
-      if (id.startsWith('pax_')) return;
       // Note inputs can exist in two DOM places (hardstand card + terminal
       // mirror) sharing the same id. getElementById returns only the first;
       // querySelectorAll with the id selector hits both. Keep them in lockstep.
@@ -2056,9 +2054,11 @@ async function loadOps() {
         Object.assign(_userInputs, window._kvPendingInputs);
         window._kvPendingInputs = {};
       }
-      // Blob is always the authority for pax on the current ops day.
-      // Await before restoreInputs so fields are pre-filled from the blob;
-      // restoreInputs skips pax_ keys so KV never overwrites blob counts.
+      // Poll the Blob store first so any GateGadget-submitted counts pre-fill
+      // blank fields, then restore local/KV inputs on top — PAX is a normal
+      // KV-backed field now (see kvBuildState/restoreInputs), so a value the
+      // user actually typed or that was loaded from KV always wins over
+      // whatever the blob has.
       await pollGateGadgetPax();
       restoreInputs(_userInputs);
     }
