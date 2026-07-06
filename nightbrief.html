@@ -1445,10 +1445,10 @@ const PM_AIRLINE_NAMES = {
 // Rendered as a reference table below the flight ops section of the email.
 // Ordered: Air Canada, JetBlue, United, Frontier.
 const AIRLINE_CTR_MU = [
-  { airline: 'Air Canada', mu: 'Term E', counter: 'Term E - Zone 1' },
-  { airline: 'JetBlue',    mu: 'Term E', counter: 'Term E - Zone 1' },
-  { airline: 'United',     mu: 'Term E', counter: 'Term E - Zone 1' },
-  { airline: 'Frontier',   mu: 'Term E', counter: 'Term E - Zone 4' },
+  { airline: 'Air Canada', mu: 'MU 1',          counter: 'Term E - Zone 1' },
+  { airline: 'JetBlue',    mu: 'MU 1',          counter: 'Term E - Zone 1' },
+  { airline: 'United',     mu: 'MU 1 & MU 4',   counter: 'Term E - Zone 1' },
+  { airline: 'Frontier',   mu: 'MU 11',         counter: 'Term E - Zone 4' },
 ];
 
 // ── Overnight scope — explicit allowlists ──────────────────────────
@@ -2091,8 +2091,9 @@ function buildOpsText() {
 // ── Shared email HTML helpers ──────────────────────────────────────
 // Used by both buildOpsHtml (standalone) and buildCombinedNightBriefHtml.
 
-// Renders the flight ops section (Term D / Term E / Other subtables).
-// Columns: Flight, AL, Stand, Sched, Est, Status, Bag, Comments
+// Renders the flight ops section (Term D / Term E / Other), each split into
+// an Arrivals sub-table (Date, Airline, Flight #, STA/ETA, Bag Claim) and a
+// Departures sub-table (Date, Airline, Flight #, STD, MU).
 function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
   let h = '';
   const active = flights.filter(f => f.flightNum || f.gate || f.stand);
@@ -2105,7 +2106,6 @@ function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
   const termD = active.filter(f => (f.terminal||'').toUpperCase() === 'D');
   const termE = active.filter(f => (f.terminal||'').toUpperCase() === 'E');
   const other = active.filter(f => !['D','E'].includes((f.terminal||'').toUpperCase()));
- const cols  = ['Flight','AL','Kind','Date','Stand','Sched','Est','Status','Bag','Comments'];
 
   // Overnight date logic: same as card view — <12:00 = tomorrow, >=12:00 = tonight
   const _now      = new Date();
@@ -2118,10 +2118,12 @@ function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
     return `${_MONTHS[d.getMonth()]} ${d.getDate()}`;
   };
 
-  const writeSection = (title, rows) => {
+  // Renders one sub-table (arrivals or departures) with its own column set.
+  const writeSubTable = (subLabel, rows, timeColLabel, lastColLabel, timeField, lastField) => {
     if (!rows.length) return;
-    h += `<div style="margin-top:14px;">`;
-    h += `<div style="background:#FF5000;color:#fff;padding:7px 12px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">${escHtml(title)}</div>`;
+    const cols = ['Date','Airline','Flight #', timeColLabel, lastColLabel];
+    h += `<div style="margin-top:10px;">`;
+    h += `<div style="background:${subLabel === 'Arrivals' ? '#2e7d32' : '#1565c0'};color:#fff;padding:5px 12px;font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;">${subLabel}</div>`;
     h += `<table style="width:100%;border-collapse:collapse;font-size:12px;">`;
     h += `<thead><tr style="background:${NAVY};color:#fff;">`;
     cols.forEach(c => {
@@ -2129,36 +2131,34 @@ function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
     });
     h += `</tr></thead><tbody>`;
     rows.forEach((f, i) => {
-      const sch     = f.kind === 'A' ? f.sta  : f.std;
-      const est     = f.kind === 'A' ? f.eta  : f.etd;
-      const estDisp = (est && est !== sch) ? est : '—';
       const cxl     = f.status === 'CXL';
       const bg      = cxl ? '#fff0ee' : (i % 2 === 0 ? '#fff' : LTGRAY);
       const strike  = cxl ? 'text-decoration:line-through;color:#aaa;' : '';
-      const sc      = f.status === 'CXL' ? '#cc0000' :
-                      f.status === 'DLY' ? '#b85c00' :
-                      f.status === 'ARR' || f.status === 'DEP' ? '#1a6b1a' : '#333';
-      const kindLabel = f.kind === 'A' ? 'ARR' : (f.kind === 'D' ? 'DEP' : '—');
+      const sch     = f[timeField] || '';
+      const est     = subLabel === 'Arrivals' ? f.eta : f.etd;
+      const timeDisp = est && est !== sch ? `${sch||'—'} <span style="color:#888;">(${est})</span>` : (sch||'—');
       const dateLabel = flightDateStr(sch);
-      const cells = [
-        f.flightNum, f.airline, kindLabel, dateLabel,
-        f.stand, sch||'—', estDisp,
-        f.status||'SCH', f.bagClaim||'—', f.comments||''
-      ];
+      const lastVal = f[lastField] || '—';
       h += `<tr style="background:${bg};">`;
-      cells.forEach((val, ci) => {
-        // Status column is now index 7 (0-based)
-        const extra = ci === 7 ? `color:${sc};font-weight:600;` : strike;
-        // Let Comments column (last) wrap — everything else stays on one line
-        const wrap  = (ci === cells.length - 1) ? '' : 'white-space:nowrap;';
-        const cellVal = (ci === 2 && (val === 'ARR' || val === 'DEP'))
-          ? `<span style="background:${val === 'ARR' ? '#2e7d32' : '#1565c0'};color:#fff;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:700;">${val}</span>`
-          : escHtml(String(val||'—'));
-        h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;${wrap}${extra}">${cellVal}</td>`;
-      });
+      h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;white-space:nowrap;${strike}">${escHtml(dateLabel)}</td>`;
+      h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;white-space:nowrap;${strike}">${escHtml(f.airline||'—')}</td>`;
+      h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;white-space:nowrap;${strike}">${escHtml(f.flightNum||'—')}</td>`;
+      h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;white-space:nowrap;${strike}">${timeDisp}</td>`;
+      h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;white-space:nowrap;${strike}">${escHtml(lastVal)}</td>`;
       h += `</tr>`;
     });
     h += `</tbody></table></div>`;
+  };
+
+  const writeSection = (title, rows) => {
+    if (!rows.length) return;
+    const arrivals   = rows.filter(f => f.kind === 'A');
+    const departures = rows.filter(f => f.kind === 'D');
+    h += `<div style="margin-top:14px;">`;
+    h += `<div style="background:#FF5000;color:#fff;padding:7px 12px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">${escHtml(title)}</div>`;
+    writeSubTable('Arrivals',   arrivals,   'STA/ETA', 'Bag Claim', 'sta', 'bagClaim');
+    writeSubTable('Departures', departures, 'STD',     'MU',        'std', 'mu');
+    h += `</div>`;
   };
 
   writeSection('Terminal D Overnight Ops', termD);
@@ -2297,11 +2297,8 @@ function buildCombinedNightBriefHtml() {
   h += `</div>`;
 
   // ══════════════════════════════════════════════════════════
-  //  SECTION 1 — TERMINAL D OVERNIGHT OPS
+  //  SECTION 1 — FLIGHT OPS
   // ══════════════════════════════════════════════════════════
-  h += `<div style="margin-top:22px;padding:10px 14px;background:${ORANGE};color:#fff;font-size:13px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;border-radius:4px;">`;
-  h += `Terminal D Overnight Ops`;
-  h += `</div>`;
 
   // Flight tables + Counter/MU reference
   h += renderFlightSectionsHtml(opsFlights, NAVY, ORANGE, LTGRAY);
