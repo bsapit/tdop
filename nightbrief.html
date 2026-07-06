@@ -535,6 +535,17 @@ tbody td input[type=text]:focus { border-color: var(--blue); background: var(--s
   margin-bottom: 0;
 }
 .flight-section-label:first-child { margin-top: 0; }
+.flight-subsection-label {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #fff;
+  padding: 4px 12px;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+.flight-subsection-label:first-of-type { margin-top: 0; }
 .flight-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -1441,15 +1452,22 @@ const PM_AIRLINE_NAMES = {
   TK:'Turkish Airlines', UA:'United', VB:'VivaAerobus', Y4:'Volaris',
 };
 
-// Static ticket counter + makeup unit reference (carriers that check in at Term E)
-// Rendered as a reference table below the flight ops section of the email.
-// Ordered: Air Canada, JetBlue, United, Frontier.
-const AIRLINE_CTR_MU = [
-  { airline: 'Air Canada', mu: 'MU 1',          counter: 'Term E - Zone 1' },
-  { airline: 'JetBlue',    mu: 'MU 1',          counter: 'Term E - Zone 1' },
-  { airline: 'United',     mu: 'MU 1 & MU 4',   counter: 'Term E - Zone 1' },
-  { airline: 'Frontier',   mu: 'MU 11',         counter: 'Term E - Zone 4' },
-];
+// Single source of truth: airline-specific ground-ops assignments at Terminal E.
+// MU (makeup unit) and Ticket Counter are fixed per-airline assignments — they
+// don't come from the live flight feed, they're set by ops and apply to every
+// flight that carrier operates (arrival or departure). Keyed by IATA code so
+// it can be looked up directly while parsing each leg.
+const AIRLINE_MU_COUNTER = {
+  AC: { name: 'Air Canada', mu: 'MU 1',        counter: 'Term E - Zone 1' },
+  B6: { name: 'JetBlue',    mu: 'MU 1',        counter: 'Term E - Zone 1' },
+  UA: { name: 'United',     mu: 'MU 1 & MU 4', counter: 'Term E - Zone 1' },
+  F9: { name: 'Frontier',   mu: 'MU 11',       counter: 'Term E - Zone 4' },
+};
+
+// Reference-table shape derived from the lookup above so the two never drift apart.
+const AIRLINE_CTR_MU = Object.values(AIRLINE_MU_COUNTER).map(a => ({
+  airline: a.name, mu: a.mu, counter: a.counter,
+}));
 
 // ── Overnight scope — explicit allowlists ──────────────────────────
 //
@@ -1544,26 +1562,10 @@ async function loadPmOps() {
     ];
     opsFlights = filterPmLegs(legs).map(f => ({ ...f, comments:'' }));
 
-    // Post-process: force correct bag claim / MU / counter for known carriers.
-    // Single source of truth — mirrors AIRLINE_CTR_MU but keyed by IATA code
-    // and includes bag claim. Applies to arrivals only (MU/counter are ramp-side
-    // concepts that don't apply to departures in this brief).
-    const CARRIER_OVERRIDES = {
-      AC: { bagClaim: 'E4',  mu: 'Term E', counter: 'Term E - Zone 1' },
-      B6: { bagClaim: 'E7',  mu: 'Term E', counter: 'Term E - Zone 1' },
-      UA: { bagClaim: 'E4',  mu: 'Term E', counter: 'Term E - Zone 1' },
-      NK: { bagClaim: 'D15', mu: 'Term E', counter: 'Term E - Zone 3' },
-      F9: { bagClaim: 'D15', mu: 'Term E', counter: 'Term E - Zone 4' },
-    };
-    opsFlights.forEach(f => {
-      if (f.kind !== 'A') return;
-      const o = CARRIER_OVERRIDES[f.airline];
-      if (o) {
-        f.bagClaim = o.bagClaim;
-        f.mu       = o.mu;
-        f.counter  = o.counter;
-      }
-    });
+    // MU/counter are now set correctly at parse time (parseTurnsToLegs) for
+    // both arrivals and departures via the AIRLINE_MU_COUNTER lookup, and
+    // bag claim is left as whatever the live feed reported per flight — so
+    // no further post-processing/overriding happens here.
 
     document.getElementById('opsFlightCount').textContent = `(${opsFlights.length})`;
     document.getElementById('opsLastPull').textContent = `Last pull: ${new Date().toLocaleTimeString()}`;
@@ -1665,8 +1667,8 @@ function parseTurnsToLegs(data, flightsMap = {}, originDate = '') {
       const bfi      = flightsMap[(af.airline || '') + (af.flightNumber || '')];
       const status   = bfi ? deriveStatus(bfi.fields, 'A') : deriveStatus(af.fields, 'A');
       const airline  = af.airline || '';
-      // Determine bag claim — carrier-specific overrides take precedence over API value
-    let bagClaim = af.bagClaim || af.baggageClaim || t.bagClaim || '';
+      const bagClaim = af.bagClaim || af.baggageClaim || t.bagClaim || '';
+      const ref      = AIRLINE_MU_COUNTER[airline];
   const rawArrGate = af.gate || af.position || (PM_D_GATES.has(normGate(arrStand)) || PM_E_GATES.has(normGate(arrStand)) ? arrStand : '');
   const arrGate = (PM_D_GATES.has(normGate(rawArrGate)) || PM_E_GATES.has(normGate(rawArrGate))) ? rawArrGate : '';
      legs.push({
@@ -1675,20 +1677,23 @@ function parseTurnsToLegs(data, flightsMap = {}, originDate = '') {
   airline,
   gate:      arrGate,
   stand:     arrStand,
-  sta:       fmtTime(af.scheduleTime || ''),
+  sta:       pickSchedTime(af),
   std:       '',
   eta:       extractEst(bfi, 'Arrival.Time'),
   etd:       '',
   status,
   bagClaim,
-  mu:        (['F9','AC','B6','UA'].includes(airline)) ? 'Term E' : '',   // <-- THIS LINE
-  counter:   (['F9','AC','B6','UA'].includes(airline)) ? 'Term E' : '',   // <-- AND THIS LINE
+  // MU/counter are fixed per-airline ground-ops assignments, not per-flight
+  // feed data — always pull from the static reference table.
+  mu:        ref ? ref.mu      : '',
+  counter:   ref ? ref.counter : '',
   originDate: normalizeDate(afDate),
 });
     }
     if (df) {
       const bfi    = flightsMap[(df.airline || '') + (df.flightNumber || '')];
       const status = bfi ? deriveStatus(bfi.fields, 'D') : deriveStatus(df.fields, 'D');
+      const ref    = AIRLINE_MU_COUNTER[df.airline || ''];
       legs.push({
         kind:      'D',
         flightNum: df.flightNumber || '',
@@ -1696,13 +1701,15 @@ function parseTurnsToLegs(data, flightsMap = {}, originDate = '') {
         gate:      (() => { const r = df.gate || df.position || (PM_D_GATES.has(normGate(depStand)) || PM_E_GATES.has(normGate(depStand)) ? depStand : ''); return (PM_D_GATES.has(normGate(r)) || PM_E_GATES.has(normGate(r))) ? r : ''; })(),
         stand:     depStand,
         sta:       '',
-        std:       fmtTime(df.scheduleTime || ''),
+        std:       pickSchedTime(df),
         eta:       '',
         etd:       extractEst(bfi, 'Departure.Time'),
         status,
         bagClaim:  '',
-        mu:        df.muStation    || df.mu || t.muStation || '',
-        counter:   df.ticketCounter|| df.counter || t.ticketCounter || '',
+        // Same static per-airline lookup as arrivals — MU applies to a
+        // carrier's flights regardless of arrival or departure leg.
+        mu:        ref ? ref.mu      : '',
+        counter:   ref ? ref.counter : '',
         originDate: normalizeDate(dfDate),
       });
     }
@@ -1732,6 +1739,26 @@ function fmtTime(raw) {
   if (!raw) return '';
   if (/^\d{2}:\d{2}/.test(raw)) return raw.slice(0,5);
   try { return new Date(raw).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false}); } catch { return raw; }
+}
+
+// Scheduled times have shown up from the feed under a few different key
+// names/shapes (plain string vs. { Scheduled, scheduled, value } object).
+// Try each known variant in order instead of assuming one exact shape, so a
+// leg doesn't silently end up with a blank time just because the field name
+// didn't match what we expected.
+function pickSchedTime(obj) {
+  if (!obj) return '';
+  const KEYS = ['scheduleTime','scheduledTime','ScheduledTime','schedule_time','time'];
+  for (const k of KEYS) {
+    const v = obj[k];
+    if (!v) continue;
+    if (typeof v === 'string') return fmtTime(v);
+    if (typeof v === 'object') {
+      const inner = v.Scheduled || v.scheduled || v.value || '';
+      if (inner) return fmtTime(inner);
+    }
+  }
+  return '';
 }
 
 function filterPmLegs(legs) {
@@ -1900,88 +1927,97 @@ function renderOpsTable() {
   const termD  = active.filter(f => (f.terminal||'').toUpperCase() === 'D');
   const termE  = active.filter(f => (f.terminal||'').toUpperCase() === 'E');
   const other  = active.filter(f => !['D','E'].includes((f.terminal||'').toUpperCase()));
-  let html = '';
-  const renderSection = (title, rows) => {
-    if (!rows.length) return;
-    html += `<div class="flight-section-label">${escHtml(title)}</div>`;
-    html += `<div class="flight-cards-grid">`;
-    rows.forEach((f, _) => {
-      const i = active.indexOf(f);
-      const sch = f.kind === 'A' ? f.sta  : f.std;
-      const est = f.kind === 'A' ? f.eta  : f.etd;
-      const estDisp = (est && est !== sch) ? est : '';
-      const kindLabel = f.kind === 'A' ? 'ARR' : (f.kind === 'D' ? 'DEP' : '');
-      const cxl = f.status === 'CXL';
-      const statusBadge = f.status && f.status !== 'SCH'
-        ? `<span class="flight-status-badge" style="background:${statusColor(f.status)}">${f.status}</span>`
-        : '';
 
-      // Date display: arrivals show arrival date, departures show departure date
-      const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const now = new Date();
-      const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
-      // Flights before 08:00 are "tomorrow", flights at/after 23:00 are "today"
-      let flightDate = '';
-      if (sch) {
-        const schHour = parseInt(sch.split(':')[0], 10);
-        const dateObj = schHour < 12 ? tomorrow : now;
-        flightDate = `${dateObj.getDate()} ${MONTHS[dateObj.getMonth()]}`;
-      }
+  const MONTHS   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now      = new Date();
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+  // Flights before 12:00 are "tomorrow", flights at/after 12:00 are "today"
+  const flightDateLabel = (sch) => {
+    if (!sch) return '—';
+    const hour = parseInt(sch.split(':')[0], 10);
+    const d = hour < 12 ? tomorrow : now;
+    return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  };
+
+  let html = '';
+
+  // One ARR or DEP card grid within a terminal section.
+  // Fields shown: Date, Airline, Flight #, STA/ETA (ARR) or STD (DEP),
+  // and Bag Claim (ARR) or MU (DEP) — per the requested layout.
+  const renderCards = (subLabel, rows) => {
+    if (!rows.length) return;
+    const isArr     = subLabel === 'Arrivals';
+    const color     = isArr ? '#2e7d32' : '#1565c0';
+    const timeField = isArr ? 'sta' : 'std';
+    const estField  = isArr ? 'eta' : 'etd';
+    const lastLabel = isArr ? 'Bag Claim' : 'MU';
+    const lastField = isArr ? 'bagClaim'  : 'mu';
+
+    html += `<div class="flight-subsection-label" style="background:${color};">${subLabel}</div>`;
+    html += `<div class="flight-cards-grid">`;
+    rows.forEach(f => {
+      const i       = active.indexOf(f);
+      const sch     = f[timeField] || '';
+      const est     = f[estField]  || '';
+      const estDisp = (est && est !== sch) ? est : '';
+      const cxl     = f.status === 'CXL';
+      // Date is editable — once the user overrides it, that value sticks
+      // instead of being recomputed from the scheduled time.
+      if (!f.dateOverride) f.dateOverride = flightDateLabel(sch);
+      const dateVal = f.dateOverride;
 
       html += `<div class="flight-card${cxl ? ' cxl' : ''}">
-  <div class="flight-card-top">
+  <div class="flight-card-top" style="background:${color};">
     <div>
-      <div class="flight-card-num"><input type="text" value="${ev(f.flightNum)}" oninput="opsFlights[${i}].flightNum=this.value" placeholder="QR729" style="background:transparent;border:none;color:#fff;font-weight:800;font-size:.95rem;width:90px;padding:0;" /></div>
+      <div class="flight-card-num"><input type="text" value="${ev(f.flightNum)}" oninput="opsFlights[${i}].flightNum=this.value" placeholder="3423" style="background:transparent;border:none;color:#fff;font-weight:800;font-size:.95rem;width:70px;padding:0;" /></div>
       <div class="flight-card-al">
-        ${f.airline ? `<span class="flight-kind-badge">${escHtml(f.airline)}</span>` : ''}
- ${kindLabel ? `<span class="flight-kind-badge" style="margin-left:4px;background:${kindLabel === 'ARR' ? '#2e7d32' : '#1565c0'};color:#fff;">${kindLabel}</span>` : ''}
-        ${f.airline && PM_AIRLINE_NAMES[f.airline] ? `<div style="font-size:.68rem;color:rgba(255,255,255,.6);margin-top:3px;letter-spacing:.02em;">${escHtml(PM_AIRLINE_NAMES[f.airline])}</div>` : ''}
+        <input type="text" value="${ev(f.airline)}" oninput="opsFlights[${i}].airline=this.value" placeholder="F9" style="background:rgba(255,255,255,.18);border:none;color:#fff;font-weight:700;font-size:.68rem;width:36px;padding:2px 5px;border-radius:3px;text-transform:uppercase;" />
+        <select onchange="opsFlights[${i}].kind=this.value;renderOpsTable();" title="Arrival or Departure" style="margin-left:4px;background:rgba(255,255,255,.25);border:none;color:#fff;font-weight:700;font-size:.62rem;letter-spacing:.05em;border-radius:10px;padding:2px 4px;">
+          <option value="A" ${f.kind==='A'?'selected':''}>ARR</option>
+          <option value="D" ${f.kind==='D'?'selected':''}>DEP</option>
+        </select>
       </div>
     </div>
     <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-      <button onclick="removeFlight(${i})" title="Remove flight from brief" style="background:rgba(255,255,255,0.15);border:none;color:rgba(255,255,255,0.7);border-radius:4px;padding:2px 7px;font-size:.7rem;font-weight:700;cursor:pointer;letter-spacing:.04em;line-height:1.6;" onmouseover="this.style.background='rgba(220,50,50,0.7)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.7)'">✕ Remove</button>
-      <div class="flight-card-time">${escHtml(sch||'—')}${estDisp ? `<span class="est">${escHtml(estDisp)}</span>` : ''}</div>
-      ${flightDate ? `<div style="font-size:0.72rem;color:#aac4e0;font-weight:500;">${flightDate}</div>` : ''}
-      <div>${statusBadge}</div>
+      <button onclick="removeFlight(${i})" title="Remove flight from brief" style="background:rgba(255,255,255,0.15);border:none;color:rgba(255,255,255,0.7);border-radius:4px;padding:2px 7px;font-size:.7rem;font-weight:700;cursor:pointer;letter-spacing:.04em;line-height:1.6;" onmouseover="this.style.background='rgba(220,50,50,0.7)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.7)'">✕</button>
+      <select onchange="opsFlights[${i}].terminal=this.value;renderOpsTable();" title="Terminal" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-weight:700;font-size:.62rem;letter-spacing:.05em;border-radius:10px;padding:2px 5px;">
+        <option value="D" ${(f.terminal||'').toUpperCase()==='D'?'selected':''}>Term D</option>
+        <option value="E" ${(f.terminal||'').toUpperCase()==='E'?'selected':''}>Term E</option>
+      </select>
     </div>
   </div>
   <div class="flight-card-body">
     <div class="flight-card-field">
-      <span class="fk-label">Gate</span>
-      <span class="fk-val"><input type="text" value="${ev(f.gate)}" oninput="opsFlights[${i}].gate=this.value" placeholder="—"/></span>
+      <span class="fk-label">Date</span>
+      <span class="fk-val"><input type="text" value="${ev(dateVal)}" oninput="opsFlights[${i}].dateOverride=this.value" placeholder="Jul 7"/></span>
     </div>
     <div class="flight-card-field">
-      <span class="fk-label">Stand</span>
-      <span class="fk-val"><input type="text" value="${ev(f.stand)}" oninput="opsFlights[${i}].stand=this.value" placeholder="T84"/></span>
-    </div>
-    <div class="flight-card-field">
- <span class="fk-label">Bag Claim</span>
-<span class="fk-val">${f.kind === 'D' ? '<span style="color:#888;font-style:italic;">N/A</span>' : '<input type="text" value="' + ev(f.bagClaim) + '" oninput="opsFlights[' + i + '].bagClaim=this.value" placeholder="D7"/>'}</span>
-    </div>
-    <div class="flight-card-field">
-      <span class="fk-label">Terminal</span>
-      <span class="fk-val"><input type="text" value="${ev(f.terminal)}" oninput="opsFlights[${i}].terminal=this.value" placeholder="D"/></span>
-    </div>
-    <div class="flight-card-field">
-      <span class="fk-label">MU</span>
-      <span class="fk-val"><input type="text" value="${ev(f.mu)}" oninput="opsFlights[${i}].mu=this.value" placeholder="Term E"/></span>
-    </div>
-    <div class="flight-card-field">
-      <span class="fk-label">Counter</span>
-      <span class="fk-val"><input type="text" value="${ev(f.counter)}" oninput="opsFlights[${i}].counter=this.value" placeholder="Zone 1"/></span>
+      <span class="fk-label">${isArr ? 'STA/ETA' : 'STD'}</span>
+      <span class="fk-val"><input type="text" value="${ev(sch)}" oninput="opsFlights[${i}].${timeField}=this.value" placeholder="00:00"/>${estDisp ? `<span class="est">${escHtml(estDisp)}</span>` : ''}</span>
     </div>
     <div class="flight-card-field full">
-      <span class="fk-label">Comments</span>
-      <span class="fk-val"><input type="text" value="${ev(f.comments)}" oninput="opsFlights[${i}].comments=this.value" placeholder="Notes…"/></span>
+      <span class="fk-label">${lastLabel}</span>
+      <span class="fk-val"><input type="text" value="${ev(f[lastField])}" oninput="opsFlights[${i}].${lastField}=this.value" placeholder="${isArr ? 'D15' : 'MU 1'}"/></span>
     </div>
   </div>
 </div>`;
     });
     html += `</div>`;
   };
-  renderSection('Terminal D Overnight Ops', termD);
-  renderSection('Terminal E Overnight Ops — Common-Use Gates (E2 / E7 / E10 / E32 / E33)', termE);
-  if (other.length) renderSection('Other / Uncategorized', other);
+
+  const renderTerminal = (title, rows) => {
+    if (!rows.length) return;
+    const arrivals   = rows.filter(f => f.kind === 'A');
+    const departures = rows.filter(f => f.kind === 'D');
+    html += `<div class="flight-section-label">${escHtml(title)}</div>`;
+    renderCards('Arrivals',   arrivals);
+    renderCards('Departures', departures);
+  };
+
+  renderTerminal('Terminal D Overnight Ops', termD);
+  renderTerminal('Terminal E Overnight Ops — Common-Use Gates (E2 / E7 / E10 / E32 / E33)', termE);
+  if (other.length) renderTerminal('Other / Uncategorized', other);
+
   wrap.innerHTML = html;
 }
 
@@ -2092,8 +2128,8 @@ function buildOpsText() {
 // Used by both buildOpsHtml (standalone) and buildCombinedNightBriefHtml.
 
 // Renders the flight ops section (Term D / Term E / Other), each split into
-// an Arrivals sub-table (Date, Airline, Flight #, STA/ETA, Bag Claim) and a
-// Departures sub-table (Date, Airline, Flight #, STD, MU).
+// an Arrivals card row (Date, Airline, Flight #, STA/ETA, Bag Claim) and a
+// Departures card row (Date, Airline, Flight #, STD, MU).
 function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
   let h = '';
   const active = flights.filter(f => f.flightNum || f.gate || f.stand);
@@ -2107,7 +2143,7 @@ function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
   const termE = active.filter(f => (f.terminal||'').toUpperCase() === 'E');
   const other = active.filter(f => !['D','E'].includes((f.terminal||'').toUpperCase()));
 
-  // Overnight date logic: same as card view — <12:00 = tomorrow, >=12:00 = tonight
+  // Overnight date logic: same as the live card view — <12:00 = tomorrow, >=12:00 = tonight
   const _now      = new Date();
   const _tomorrow = new Date(_now); _tomorrow.setDate(_tomorrow.getDate() + 1);
   const _MONTHS   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2118,36 +2154,48 @@ function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
     return `${_MONTHS[d.getMonth()]} ${d.getDate()}`;
   };
 
-  // Renders one sub-table (arrivals or departures) with its own column set.
-  const writeSubTable = (subLabel, rows, timeColLabel, lastColLabel, timeField, lastField) => {
+  // Renders one flight as a small boarding-pass-style card (table-based, email-safe).
+  const writeCard = (f, timeField, lastLabel, lastField, color, kindLabel) => {
+    const cxl      = f.status === 'CXL';
+    const sch      = f[timeField] || '';
+    const est      = kindLabel === 'ARR' ? f.eta : f.etd;
+    const timeDisp = (est && est !== sch) ? `${sch||'—'} <span style="color:#888;font-weight:500;">(${escHtml(est)})</span>` : escHtml(sch||'—');
+    const dateLbl  = flightDateStr(sch);
+    const lastVal  = f[lastField] || '—';
+    const strike   = cxl ? 'text-decoration:line-through;color:#aaa;' : '';
+
+    return `<table cellpadding="0" cellspacing="0" style="display:inline-table;vertical-align:top;width:210px;margin:0 8px 8px 0;border-collapse:collapse;border:1px solid #d9dde3;border-radius:6px;overflow:hidden;font-size:12px;">
+      <tr><td colspan="2" style="background:${color};padding:6px 10px;">
+        <table width="100%" cellpadding="0" cellspacing="0"><tr>
+          <td style="color:#fff;font-weight:800;font-size:13px;${strike}">${escHtml(f.flightNum||'—')}</td>
+          <td align="right" style="color:rgba(255,255,255,.9);font-weight:700;font-size:10px;letter-spacing:.04em;">${escHtml(f.airline||'—')} · ${kindLabel}</td>
+        </tr></table>
+      </td></tr>
+      <tr>
+        <td style="padding:6px 10px 0;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">Date</td>
+        <td style="padding:6px 10px 0;font-size:12px;font-weight:600;text-align:right;color:#222;">${escHtml(dateLbl)}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 10px 0;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">${timeField === 'sta' ? 'STA/ETA' : 'STD'}</td>
+        <td style="padding:4px 10px 0;font-size:12px;font-weight:600;text-align:right;color:#222;">${timeDisp}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 10px 8px;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">${lastLabel}</td>
+        <td style="padding:4px 10px 8px;font-size:12px;font-weight:700;text-align:right;color:${NAVY};">${escHtml(lastVal)}</td>
+      </tr>
+    </table>`;
+  };
+
+  // Renders a row of cards (arrivals or departures) with its own field set.
+  const writeCardRow = (subLabel, rows, timeField, lastLabel, lastField) => {
     if (!rows.length) return;
-    const cols = ['Date','Airline','Flight #', timeColLabel, lastColLabel];
+    const color = subLabel === 'Arrivals' ? '#2e7d32' : '#1565c0';
+    const kindLabel = subLabel === 'Arrivals' ? 'ARR' : 'DEP';
     h += `<div style="margin-top:10px;">`;
-    h += `<div style="background:${subLabel === 'Arrivals' ? '#2e7d32' : '#1565c0'};color:#fff;padding:5px 12px;font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;">${subLabel}</div>`;
-    h += `<table style="width:100%;border-collapse:collapse;font-size:12px;">`;
-    h += `<thead><tr style="background:${NAVY};color:#fff;">`;
-    cols.forEach(c => {
-      h += `<th style="padding:6px 8px;text-align:left;font-weight:600;white-space:nowrap;border-bottom:2px solid ${ORANGE};">${c}</th>`;
-    });
-    h += `</tr></thead><tbody>`;
-    rows.forEach((f, i) => {
-      const cxl     = f.status === 'CXL';
-      const bg      = cxl ? '#fff0ee' : (i % 2 === 0 ? '#fff' : LTGRAY);
-      const strike  = cxl ? 'text-decoration:line-through;color:#aaa;' : '';
-      const sch     = f[timeField] || '';
-      const est     = subLabel === 'Arrivals' ? f.eta : f.etd;
-      const timeDisp = est && est !== sch ? `${sch||'—'} <span style="color:#888;">(${est})</span>` : (sch||'—');
-      const dateLabel = flightDateStr(sch);
-      const lastVal = f[lastField] || '—';
-      h += `<tr style="background:${bg};">`;
-      h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;white-space:nowrap;${strike}">${escHtml(dateLabel)}</td>`;
-      h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;white-space:nowrap;${strike}">${escHtml(f.airline||'—')}</td>`;
-      h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;white-space:nowrap;${strike}">${escHtml(f.flightNum||'—')}</td>`;
-      h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;white-space:nowrap;${strike}">${timeDisp}</td>`;
-      h += `<td style="padding:5px 8px;border-bottom:1px solid #e0e4ec;white-space:nowrap;${strike}">${escHtml(lastVal)}</td>`;
-      h += `</tr>`;
-    });
-    h += `</tbody></table></div>`;
+    h += `<div style="background:${color};color:#fff;padding:5px 12px;font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-radius:4px 4px 0 0;">${subLabel}</div>`;
+    h += `<div style="padding:10px 0 2px;">`;
+    rows.forEach(f => { h += writeCard(f, timeField, lastLabel, lastField, color, kindLabel); });
+    h += `</div></div>`;
   };
 
   const writeSection = (title, rows) => {
@@ -2156,8 +2204,8 @@ function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
     const departures = rows.filter(f => f.kind === 'D');
     h += `<div style="margin-top:14px;">`;
     h += `<div style="background:#FF5000;color:#fff;padding:7px 12px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">${escHtml(title)}</div>`;
-    writeSubTable('Arrivals',   arrivals,   'STA/ETA', 'Bag Claim', 'sta', 'bagClaim');
-    writeSubTable('Departures', departures, 'STD',     'MU',        'std', 'mu');
+    writeCardRow('Arrivals',   arrivals,   'sta', 'Bag Claim', 'bagClaim');
+    writeCardRow('Departures', departures, 'std', 'MU',        'mu');
     h += `</div>`;
   };
 
