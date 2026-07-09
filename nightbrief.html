@@ -1469,6 +1469,43 @@ const AIRLINE_CTR_MU = Object.values(AIRLINE_MU_COUNTER).map(a => ({
   airline: a.name, mu: a.mu, counter: a.counter,
 }));
 
+// ── Airline brand colors — used to tint flight cards by carrier ────
+// Keyed by IATA code. Source: DFW ops brand-color reference sheet.
+const AIRLINE_COLORS = {
+  AA: '#C0C0C0', AC: '#D82F2E', AF: '#002157', AM: '#FFC99B', AS: '#B3D37C',
+  AV: '#FC0404', AY: '#7F1F89', B6: '#B5D2EE', BA: '#0035AD', BR: '#EA5400',
+  CX: '#1A7A8A', DL: '#B090B0', EK: '#C9963B', F9: '#046444', FJ: '#808000',
+  IB: '#F9CD03', JL: '#EC8C84', KE: '#71CBEB', KG: '#AEFF6E', LF: '#A5C8BB',
+  LH: '#f9ba00', MX: '#1F74DF', NK: '#FFEC00', QF: '#FF00FF', QR: '#5C0632',
+  RJ: '#A6844B', SY: '#F58232', TK: '#C70A0C', UA: '#6583FD', VB: '#74CC04',
+  Y4: '#C77EB6', XP: '#502E90', AD: '#993E7D', AI: '#F0CF98', AR: '#EDA97C',
+  CM: '#0060A9', CZ: '#0093D0', DE: '#FFA200', EB: '#7CAC2C', EI: '#008374',
+  EY: '#C5941B', FI: '#91F5E1', G6: '#25ABE2', GF: '#A29062', HA: '#D2058A',
+  JX: '#9C6C4C', KL: '#049CDC', KX: '#4B8B44', LA: '#99E1DE', LO: '#1a3171',
+  LY: '#666666', MU: '#9E2234', N8: '#A8BFE4', NZ: '#6d6ee2', OS: '#E71C23',
+  OZ: '#E51820', RX: '#22044F', SK: '#2B0F73', SQ: '#FCB130', TG: '#B6007D',
+  TN: '#2CCCD4', TS: '#3FBBEF', UX: '#347311', VA: '#E4040C', VN: '#0090BC',
+  VS: '#4F1B4D', WN: '#F9B612', WS: '#00AAA6', WY: '#70C0C9', XE: '#E53835',
+  XN: '#00334C', YP: '#71C517', '9X': '#c4d4dc', ZG: '#4CAF50', '2D': '#FFE562',
+  N3: '#8CC43C', K5: '#1B4F72', RV: '#A40C34', TP: '#BED62F',
+};
+
+// Looks up an airline's brand color by IATA code; falls back to the given default.
+function airlineColor(code, fallback) {
+  return AIRLINE_COLORS[(code || '').toUpperCase()] || fallback;
+}
+
+// Picks readable text (near-black or white) against a given hex background,
+// so bright/pale carrier colors (e.g. NK yellow, AA silver) stay legible.
+function contrastText(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return '#fff';
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const luma = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luma > 0.6 ? '#1a1c20' : '#fff';
+}
+
 // ── Overnight scope — explicit allowlists ──────────────────────────
 //
 // Terminal D common-use gates (exact list — not a numeric range).
@@ -1942,18 +1979,17 @@ function renderOpsTable() {
   let html = '';
 
   // One ARR or DEP card grid within a terminal section.
-  // Fields shown: Date, Airline, Flight #, STA/ETA (ARR) or STD (DEP),
-  // and Bag Claim (ARR) or MU (DEP) — per the requested layout.
+  // Arrival cards:   Airline, Flight #, Origin, STA/ETA, Gate/Stand, Bag Claim.
+  // Departure cards: Airline, Flight #, Destination, STD/ETD, MU, Counters, Gate/Stand.
+  // Card top is tinted with the airline's brand color (see AIRLINE_COLORS).
   const renderCards = (subLabel, rows) => {
     if (!rows.length) return;
     const isArr     = subLabel === 'Arrivals';
-    const color     = isArr ? '#2e7d32' : '#1565c0';
+    const sectColor = isArr ? '#2e7d32' : '#1565c0';
     const timeField = isArr ? 'sta' : 'std';
     const estField  = isArr ? 'eta' : 'etd';
-    const lastLabel = isArr ? 'Bag Claim' : 'MU';
-    const lastField = isArr ? 'bagClaim'  : 'mu';
 
-    html += `<div class="flight-subsection-label" style="background:${color};">${subLabel}</div>`;
+    html += `<div class="flight-subsection-label" style="background:${sectColor};">${subLabel}</div>`;
     html += `<div class="flight-cards-grid">`;
     rows.forEach(f => {
       const i       = active.indexOf(f);
@@ -1961,26 +1997,35 @@ function renderOpsTable() {
       const est     = f[estField]  || '';
       const estDisp = (est && est !== sch) ? est : '';
       const cxl     = f.status === 'CXL';
-      // Date is editable — once the user overrides it, that value sticks
-      // instead of being recomputed from the scheduled time.
-      if (!f.dateOverride) f.dateOverride = flightDateLabel(sch);
-      const dateVal = f.dateOverride;
+
+      // Domestic Term D arrivals default to Bag Claim D15 unless the user
+      // has already set (or overridden) a value for this flight.
+      if (isArr && !f.bagClaim && (f.terminal||'').toUpperCase() === 'D') f.bagClaim = 'D15';
+
+      // Card top is tinted by the airline's brand color; falls back to the
+      // Arrivals/Departures section color for carriers we don't have on file.
+      const color    = airlineColor(f.airline, sectColor);
+      const fg       = contrastText(color);
+      const overlay  = fg === '#fff' ? 'rgba(255,255,255,.18)' : 'rgba(0,0,0,.12)';
+      const overlay2 = fg === '#fff' ? 'rgba(255,255,255,.25)' : 'rgba(0,0,0,.16)';
+      const overlay3 = fg === '#fff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.10)';
+      const fgSoft   = fg === '#fff' ? 'rgba(255,255,255,.7)'  : 'rgba(26,28,32,.65)';
 
       html += `<div class="flight-card${cxl ? ' cxl' : ''}">
   <div class="flight-card-top" style="background:${color};">
     <div>
-      <div class="flight-card-num"><input type="text" value="${ev(f.flightNum)}" oninput="opsFlights[${i}].flightNum=this.value" placeholder="3423" style="background:transparent;border:none;color:#fff;font-weight:800;font-size:.95rem;width:70px;padding:0;" /></div>
+      <div class="flight-card-num"><input type="text" value="${ev(f.flightNum)}" oninput="opsFlights[${i}].flightNum=this.value" placeholder="3423" style="background:transparent;border:none;color:${fg};font-weight:800;font-size:.95rem;width:70px;padding:0;" /></div>
       <div class="flight-card-al">
-        <input type="text" value="${ev(f.airline)}" oninput="opsFlights[${i}].airline=this.value" placeholder="F9" style="background:rgba(255,255,255,.18);border:none;color:#fff;font-weight:700;font-size:.68rem;width:36px;padding:2px 5px;border-radius:3px;text-transform:uppercase;" />
-        <select onchange="opsFlights[${i}].kind=this.value;renderOpsTable();" title="Arrival or Departure" style="margin-left:4px;background:rgba(255,255,255,.25);border:none;color:#fff;font-weight:700;font-size:.62rem;letter-spacing:.05em;border-radius:10px;padding:2px 4px;">
+        <input type="text" value="${ev(f.airline)}" oninput="opsFlights[${i}].airline=this.value;renderOpsTable();" placeholder="F9" style="background:${overlay};border:none;color:${fg};font-weight:700;font-size:.68rem;width:36px;padding:2px 5px;border-radius:3px;text-transform:uppercase;" />
+        <select onchange="opsFlights[${i}].kind=this.value;renderOpsTable();" title="Arrival or Departure" style="margin-left:4px;background:${overlay2};border:none;color:${fg};font-weight:700;font-size:.62rem;letter-spacing:.05em;border-radius:10px;padding:2px 4px;">
           <option value="A" ${f.kind==='A'?'selected':''}>ARR</option>
           <option value="D" ${f.kind==='D'?'selected':''}>DEP</option>
         </select>
       </div>
     </div>
     <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-      <button onclick="removeFlight(${i})" title="Remove flight from brief" style="background:rgba(255,255,255,0.15);border:none;color:rgba(255,255,255,0.7);border-radius:4px;padding:2px 7px;font-size:.7rem;font-weight:700;cursor:pointer;letter-spacing:.04em;line-height:1.6;" onmouseover="this.style.background='rgba(220,50,50,0.7)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.7)'">✕</button>
-      <select onchange="opsFlights[${i}].terminal=this.value;renderOpsTable();" title="Terminal" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-weight:700;font-size:.62rem;letter-spacing:.05em;border-radius:10px;padding:2px 5px;">
+      <button onclick="removeFlight(${i})" title="Remove flight from brief" style="background:${overlay3};border:none;color:${fgSoft};border-radius:4px;padding:2px 7px;font-size:.7rem;font-weight:700;cursor:pointer;letter-spacing:.04em;line-height:1.6;" onmouseover="this.style.background='rgba(220,50,50,0.7)';this.style.color='#fff'" onmouseout="this.style.background='${overlay3}';this.style.color='${fgSoft}'">✕</button>
+      <select onchange="opsFlights[${i}].terminal=this.value;renderOpsTable();" title="Terminal" style="background:${overlay2};border:none;color:${fg};font-weight:700;font-size:.62rem;letter-spacing:.05em;border-radius:10px;padding:2px 5px;">
         <option value="D" ${(f.terminal||'').toUpperCase()==='D'?'selected':''}>Term D</option>
         <option value="E" ${(f.terminal||'').toUpperCase()==='E'?'selected':''}>Term E</option>
       </select>
@@ -1988,17 +2033,33 @@ function renderOpsTable() {
   </div>
   <div class="flight-card-body">
     <div class="flight-card-field">
-      <span class="fk-label">Date</span>
-      <span class="fk-val"><input type="text" value="${ev(dateVal)}" oninput="opsFlights[${i}].dateOverride=this.value" placeholder="Jul 7"/></span>
+      <span class="fk-label">${isArr ? 'Origin' : 'Destination'}</span>
+      <span class="fk-val"><input type="text" value="${ev(isArr ? f.origin : f.destination)}" oninput="opsFlights[${i}].${isArr ? 'origin' : 'destination'}=this.value" placeholder="${isArr ? 'DEN' : 'ORD'}" style="text-transform:uppercase;" /></span>
     </div>
     <div class="flight-card-field">
-      <span class="fk-label">${isArr ? 'STA/ETA' : 'STD'}</span>
+      <span class="fk-label">${isArr ? 'STA/ETA' : 'STD/ETD'}</span>
       <span class="fk-val"><input type="text" value="${ev(sch)}" oninput="opsFlights[${i}].${timeField}=this.value" placeholder="00:00"/>${estDisp ? `<span class="est">${escHtml(estDisp)}</span>` : ''}</span>
     </div>
-    <div class="flight-card-field full">
-      <span class="fk-label">${lastLabel}</span>
-      <span class="fk-val"><input type="text" value="${ev(f[lastField])}" oninput="opsFlights[${i}].${lastField}=this.value" placeholder="${isArr ? 'D15' : 'MU 1'}"/></span>
+    <div class="flight-card-field">
+      <span class="fk-label">Gate/Stand</span>
+      <span class="fk-val" style="display:flex;gap:4px;">
+        <input type="text" value="${ev(f.gate)}" oninput="opsFlights[${i}].gate=this.value" placeholder="E10" style="text-transform:uppercase;width:50%;"/>
+        <input type="text" value="${ev(f.stand)}" oninput="opsFlights[${i}].stand=this.value" placeholder="T84" style="text-transform:uppercase;width:50%;"/>
+      </span>
     </div>
+    ${isArr ? `
+    <div class="flight-card-field">
+      <span class="fk-label">Bag Claim</span>
+      <span class="fk-val"><input type="text" value="${ev(f.bagClaim)}" oninput="opsFlights[${i}].bagClaim=this.value" placeholder="D15"/></span>
+    </div>` : `
+    <div class="flight-card-field">
+      <span class="fk-label">MU</span>
+      <span class="fk-val"><input type="text" value="${ev(f.mu)}" oninput="opsFlights[${i}].mu=this.value" placeholder="MU 1"/></span>
+    </div>
+    <div class="flight-card-field full">
+      <span class="fk-label">Counters</span>
+      <span class="fk-val"><input type="text" value="${ev(f.counter)}" oninput="opsFlights[${i}].counter=this.value" placeholder="Term E - Zone 1"/></span>
+    </div>`}
   </div>
 </div>`;
     });
@@ -2128,8 +2189,9 @@ function buildOpsText() {
 // Used by both buildOpsHtml (standalone) and buildCombinedNightBriefHtml.
 
 // Renders the flight ops section (Term D / Term E / Other), each split into
-// an Arrivals card row (Date, Airline, Flight #, STA/ETA, Bag Claim) and a
-// Departures card row (Date, Airline, Flight #, STD, MU).
+// an Arrivals card row (Airline, Flight #, Origin, STA/ETA, Gate/Stand, Bag
+// Claim) and a Departures card row (Airline, Flight #, Destination, STD/ETD,
+// MU, Counters, Gate/Stand). Cards are tinted with the airline's brand color.
 function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
   let h = '';
   const active = flights.filter(f => f.flightNum || f.gate || f.stand);
@@ -2155,46 +2217,77 @@ function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
   };
 
   // Renders one flight as a small boarding-pass-style card (table-based, email-safe).
-  const writeCard = (f, timeField, lastLabel, lastField, color, kindLabel) => {
+  // Arrival cards: Airline, Flight #, Origin, STA/ETA, Gate/Stand, Bag Claim.
+  // Departure cards: Airline, Flight #, Destination, STD/ETD, MU, Counters, Gate/Stand.
+  const writeCard = (f, timeField, sectColor, kindLabel) => {
+    const isArr = kindLabel === 'ARR';
+
+    // Domestic Term D arrivals default to Bag Claim D15 unless already set.
+    if (isArr && !f.bagClaim && (f.terminal||'').toUpperCase() === 'D') f.bagClaim = 'D15';
+
     const cxl      = f.status === 'CXL';
     const sch      = f[timeField] || '';
-    const est      = kindLabel === 'ARR' ? f.eta : f.etd;
+    const est      = isArr ? f.eta : f.etd;
     const timeDisp = (est && est !== sch) ? `${sch||'—'} <span style="color:#888;font-weight:500;">(${escHtml(est)})</span>` : escHtml(sch||'—');
-    const dateLbl  = flightDateStr(sch);
-    const lastVal  = f[lastField] || '—';
+    const odVal    = (isArr ? f.origin : f.destination) || '—';
+    const gateStand= [f.gate, f.stand].filter(Boolean).join(' / ') || '—';
     const strike   = cxl ? 'text-decoration:line-through;color:#aaa;' : '';
+
+    const color   = airlineColor(f.airline, sectColor);
+    const fg      = contrastText(color);
+    const fgSoft  = fg === '#fff' ? 'rgba(255,255,255,.9)' : 'rgba(26,28,32,.75)';
+
+    let rows = `
+      <tr>
+        <td style="padding:6px 10px 0;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">${isArr ? 'Origin' : 'Destination'}</td>
+        <td style="padding:6px 10px 0;font-size:12px;font-weight:600;text-align:right;color:#222;">${escHtml(odVal)}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 10px 0;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">${isArr ? 'STA/ETA' : 'STD/ETD'}</td>
+        <td style="padding:4px 10px 0;font-size:12px;font-weight:600;text-align:right;color:#222;">${timeDisp}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 10px 0;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">Gate/Stand</td>
+        <td style="padding:4px 10px 0;font-size:12px;font-weight:600;text-align:right;color:#222;">${escHtml(gateStand)}</td>
+      </tr>`;
+
+    if (isArr) {
+      rows += `
+      <tr>
+        <td style="padding:4px 10px 8px;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">Bag Claim</td>
+        <td style="padding:4px 10px 8px;font-size:12px;font-weight:700;text-align:right;color:${NAVY};">${escHtml(f.bagClaim||'—')}</td>
+      </tr>`;
+    } else {
+      rows += `
+      <tr>
+        <td style="padding:4px 10px 0;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">MU</td>
+        <td style="padding:4px 10px 0;font-size:12px;font-weight:700;text-align:right;color:${NAVY};">${escHtml(f.mu||'—')}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 10px 8px;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">Counters</td>
+        <td style="padding:4px 10px 8px;font-size:12px;font-weight:700;text-align:right;color:${NAVY};">${escHtml(f.counter||'—')}</td>
+      </tr>`;
+    }
 
     return `<table cellpadding="0" cellspacing="0" style="display:inline-table;vertical-align:top;width:210px;margin:0 8px 8px 0;border-collapse:collapse;border:1px solid #d9dde3;border-radius:6px;overflow:hidden;font-size:12px;">
       <tr><td colspan="2" style="background:${color};padding:6px 10px;">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td style="color:#fff;font-weight:800;font-size:13px;${strike}">${escHtml(f.flightNum||'—')}</td>
-          <td align="right" style="color:rgba(255,255,255,.9);font-weight:700;font-size:10px;letter-spacing:.04em;">${escHtml(f.airline||'—')} · ${kindLabel}</td>
+          <td style="color:${fg};font-weight:800;font-size:13px;${strike}">${escHtml(f.flightNum||'—')}</td>
+          <td align="right" style="color:${fgSoft};font-weight:700;font-size:10px;letter-spacing:.04em;">${escHtml(f.airline||'—')} · ${kindLabel}</td>
         </tr></table>
-      </td></tr>
-      <tr>
-        <td style="padding:6px 10px 0;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">Date</td>
-        <td style="padding:6px 10px 0;font-size:12px;font-weight:600;text-align:right;color:#222;">${escHtml(dateLbl)}</td>
-      </tr>
-      <tr>
-        <td style="padding:4px 10px 0;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">${timeField === 'sta' ? 'STA/ETA' : 'STD'}</td>
-        <td style="padding:4px 10px 0;font-size:12px;font-weight:600;text-align:right;color:#222;">${timeDisp}</td>
-      </tr>
-      <tr>
-        <td style="padding:4px 10px 8px;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;">${lastLabel}</td>
-        <td style="padding:4px 10px 8px;font-size:12px;font-weight:700;text-align:right;color:${NAVY};">${escHtml(lastVal)}</td>
-      </tr>
+      </td></tr>${rows}
     </table>`;
   };
 
   // Renders a row of cards (arrivals or departures) with its own field set.
-  const writeCardRow = (subLabel, rows, timeField, lastLabel, lastField) => {
+  const writeCardRow = (subLabel, rows, timeField) => {
     if (!rows.length) return;
-    const color = subLabel === 'Arrivals' ? '#2e7d32' : '#1565c0';
+    const sectColor = subLabel === 'Arrivals' ? '#2e7d32' : '#1565c0';
     const kindLabel = subLabel === 'Arrivals' ? 'ARR' : 'DEP';
     h += `<div style="margin-top:10px;">`;
-    h += `<div style="background:${color};color:#fff;padding:5px 12px;font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-radius:4px 4px 0 0;">${subLabel}</div>`;
+    h += `<div style="background:${sectColor};color:#fff;padding:5px 12px;font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-radius:4px 4px 0 0;">${subLabel}</div>`;
     h += `<div style="padding:10px 0 2px;">`;
-    rows.forEach(f => { h += writeCard(f, timeField, lastLabel, lastField, color, kindLabel); });
+    rows.forEach(f => { h += writeCard(f, timeField, sectColor, kindLabel); });
     h += `</div></div>`;
   };
 
@@ -2204,8 +2297,8 @@ function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
     const departures = rows.filter(f => f.kind === 'D');
     h += `<div style="margin-top:14px;">`;
     h += `<div style="background:#FF5000;color:#fff;padding:7px 12px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">${escHtml(title)}</div>`;
-    writeCardRow('Arrivals',   arrivals,   'sta', 'Bag Claim', 'bagClaim');
-    writeCardRow('Departures', departures, 'std', 'MU',        'mu');
+    writeCardRow('Arrivals',   arrivals,   'sta');
+    writeCardRow('Departures', departures, 'std');
     h += `</div>`;
   };
 
