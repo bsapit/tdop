@@ -2348,6 +2348,158 @@ function processF9Rons(turns, dateFrom, dateTo, timeFrom, timeTo) {
   return f9Rons;
 }
 
+// ── SUN COUNTRY AM LINEUP (00:01–09:00) ────────────────────────────────────
+// Ported from the FlightInfo tool's "Export AM Lineup" feature. Reads raw
+// (unfiltered) turns directly — like F9 RONs — since Sun Country isn't a
+// Terminal D carrier and would otherwise be filtered out entirely.
+// MU / Bag Claim / Check-In aren't tracked anywhere in TDOP's data model, so
+// they're rendered as free-text inputs the same way PAX/notes are — one set
+// per turn (keyed by a stable turnKey), persisted via the existing generic
+// input-recording system (class="cell-note-input").
+function isSyAMTime(timeStr) {
+  if (!timeStr || timeStr === '--:--') return false;
+  const [h, m] = timeStr.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return false;
+  if (h === 0 && m === 0) return false; // exclude exactly 00:00
+  return (h >= 0 && h < 9) || (h === 9 && m === 0);
+}
+
+function processSunCountryAM(turns, dateFrom) {
+  const legs = [];
+
+  (turns || []).forEach(turn => {
+    const arr = turn.arrivalFlight   || {};
+    const dep = turn.departureFlight || {};
+    const arrIata = (arr.airline || '').toUpperCase();
+    const depIata = (dep.airline || '').toUpperCase();
+    if (arrIata !== 'SY' && depIata !== 'SY') return;
+
+    const arrGate   = normalizeGate((turn.arrivalGate   || {}).name || '');
+    const depGate   = normalizeGate((turn.departureGate || {}).name || '');
+    const arrStand  = (turn.arrivalStand   || {}).name || '';
+    const depStand  = (turn.departureStand || {}).name || '';
+    const idleStand = (turn.idleStand      || {}).name || '';
+    const arrIsHs   = isHardstandStand(arrStand);
+    const depIsHs   = isHardstandStand(depStand);
+    const towOff    = fmtTime(turn.tow1StartTime || '');
+    const towOn     = fmtTime(turn.tow2StartTime || '');
+
+    const turnKey = `${arr.flightNumber || 'x'}_${dep.flightNumber || 'x'}`.replace(/\s/g,'');
+
+    if (arrIata === 'SY') {
+      const schedDate = (arr.scheduleTime || '').substring(0,10);
+      const schedFmt  = fmtTime(arr.scheduleTime);
+      const estFmt    = fmtTime(arr.estimatedTime || arr.actualTime || '');
+      const checkTime = schedFmt || estFmt;
+      if (schedDate === dateFrom && isSyAMTime(checkTime)) {
+        legs.push({
+          type: 'ARR', turnKey,
+          flight:  `SY${String(arr.flightNumber||'').replace(/^SY/i,'')}`,
+          city:    arr.destination || '',
+          time:    schedFmt,
+          estTime: (estFmt && estFmt !== schedFmt) ? estFmt : '',
+          gate: arrGate, stand: arrStand,
+          arrIsHs, depIsHs, towOff, towOn, idleStand,
+        });
+      }
+    }
+    if (depIata === 'SY') {
+      const schedDate = (dep.scheduleTime || '').substring(0,10);
+      const schedFmt  = fmtTime(dep.scheduleTime);
+      const estFmt    = fmtTime(dep.estimatedTime || dep.actualTime || '');
+      const checkTime = schedFmt || estFmt;
+      if (schedDate === dateFrom && isSyAMTime(checkTime)) {
+        legs.push({
+          type: 'DEP', turnKey,
+          flight:  `SY${String(dep.flightNumber||'').replace(/^SY/i,'')}`,
+          city:    dep.destination || '',
+          time:    schedFmt,
+          estTime: (estFmt && estFmt !== schedFmt) ? estFmt : '',
+          gate: depGate, stand: depStand,
+          arrIsHs, depIsHs, towOff, towOn, idleStand,
+        });
+      }
+    }
+  });
+
+  legs.sort((a,b) => {
+    const toMins = t => { if (!t) return 9999; const [h,m]=t.split(':').map(Number); return h>=23 ? h*60+m-24*60 : h*60+m; };
+    return toMins(a.time) - toMins(b.time);
+  });
+  return legs;
+}
+
+// Builds the on-page "☀ Sun Country — AM Lineup" panel: a table of legs with
+// editable MU / Bag Claim / Check-In inputs (persisted via the same generic
+// input system as PAX/notes) plus read-only Tow Off/On + Idle Stand.
+function buildSunCountrySection(legs) {
+  if (!legs.length) return '';
+
+  const rows = legs.map(l => {
+    const typeBg  = l.type === 'ARR' ? '#DAF0F6' : '#FEF0E6';
+    const typeFg  = l.type === 'ARR' ? '#1A8FA8' : '#D96E20';
+    const timeHtml = l.estTime
+      ? `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+           <span style="text-decoration:line-through;color:#9CA3AF;font-size:11px;font-weight:600">${l.time}</span>
+           <span style="font-size:14px;font-weight:800;color:#fff;background:${l.estTime>l.time?'#C62828':'#00873E'};padding:1px 7px;border-radius:5px">${l.estTime}</span>
+         </div>`
+      : `<span style="font-size:14px;font-weight:700;color:#1C1C1E">${l.time || '—'}</span>`;
+    const gateStand = [l.gate, l.stand].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' / ') || 'TBD';
+
+    // Tow-Up-only case: arrival was on hardstand, departure is off hardstand
+    // — the only meaningful tow event is the tow that brought it to the gate.
+    const towUpOnly = l.type === 'DEP' && l.arrIsHs && !l.depIsHs;
+
+    let details = '';
+    if (l.type === 'ARR') {
+      details += `<label style="font-size:9px;color:#9CA3AF;text-transform:uppercase;letter-spacing:.05em;font-weight:700">Bag Claim</label>
+        <input type="text" class="cell-note-input" id="syclaim_${l.turnKey}" placeholder="—" style="display:block;width:60px;font-size:12px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;margin-top:1px">`;
+    } else {
+      details += `<div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div><label style="font-size:9px;color:#9CA3AF;text-transform:uppercase;letter-spacing:.05em;font-weight:700">MU</label>
+          <input type="text" class="cell-note-input" id="symu_${l.turnKey}" placeholder="—" style="display:block;width:50px;font-size:12px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;margin-top:1px"></div>
+        <div><label style="font-size:9px;color:#9CA3AF;text-transform:uppercase;letter-spacing:.05em;font-weight:700">Check-In</label>
+          <input type="text" class="cell-note-input" id="sycheckin_${l.turnKey}" placeholder="—" style="display:block;width:60px;font-size:12px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;margin-top:1px"></div>
+      </div>`;
+    }
+    const towParts = [];
+    if (towUpOnly) {
+      if (l.towOn) towParts.push(`Tow-Up: ${l.towOn}`);
+    } else {
+      if (l.towOff) towParts.push(`Tow Off: ${l.towOff}`);
+      if (l.towOn)  towParts.push(`Tow On: ${l.towOn}`);
+      if (l.idleStand) towParts.push(`Idle: ${l.idleStand}`);
+    }
+    const towLine = towParts.length
+      ? `<div style="font-size:10px;color:#9CA3AF;margin-top:4px">${towParts.join(' &nbsp;·&nbsp; ')}</div>` : '';
+
+    return `<tr>
+      <td style="padding:8px 10px;vertical-align:top"><span style="background:${typeBg};color:${typeFg};font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:4px">${l.type}</span></td>
+      <td style="padding:8px 10px;vertical-align:top"><div style="font-size:13px;font-weight:700;color:#1C1C1E">${l.flight}</div><div style="font-size:11px;color:#8A8A96">${l.city}</div></td>
+      <td style="padding:8px 10px;vertical-align:top;text-align:right">${timeHtml}</td>
+      <td style="padding:8px 10px;vertical-align:top;text-align:right;font-size:14px;font-weight:700;color:#FF5000">${gateStand}</td>
+      <td style="padding:8px 10px;vertical-align:top">${details}${towLine}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div style="margin-top:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+    <div style="background:#F58232;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <span style="font-size:.85rem;font-weight:700">☀ Sun Country — AM Lineup (00:01–09:00)</span>
+      <button id="btnSunCountryExport" style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:4px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer" onclick="exportSunCountryAM()">✉ Export AM Lineup</button>
+    </div>
+    <table width="100%" style="border-collapse:collapse">
+      <thead><tr style="background:var(--surface-alt,#F4F4F6)">
+        <th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:#8A8A96;text-transform:uppercase;letter-spacing:.05em"></th>
+        <th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:#8A8A96;text-transform:uppercase;letter-spacing:.05em">Flight</th>
+        <th style="padding:6px 10px;text-align:right;font-size:10px;font-weight:700;color:#8A8A96;text-transform:uppercase;letter-spacing:.05em">Time</th>
+        <th style="padding:6px 10px;text-align:right;font-size:10px;font-weight:700;color:#8A8A96;text-transform:uppercase;letter-spacing:.05em">Stand/Gate</th>
+        <th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:#8A8A96;text-transform:uppercase;letter-spacing:.05em">Details</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
 function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
   const sameDay   = dateFrom === dateTo;
   const dateLabel = sameDay ? fmtDateLong(dateFrom) : `${fmtDateLong(dateFrom)} – ${fmtDateLong(dateTo)}`;
@@ -2580,6 +2732,8 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
   }
   h += `</div>`; // close right col
   h += `</div>`; // close briefing-grid
+
+  h += buildSunCountrySection(processSunCountryAM(lastRawTurns, dateFrom));
 
   h += `<div class="doc-footer-bar">
     <span>DFW Terminal D · TDOP V1.0.3</span><span>Generated ${now}</span>
@@ -3866,11 +4020,17 @@ const MAILTO_LISTS = {
   lfOps:   'jaren.spikes@flycontour.com;dfw@flycontour.com;operations@flycontour.com;iocgatecoordinators@dfwairport.com;reginald.richardson@flycontour.com;shellie.housewright@flycontour.com;mason.notch@flycontour.com',
   intlOps: 'jaguilar1@dfwairport.com;hffilho@dfwairport.com;iocgatecoordinators@dfwairport.com;TermDACES@dfwairport.com;TermDSupervisors@dfwairport.com',
   f9Rons:  'brian.williams@menziesaviation.com;brittany.mitchell@flyfrontier.com;bryan.ray@flyfrontier.com;christopher.pena@menziesaviation.com;David.Barnett@menziesaviation.com;destiney.mendez@menziesaviation.com;dfwf9ops@outlook.com;Farris.Teas@menziesaviation.com;felicia.crawford@flyfrontier.com;kim.davis@menziesaviation.com;luis.torres1@menziesaviation.com;marwa.elsherbiny@menziesaviation.com;meagan.mcdade@menziesaviation.com',
+  sunCountryAM: 'adel.megally@menziesaviation.com;Amber.palacios@menziesaviation.com;belquita.reyes@menziesaviation.com;gail.hill@menziesaviation.com;Latasha.Calhoune@menziesaviation.com;randall.mulvey@suncountry.com;dfwops@suncountry.com;Tdaisia.Watkins@menziesaviation.com;wanda.bell@menziesaviation.com',
+};
+const MAILTO_CC = {
+  sunCountryAM: 'iocgatecoordinators@dfwairport.com',
 };
 
 function openMailto(listKey, subject) {
   const to      = MAILTO_LISTS[listKey] || '';
-  const mailto  = `mailto:${to}?subject=${encodeURIComponent(subject)}`;
+  const cc      = MAILTO_CC[listKey] || '';
+  const ccParam = cc ? `&cc=${encodeURIComponent(cc)}` : '';
+  const mailto  = `mailto:${to}?subject=${encodeURIComponent(subject)}${ccParam}`;
   // Small delay so clipboard write completes first
   setTimeout(() => { window.location.href = mailto; }, 300);
 }
@@ -4520,6 +4680,93 @@ function exportF9Rons() {
 
   copyEmailHtml(fullHtml, 'btnF9Rons');
   openMailto('f9Rons', `F9 RON Operations - ${fmtSubjectDate(briefingData.dateFrom)}`);
+}
+
+// ── SUN COUNTRY AM LINEUP EMAIL ────────────────────────────────────────────
+// Ported from the FlightInfo tool's "Export AM Lineup" — same visual style
+// (header bar, struck-through sched time + colored estimate pill), reading
+// the current MU / Bag Claim / Check-In values typed into the on-page panel.
+function exportSunCountryAM() {
+  if (!briefingData) return;
+  const legs = processSunCountryAM(lastRawTurns, briefingData.dateFrom);
+  if (!legs.length) { alert('No Sun Country AM Lineup flights found for this window.'); return; }
+
+  const dateLong = fmtDateLong(briefingData.dateFrom);
+  const now      = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+
+  const rowsHtml = legs.map((l, idx) => {
+    const isArr   = l.type === 'ARR';
+    const typeBg  = isArr ? '#daf0f6' : '#fef0e6';
+    const typeClr = isArr ? '#1a8fa8' : '#d96e20';
+    const bg      = idx % 2 === 0 ? '#ffffff' : '#f7f8fa';
+    const gateStand = [l.gate, l.stand].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' / ') || 'TBD';
+
+    let timeHtml;
+    if (l.estTime) {
+      const isLate  = l.estTime > l.time;
+      const pillClr = isLate ? '#C62828' : '#00873E';
+      timeHtml = `<div style="display:inline-block;text-align:right">
+        <div style="text-decoration:line-through;color:#9ca3af;font-size:11px;font-weight:600">${l.time}</div>
+        <div style="font-size:16px;font-weight:900;color:#ffffff;background:${pillClr};padding:2px 9px;border-radius:5px;display:inline-block">${l.estTime}</div>
+      </div>`;
+    } else {
+      timeHtml = `<span style="font-size:15px;font-weight:700;color:#111827">${l.time || '—'}</span>`;
+    }
+
+    const towUpOnly = l.type === 'DEP' && l.arrIsHs && !l.depIsHs;
+    const extraParts = [];
+    if (isArr) {
+      const claim = getVal(`syclaim_${l.turnKey}`);
+      if (claim) extraParts.push(`Claim: ${claim}`);
+    } else {
+      const mu      = getVal(`symu_${l.turnKey}`);
+      const checkin = getVal(`sycheckin_${l.turnKey}`);
+      if (mu)      extraParts.push(`MU: ${mu}`);
+      if (checkin) extraParts.push(`Check-In: ${checkin}`);
+    }
+    if (towUpOnly) {
+      if (l.towOn) extraParts.push(`Tow-Up: ${l.towOn}`);
+    } else {
+      if (l.towOff)    extraParts.push(`Tow Off: ${l.towOff}`);
+      if (l.towOn)     extraParts.push(`Tow On: ${l.towOn}`);
+      if (l.idleStand) extraParts.push(`Idle: ${l.idleStand}`);
+    }
+    const detail = escapeHtml(extraParts.join('  ·  '));
+
+    return `<tr style="background:${bg}">
+      <td style="padding:9px 14px;border-bottom:1px solid #e5e7eb"><span style="background:${typeBg};color:${typeClr};font-size:11px;font-weight:700;letter-spacing:0.06em;padding:3px 8px;border-radius:4px">${l.type}</span></td>
+      <td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:15px;font-weight:700;color:#111827">${l.flight} / ${escapeHtml(l.city)}</td>
+      <td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;text-align:right">${timeHtml}</td>
+      <td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:20px;font-weight:900;color:#111827;text-align:right">${gateStand}</td>
+      <td style="padding:9px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280">${detail}</td>
+    </tr>`;
+  }).join('');
+
+  const subLine = `00:01 – 09:00 &nbsp;·&nbsp; ${dateLong} &nbsp;·&nbsp; Generated ${now} &nbsp;·&nbsp; ${legs.length} leg${legs.length!==1?'s':''}`;
+
+  const fullHtml = `<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;width:100%;max-width:680px">
+  <thead>
+    <tr style="background:#F58232">
+      <td colspan="5" style="padding:14px 16px;color:#ffffff;font-size:15px;font-weight:700;letter-spacing:0.04em">☀ Sun Country — AM Lineup &nbsp;<span style="font-size:11px;color:#fff3e8;font-weight:400">${subLine}</span></td>
+    </tr>
+    <tr style="background:#f3f4f6">
+      <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#9ca3af;border-bottom:2px solid #d1d5db"></th>
+      <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#9ca3af;border-bottom:2px solid #d1d5db">Flight</th>
+      <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#9ca3af;border-bottom:2px solid #d1d5db">Time</th>
+      <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#9ca3af;border-bottom:2px solid #d1d5db">Stand / Gate</th>
+      <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#9ca3af;border-bottom:2px solid #d1d5db">Details</th>
+    </tr>
+  </thead>
+  <tbody>${rowsHtml}</tbody>
+  <tfoot>
+    <tr style="background:#f3f4f6">
+      <td colspan="5" style="padding:10px 14px;font-size:10px;color:#9ca3af;letter-spacing:0.06em;text-transform:uppercase;border-top:1px solid #e5e7eb">DFW Terminal D · TDOP V1.0.3 · For Internal Use Only</td>
+    </tr>
+  </tfoot>
+</table>`;
+
+  copyEmailHtml(fullHtml, 'btnSunCountryExport', null, '✉ Export AM Lineup');
+  openMailto('sunCountryAM', `Sun Country AM Lineup - ${fmtSubjectDate(briefingData.dateFrom)}`);
 }
 
 
