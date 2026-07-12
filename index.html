@@ -4370,12 +4370,18 @@ function exportHSOps() {
 // E2/E7/E10/E32/E33 for the currently-selected TDOP window.
 function exportF9Rons() {
   if (!briefingData) return;
-  const f9Rons = processF9Rons(lastRawTurns, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
+  // F9 RONs always covers a fixed 20:00 → 08:00 (next day) window, regardless
+  // of whatever From/To range is currently set in the date/time picker.
+  const f9DateFrom = briefingData.dateFrom;
+  const f9DateTo   = _addDays(f9DateFrom, 1);
+  const f9TimeFrom = '20:00';
+  const f9TimeTo   = '08:00';
+  const f9Rons = processF9Rons(lastRawTurns, f9DateFrom, f9DateTo, f9TimeFrom, f9TimeTo);
   if (!f9Rons.length) { alert('No F9 RON flights found for this window.'); return; }
 
-  const dk         = briefingData.dateFrom;
+  const dk         = f9DateFrom;
   const dateLong   = fmtDateLong(dk);
-  const shiftLabel = (currentTimeFrom === '00:00' && currentTimeTo === '23:59') ? 'Full Day' : `${currentTimeFrom}–${currentTimeTo}`;
+  const shiftLabel = `${f9TimeFrom}–${f9TimeTo}`;
   const now        = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
 
   const FS  = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;';
