@@ -713,7 +713,7 @@ const _tomorrow = _addDays(_today, 1);
 document.getElementById('dateFrom').value   = _today;
 document.getElementById('dateTo').value     = _tomorrow;
 document.getElementById('timeFrom').value   = '04:30';
-document.getElementById('timeTo').value     = '01:00';
+document.getElementById('timeTo').value     = '02:00';
 
 const NAMES = {
   AA:'American', UA:'United', DL:'Delta', AS:'Alaska', B6:'JetBlue',
@@ -1411,7 +1411,7 @@ async function kvApplyState(state) {
   document.getElementById('dateFrom').value = state.dateFrom;
   document.getElementById('dateTo').value   = state.dateTo   || _addDays(state.dateFrom, 1);
   document.getElementById('timeFrom').value = state.timeFrom || '04:30';
-  document.getElementById('timeTo').value   = state.timeTo   || '01:00';
+  document.getElementById('timeTo').value   = state.timeTo   || '02:00';
   window._kvPendingManual = state.manualFlights || [];
   window._kvPendingPromotedHS = state.promotedHardstand || [];
   window._kvPendingInputs = state.inputs || {};
@@ -1471,7 +1471,7 @@ async function nuclearClear() {
   document.getElementById('dateFrom').value = _today;
   document.getElementById('dateTo').value   = _tomorrow;
   document.getElementById('timeFrom').value = '04:30';
-  document.getElementById('timeTo').value   = '01:00';
+  document.getElementById('timeTo').value   = '02:00';
 
   // 5. Pull a clean briefing, then restart timers
   setStatus('loading', 'Cleared — pulling fresh briefing…');
@@ -1488,7 +1488,7 @@ let _startupState = null; // holds KV state if a saved briefing was found
 
 (async function initKV() {
   document.getElementById('timeFrom').value = '04:30';
-  document.getElementById('timeTo').value   = '01:00';
+  document.getElementById('timeTo').value   = '02:00';
   document.getElementById('dateFrom').value = _today;
   document.getElementById('dateTo').value   = _tomorrow;
 
@@ -1778,7 +1778,7 @@ function scheduleNightlyReset() {
     document.getElementById('dateFrom').value = todayStr;
     document.getElementById('dateTo').value   = _addDays(todayStr, 1);
     document.getElementById('timeFrom').value = '04:30';
-    document.getElementById('timeTo').value   = '01:00';
+    document.getElementById('timeTo').value   = '02:00';
 
     // Clear output pane and save indicator
     const out = document.getElementById('out');
