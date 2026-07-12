@@ -54,8 +54,6 @@ html,body{max-width:100%;overflow-x:hidden}
 .app-header{background:var(--header-bg);border-bottom:3px solid var(--orange);padding:10px 16px;position:sticky;top:0;z-index:100;width:100%;box-shadow:var(--shadow)}
 .app-header .hl{display:flex;align-items:center;gap:10px;margin-bottom:8px;justify-content:space-between}
 .hl-doc-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
-.btn-qsg{background:var(--teal)}
-.btn-help{background:var(--surface-alt)!important;color:var(--text-2)!important;border:1px solid var(--border)}
 .app-header img.dfw-logo{height:28px;flex-shrink:0}
 .logo-fallback{font-family:var(--mono);font-size:1.2rem;font-weight:700;color:var(--orange);display:none}
 .hdiv{width:1px;height:26px;background:rgba(255,80,0,.25);flex-shrink:0}
@@ -71,37 +69,29 @@ html,body{max-width:100%;overflow-x:hidden}
 .btn:hover:not(:disabled){filter:brightness(1.12)}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .bp{background:var(--orange)}.bs{background:var(--teal)}
-.btn-pdf{background:#585858}.btn-email{background:var(--orange)}.btn-hsops{background:var(--purple)}
-.btn-lfops{background:var(--green)}.btn-intl{background:#7B4FBF}.btn-swiss{background:#C0392B}
-.btn-wfs{background:#2471A3}.btn-prospect{background:#D4800A}.btn-traffic{background:var(--gold)}
 .traffic-wrap{position:relative;display:inline-block}
 .traffic-menu{display:none;flex-direction:column;gap:2px;position:absolute;top:calc(100% + 4px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px;min-width:230px;z-index:300;box-shadow:var(--shadow)}
 .traffic-menu.open{display:flex}
 
 .btn-seesay{background:#1565C0}
-.btn-fifa{background:#E6A817;color:#1a1a1a}
-.btn-equip{background:#5D6D7E}
-.btn-nightbrief{background:#1F3A8A;color:#fff;border:1px solid #FFB347}
-[data-theme="dark"] .btn-nightbrief{background:#FFB347;color:#1a1a1a;border:1px solid #1F3A8A}
-.btn-gatecounts{background:#41395F;color:#fff;border:1px solid #3EB1C8}
-.btn-phonebook{background:#1A7A5E}
-.btn-busneeded{background:#D4800A}
+.btn-busneeded{background:var(--teal);color:#fff;border:none}
+.btn-equip{background:var(--gold);color:#1a1a1a;border:none}
 .btn-alerts{background:#C0392B;color:#fff;position:relative}
 .btn-alerts-dropdown{display:none;position:absolute;top:calc(100% + 4px);right:0;min-width:130px;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:500;overflow:hidden}
 .btn-alerts-dropdown.open{display:block}
 .btn-alerts-dropdown button{display:block;width:100%;text-align:left;padding:9px 14px;font-family:var(--sans);font-size:.8rem;font-weight:700;border:none;cursor:pointer;white-space:nowrap}
 .btn-alerts-dropdown button:first-child{border-bottom:1px solid rgba(0,0,0,.1)}
-[data-theme="dark"] .btn-gatecounts{background:#3EB1C8;color:#1a1a1a;border:1px solid #41395F}
+.hdr-menu{position:relative}
+.hdr-menu>.hdr-menu-toggle{background:var(--surface-alt,#eee);color:var(--text-1,#1a1a1a);border:1px solid var(--border);font-family:var(--sans);font-size:.8rem;font-weight:700;padding:8px 13px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.hdr-menu-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:170px;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:500;overflow:hidden}
+.hdr-menu-dropdown.open{display:block}
+.hdr-menu-dropdown button{display:block;width:100%;text-align:left;padding:9px 14px;font-family:var(--sans);font-size:.8rem;font-weight:600;border:none;cursor:pointer;white-space:nowrap;background:var(--surface);color:var(--text-1,#1a1a1a)}
+.hdr-menu-dropdown button:not(:last-child){border-bottom:1px solid var(--border)}
+.hdr-menu-dropdown button:hover{background:var(--surface-alt,#f0f0f0)}
+.hdr-menu-dropdown button:disabled{opacity:.45;cursor:not-allowed}
 
-/* ── GATE COUNTS MODAL ── */
-#gcModal{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);overflow:auto}
-#gcModal.open{display:flex;align-items:flex-start;justify-content:center;padding:20px}
-#gcModalInner{background:#f4f1eb;border-radius:12px;width:100%;max-width:1400px;overflow:hidden;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.35)}
-#gcModalClose{position:absolute;top:10px;right:14px;z-index:10;font-family:var(--sans);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:6px;color:#fff;padding:6px 12px;cursor:pointer;transition:background .15s}
-#gcModalClose:hover{background:rgba(255,255,255,.3)}
 .btn-ghost{font-family:var(--sans);font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;border:1px solid var(--border);border-radius:6px;padding:8px 13px;cursor:pointer;background:transparent;color:var(--text-2);white-space:nowrap;transition:background .15s,color .15s}
 .btn-ghost:hover{background:var(--surface-alt);color:var(--text-1)}
-.btn-busboard{background:var(--teal)}
 .btn-theme{background:var(--surface-alt);color:var(--text-2);border:1px solid var(--border);font-size:1rem;padding:6px 10px;border-radius:6px;cursor:pointer;line-height:1}
 .btn-kv{font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.02em;text-transform:uppercase;border:none;border-radius:6px;padding:7px 12px;cursor:pointer;color:#fff;white-space:nowrap}
 .btn-kv-save{background:var(--green)}.btn-kv-load{background:var(--teal)}
@@ -131,11 +121,8 @@ html,body{max-width:100%;overflow-x:hidden}
 .briefing-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px;max-width:1400px;margin:0 auto;width:100%}
 .briefing-col{min-width:0}
 .briefing-col-hdr{font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--orange);padding:7px 12px;border-radius:6px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.briefing-col-hdr.hdr-fifa{background:#1565C0}
-.fifa-section{padding:0 16px;max-width:1400px;margin:0 auto;width:100%}
 @media(max-width:780px){
   .briefing-grid{grid-template-columns:1fr;padding:10px}
-  .fifa-section{padding:0 10px}
 }
 
 /* ── DOC MASTHEAD ── */
@@ -280,9 +267,14 @@ tr.canceled td.cell-intl{color:var(--red) !important}
       <div class="hsub">Daily Briefing</div>
     </div>
     <div class="hl-doc-btns">
-      <button class="btn btn-qsg" onclick="window.open('TDOP_Explainer.html','_blank')" title="Open Quick Start Guide">⚡ QSG</button>
-      <button class="btn btn-help" onclick="window.open('TDOP_User_Guide.html','_blank')" title="Open User Guide">❓ Help</button>
-      <button class="btn btn-phonebook" onclick="window.open('Phonebook.html','_blank')" title="Open Phonebook">📋 Phonebook</button>
+      <div class="hdr-menu">
+        <button class="hdr-menu-toggle" onclick="toggleHdrMenu(event,'referenceMenu')">📋 Reference ▾</button>
+        <div class="hdr-menu-dropdown" id="referenceMenu">
+          <button onclick="window.open('TDOP_Explainer.html','_blank')" title="Open Quick Start Guide">Quick Start Guide</button>
+          <button onclick="window.open('TDOP_User_Guide.html','_blank')" title="Open User Guide">Help</button>
+          <button onclick="window.open('Phonebook.html','_blank')" title="Open Phonebook">Phonebook</button>
+        </div>
+      </div>
       <button class="btn-theme" id="btnTheme" onclick="toggleTheme()" title="Toggle light/dark">☀️</button>
     </div>
   </div>
@@ -304,20 +296,20 @@ tr.canceled td.cell-intl{color:var(--red) !important}
 
   </div>
   <div class="controls" style="margin-top:6px">
-    <button class="btn btn-pdf" id="btnPdf" onclick="exportPDF()" disabled>↓ PDF</button>
-    <button class="btn btn-email" id="btnEmail" onclick="exportEmail()" disabled>✉ All Ops</button>
-    <button class="btn btn-hsops" id="btnHSOps" onclick="exportHSOps()" disabled>✈ HS Ops</button>
-    <button class="btn btn-busboard" id="btnBusBoard" onclick="publishToBusBoard()" disabled title="Publish current hardstand snapshot to BusBoard display">📡 Publish BusBoard</button>
-    <span id="busBoardStatus" style="font-size:.75rem;color:var(--text-3);margin-left:4px;align-self:center"></span>
-    <button class="btn btn-lfops" id="btnLFOps" onclick="exportLFOps()" disabled>✉ LF Ops</button>
-    <button class="btn btn-intl" id="btnIntlOps" onclick="exportIntlOps()" disabled>🌐 Intl Ops</button>
-    <button class="btn btn-traffic" id="btnTraffic" onclick="exportTrafficWindow()" disabled>Traffic</button>
-    <button class="btn btn-fifa" onclick="openFifaModal()">⚽ Add Charter</button>
+    <div class="hdr-menu">
+      <button class="hdr-menu-toggle" onclick="toggleHdrMenu(event,'sendReportMenu')">✉ Send Report ▾</button>
+      <div class="hdr-menu-dropdown" id="sendReportMenu">
+        <button id="btnEmail" onclick="exportEmail()" disabled>All Ops (full email)</button>
+        <button id="btnHSOps" onclick="exportHSOps()" disabled>HS Ops (hardstand only)</button>
+        <button id="btnLFOps" onclick="exportLFOps()" disabled>LF Ops</button>
+        <button id="btnIntlOps" onclick="exportIntlOps()" disabled>Intl Ops</button>
+        <button id="btnTraffic" onclick="exportTrafficWindow()" disabled>Traffic</button>
+        <button onclick="window.open('NightBrief.html','_blank')" title="Open NightBrief">NightBrief</button>
+      </div>
+    </div>
     <button class="btn btn-seesay" id="btnSeeSay" onclick="triggerSeeSay()">👁 SeeSay</button>
-    <button class="btn btn-busneeded" id="btnBusNeeded" onclick="openBusNeededModal()">🚌 Bus Needed</button>
-    <button class="btn btn-equip" id="btnEquip" onclick="window.open('equipment_email.html','_blank')">🔧 Equip</button>
-    <button class="btn btn-nightbrief" onclick="window.open('NightBrief.html','_blank')" title="Open NightBrief">🦉 NightBrief</button>
-    <button class="btn btn-gatecounts" onclick="openGateCounts()" title="Open Gate &amp; Stand Counter">📊 Gate Counts</button>
+    <button id="btnBusNeeded" class="btn btn-busneeded" onclick="openBusNeededModal()">🚌 Bus Needed</button>
+    <button id="btnEquip" class="btn btn-equip" onclick="window.open('equipment_email.html','_blank')" title="Email request to move equipment">🔧 EQUIP</button>
     <div style="margin-left:auto"></div>
     <div class="btn btn-alerts" id="btnAlerts" style="padding:0;background:#C0392B">
       <button style="background:none;border:none;color:#fff;font-family:var(--sans);font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:8px 13px;cursor:pointer;white-space:nowrap;width:100%" onclick="toggleAlertsDropdown(event)">🚨 Alerts ▾</button>
@@ -557,104 +549,6 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <div id="teamsPostStatus" style="font-size:.78rem;color:var(--text-2);min-height:18px;margin-bottom:8px"></div>
     <div class="modal-actions">
       <button class="btn" style="background:var(--text-3)" onclick="hideTeamsModal()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── FIFA CHARTER MODAL ────────────────────────────────────────────────── -->
-<div class="modal-backdrop" id="fifaModal" style="display:none" onclick="if(event.target===this)closeFifaModal()">
-  <div class="modal-box" style="width:340px">
-    <h3 id="fifaModalTitle">⚽ Add FIFA Charter</h3>
-
-    <!-- Airline -->
-    <div class="modal-field">
-      <label>Airline IATA Code</label>
-      <input type="text" id="fifa_iata" placeholder="e.g. AR, KL, KAY" style="text-transform:uppercase" maxlength="4">
-    </div>
-    <div class="modal-field">
-      <label>Airline Name <span style="font-weight:400;color:var(--text-3)">(optional override)</span></label>
-      <input type="text" id="fifa_airline" placeholder="Leave blank to auto-fill">
-    </div>
-
-    <!-- ARR / DEP / TURN toggle -->
-    <div class="modal-field">
-      <label>Flight Type</label>
-      <div style="display:flex;gap:14px;margin-top:4px">
-        <label style="display:flex;align-items:center;gap:5px;font-size:.82rem;font-weight:600;color:var(--green);cursor:pointer">
-          <input type="radio" name="fifa_type" id="fifa_type_arr"  value="arr"  checked onchange="updateFifaForm()"> ARR
-        </label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:.82rem;font-weight:600;color:var(--teal);cursor:pointer">
-          <input type="radio" name="fifa_type" id="fifa_type_dep"  value="dep"  onchange="updateFifaForm()"> DEP
-        </label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:.82rem;font-weight:600;color:var(--purple);cursor:pointer">
-          <input type="radio" name="fifa_type" id="fifa_type_turn" value="turn" onchange="updateFifaForm()"> TURN
-        </label>
-      </div>
-    </div>
-
-    <!-- ARR fields -->
-    <div id="fifa_arr_section">
-      <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--green);margin:8px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--border)">Arrival</div>
-      <div class="modal-field">
-        <label>Flight Number</label>
-        <input type="text" id="fifa_arr_fnum" placeholder="e.g. AR1234" style="text-transform:uppercase">
-      </div>
-      <div class="modal-field">
-        <label>Origin City</label>
-        <input type="text" id="fifa_arr_city" placeholder="e.g. EZE" style="text-transform:uppercase" maxlength="3">
-      </div>
-      <div class="modal-field">
-        <label>STA (HH:MM)</label>
-        <input type="text" id="fifa_arr_time" placeholder="e.g. 14:30" maxlength="5">
-      </div>
-    </div>
-
-    <!-- DEP fields -->
-    <div id="fifa_dep_section" style="display:none">
-      <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--teal);margin:8px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--border)">Departure</div>
-      <div class="modal-field">
-        <label>Flight Number</label>
-        <input type="text" id="fifa_dep_fnum" placeholder="e.g. AR1235" style="text-transform:uppercase">
-      </div>
-      <div class="modal-field">
-        <label>Destination City</label>
-        <input type="text" id="fifa_dep_city" placeholder="e.g. GRU" style="text-transform:uppercase" maxlength="3">
-      </div>
-      <div class="modal-field">
-        <label>STD (HH:MM)</label>
-        <input type="text" id="fifa_dep_time" placeholder="e.g. 18:00" maxlength="5">
-      </div>
-    </div>
-
-    <!-- Ops Info -->
-    <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--orange);margin:10px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--border)">Ops Info</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="modal-field">
-        <label>Gate</label>
-        <input type="text" id="fifa_gate" placeholder="e.g. E38" style="text-transform:uppercase">
-      </div>
-      <div class="modal-field">
-        <label>Stand / Pad</label>
-        <input type="text" id="fifa_stand" placeholder="e.g. F01" style="text-transform:uppercase">
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="modal-field">
-        <label>PAX</label>
-        <input type="number" id="fifa_pax" placeholder="—" min="0">
-      </div>
-      <div class="modal-field">
-        <label>Intl / Dom</label>
-        <select id="fifa_intl" style="font-family:var(--mono);font-size:.82rem;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:5px 8px;color:var(--input-clr);width:100%">
-          <option value="INTL">INTL</option>
-          <option value="DOM">DOM</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn bs" onclick="closeFifaModal()">Cancel</button>
-      <button class="btn" id="fifaSubmitBtn" style="background:#17A44A" onclick="addFifaCharter()">Add Charter</button>
     </div>
   </div>
 </div>
@@ -914,9 +808,7 @@ const INTL_AIRPORTS = new Set([
 
 
 let briefingData    = null;
-let fifaCharters    = [];  // manually-added FIFA charter entries
 let mfEditTarget     = null; // {iata, arrFlight, depFlight} of manual flight being edited, or null when adding
-let fifaEditId       = null; // _id of FIFA charter being edited, or null when adding
 let currentShift    = 'AM';
 let currentTimeFrom = '00:00';
 let currentTimeTo   = '23:59';
@@ -952,8 +844,6 @@ function fmtDateLong(dk) {
   return new Date(dk+'T12:00:00').toLocaleDateString('en-US',
     {weekday:'long', month:'long', day:'numeric', year:'numeric'});
 }
-
-function dateKey(iso) { return iso ? iso.substring(0,10) : ''; }
 
 // HTML-escape user-provided text (notes, airline names with quotes, etc.)
 function escapeHtml(s) {
@@ -1319,6 +1209,50 @@ function updateGateStandTracker(allEntries) {
   return mutated;
 }
 
+// ── HARDSTAND DEPARTURE TRACKER ────────────────────────────────────────────
+// Problem: when a flight moves from a hardstand to a gate, it correctly
+// disappears from the hardstand list — but bus drivers watching BusBoard
+// don't always notice it's gone, and may not realize the bus is no longer
+// needed there (or is needed somewhere new). This tracker catches that
+// transition and keeps a "moved to gate" notice visible for a few refresh
+// cycles, both on-screen and in the BusBoard payload.
+const HS_DEPART_TTL = 3; // ~15 min visibility at the 5-min auto-refresh cadence
+let _hsRecentlyLeft = {}; // key -> { iata, flight, prevStand, newGate, refreshesRemaining }
+
+// Compare the hardstand list from the previous pull against the new
+// hardstand + terminal lists. Any flight that was on hardstand and is now
+// showing at a terminal gate gets flagged; anything that's simply gone
+// (departed/canceled, not moved) is left alone.
+function updateHsDepartureTracker(prevHardstand, newHardstand, newTerminal) {
+  const newHsKeys    = new Set((newHardstand || []).map(_gsTrackerKey));
+  const terminalByKey = new Map((newTerminal || []).map(e => [_gsTrackerKey(e), e]));
+  const justFlagged  = new Set();
+
+  (prevHardstand || []).forEach(prev => {
+    const key = _gsTrackerKey(prev);
+    if (newHsKeys.has(key)) return; // still on hardstand — nothing to flag
+    const movedTo = terminalByKey.get(key);
+    if (!movedTo) return; // fully departed/canceled, not a gate move — no notice needed
+    justFlagged.add(key);
+    _hsRecentlyLeft[key] = {
+      iata:      prev.iata || '',
+      flight:    prev.arrFlight || prev.depFlight || '',
+      prevStand: prev.arrStand || prev.depStand || prev.stand || '',
+      newGate:   movedTo.arrGate || movedTo.depGate || '',
+      refreshesRemaining: HS_DEPART_TTL,
+    };
+  });
+
+  // Count down anything not freshly (re)detected this cycle; drop expired
+  // entries, and drop anything that's somehow back on the hardstand list.
+  Object.keys(_hsRecentlyLeft).forEach(key => {
+    if (justFlagged.has(key)) return;
+    if (newHsKeys.has(key)) { delete _hsRecentlyLeft[key]; return; }
+    _hsRecentlyLeft[key].refreshesRemaining -= 1;
+    if (_hsRecentlyLeft[key].refreshesRemaining <= 0) delete _hsRecentlyLeft[key];
+  });
+}
+
 function kvBuildState() {
   const inputs = {}, checks = {};
   // Note: cell-note-input is included alongside ETA/PAX so typed notes persist
@@ -1359,7 +1293,9 @@ function kvBuildState() {
     // Gate/Stand change tracker — last-known values + TTL counter per flight.
     // Persisted so the "⚠ Gate/Pad Changed" countdown survives page refreshes.
     gateStandTracker: _gateStandTracker,
-    fifaCharters:     fifaCharters,
+    // Hardstand departure tracker — flights recently moved from hardstand to
+    // a gate. Persisted so the "moved to gate" notice survives page refreshes.
+    hsRecentlyLeft: _hsRecentlyLeft,
   };
 }
 
@@ -1483,10 +1419,7 @@ async function kvApplyState(state) {
   // a page refresh. loadOps() runs in 'user' mode and will decrement any
   // remaining TTLs for flights whose gates haven't changed since last pull.
   _gateStandTracker = state.gateStandTracker || {};
-  // Restore FIFA charters — shared across all users via KV
-  if (Array.isArray(state.fifaCharters)) {
-    fifaCharters = state.fifaCharters;
-  }
+  _hsRecentlyLeft   = state.hsRecentlyLeft   || {};
   await loadOps();
   if (state.savedAt) {
     const t = new Date(state.savedAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
@@ -1513,6 +1446,7 @@ async function nuclearClear() {
   _cleanPull               = true;
   _userInputs              = {};
   _gateStandTracker        = {};
+  _hsRecentlyLeft          = {};
   window._kvPendingInputs  = {};
   window._kvPendingManual  = [];
 
@@ -1548,9 +1482,6 @@ async function nuclearClear() {
   startAutoRefresh();
   startGateGadgetPoll();
 }
-
-// Legacy alias
-async function kvClear() { return nuclearClear(); }
 
 // ── STARTUP: always offer New / Load choice when a saved state exists ────────
 let _startupState = null; // holds KV state if a saved briefing was found
@@ -1723,6 +1654,7 @@ async function silentRefresh() {
       }
     });
 
+    updateHsDepartureTracker(briefingData?.hardstand || [], newData.hardstand, newData.terminal);
     briefingData = newData;
     renderBriefing(briefingData, dateFrom, dateTo, timeFrom, timeTo);
     // Pre-fill from API estimates, then let user inputs overwrite
@@ -1747,7 +1679,7 @@ async function silentRefresh() {
     lockDate();
 
     // Re-enable export buttons
-    ['btnPdf','btnEmail','btnHSOps','btnBusBoard','btnLFOps','btnTraffic',
+    ['btnEmail','btnHSOps','btnLFOps','btnTraffic',
      'btnIntlOps'].forEach(id => {
       const b = document.getElementById(id);
       if (b) b.disabled = false;
@@ -1792,20 +1724,6 @@ function startLiveSync() {
     if (remoteTime > localTime + 2000) {  // 2s grace to avoid self-trigger
       _kvLastSavedAt = remote.savedAt;
       applySyncedInputs(remote.inputs || {});
-      // Sync FIFA charters — if the remote list differs (by count or content),
-      // update the local array and re-render the briefing so all users see the
-      // same charters without needing a full page reload.
-      if (Array.isArray(remote.fifaCharters)) {
-        const remoteJson = JSON.stringify(remote.fifaCharters);
-        const localJson  = JSON.stringify(fifaCharters);
-        if (remoteJson !== localJson) {
-          fifaCharters = remote.fifaCharters;
-          if (briefingData) {
-            renderBriefing(briefingData, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
-            restoreUserInputs();
-          }
-        }
-      }
       showSyncBadge(remote.savedAt);
     }
   }, 10 * 1000); // every 10 seconds
@@ -1850,6 +1768,7 @@ function scheduleNightlyReset() {
     briefingData            = null;
     _userInputs             = {};
     _gateStandTracker       = {};
+    _hsRecentlyLeft         = {};
     _cleanPull              = true;
     window._kvPendingInputs = {};
     window._kvPendingManual = [];
@@ -1987,10 +1906,8 @@ async function loadOps() {
 
   const btnPull = document.getElementById('btnPull');
   btnPull.disabled = true;
-  document.getElementById('btnPdf').disabled = true;
   document.getElementById('btnEmail').disabled = true;
   document.getElementById('btnHSOps').disabled = true;
-  document.getElementById('btnBusBoard').disabled = true;
   document.getElementById('btnLFOps').disabled = true;
   document.getElementById('btnTraffic').disabled = true;
   document.getElementById('btnIntlOps').disabled = true;
@@ -2002,6 +1919,7 @@ async function loadOps() {
   try {
     const raw = await apiFetch(`${BASE}/StandAndGate/TurnRounds/${dateFrom}/${dateTo}`);
     const turns = Array.isArray(raw) ? raw : [raw];
+    const _prevHardstandForDeparture = briefingData?.hardstand || [];
     briefingData = processData(turns, dateFrom, dateTo, timeFrom, timeTo);
     // Re-inject manually-added flights from live snapshot or KV restore
     const manualToInject = (inputSnap.__manualFlights||[]).length
@@ -2037,8 +1955,9 @@ async function loadOps() {
     // Gate/Stand change detection — USER mode: reset TTL on change, otherwise
     // decrement. On a clean pull (New Briefing), wipe the tracker first so no
     // stale countdowns bleed into a fresh briefing.
-    if (_cleanPull) _gateStandTracker = {};
+    if (_cleanPull) { _gateStandTracker = {}; _hsRecentlyLeft = {}; }
     const _gsChanged = updateGateStandTracker([...briefingData.hardstand, ...briefingData.terminal]);
+    updateHsDepartureTracker(_prevHardstandForDeparture, briefingData.hardstand, briefingData.terminal);
 
     renderBriefing(briefingData, dateFrom, dateTo, timeFrom, timeTo);
     // Pre-fill ETA/ETD inputs from the API's estimatedTime where available.
@@ -2086,10 +2005,8 @@ async function loadOps() {
     updateBriefingBar(dateFrom, dateTo, timeFrom, timeTo,
       briefingData.hardstand.length, briefingData.terminal.length);
     lockDate();
-    document.getElementById('btnPdf').disabled = false;
     document.getElementById('btnEmail').disabled = false;
     document.getElementById('btnHSOps').disabled = false;
-    document.getElementById('btnBusBoard').disabled = false;
     document.getElementById('btnLFOps').disabled = false;
     document.getElementById('btnTraffic').disabled = false;
     document.getElementById('btnIntlOps').disabled = false;
@@ -2325,14 +2242,6 @@ function processData(turns, dateFrom, dateTo, timeFrom, timeTo) {
   return { hardstand, terminal, dateFrom, dateTo };
 }
 
-function etaClass(sched, est, isArr) {
-  if (!est) return '';
-  const s = sched.split(':').map(Number), e = est.split(':').map(Number);
-  const sm = s[0]*60+s[1], em = e[0]*60+e[1];
-  if (isArr) return em <= sm ? 'early' : 'late';
-  return em <= sm ? '' : 'late';
-}
-
 function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
   const sameDay   = dateFrom === dateTo;
   const dateLabel = sameDay ? fmtDateLong(dateFrom) : `${fmtDateLong(dateFrom)} – ${fmtDateLong(dateTo)}`;
@@ -2512,80 +2421,6 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
     </div>
   </div>`;
 
-  // ── FIFA Charters (full-width row above grid) ────────────────────────────
-  h += `<div class="fifa-section">`;
-  h += `<div class="briefing-col-hdr hdr-fifa" style="margin-bottom:10px">
-    ⚽ FIFA Charters
-    <button style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:4px;padding:3px 10px;font-size:.7rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.04em" onclick="openFifaModal()">+ Add Charter</button>
-  </div>`;
-  if (!fifaCharters.length) {
-    h += `<p style="color:var(--text-3);font-size:.88rem;padding:4px 0 12px">No FIFA charters added yet. Use <strong>+ Add Charter</strong> to add one.</p>`;
-  } else {
-    const fifaGrid = document.createElement('div');
-    let fifaHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-bottom:14px">';
-    fifaCharters.forEach(e => {
-      const bg    = alBg(e.iata), fg = alFg(e.iata);
-      const gid   = `fifa_${e.iata}_${String(e._id).replace(/[^a-z0-9]/gi,'')}`;
-      const intlCls = e.isIntl ? 'cell-intl i' : 'cell-intl cell-dom';
-      const intlLbl = e.isIntl ? 'INTL' : 'DOM';
-      const pad   = e.stand || '—';
-      const gate  = e.gate  || '—';
-      fifaHtml += `<div class="al-card" id="${gid}">
-        <div class="al-card-hdr" style="background:${bg};color:${fg}">
-          <span class="al-card-hdr-name">${e.airline}</span>
-          <button class="al-edit-btn" title="Edit this charter" onclick="editFifaCharter(${e._id})">✏ Edit</button>
-          <button class="al-delete-btn" title="Remove this charter" onclick="deleteFifaCharter(${e._id})">🗑 Remove</button>
-        </div>
-        <table class="al-tbl">
-          <thead><tr>
-            <th>Flight</th><th>City</th><th>SKD</th><th>ETA/ETD</th>
-            <th>Gate</th><th>Stand</th><th>PAX</th><th>Type</th><th>Cxl</th>
-          </tr></thead><tbody>`;
-      if (e.arrFlight) {
-        const etid = `eta_fifa_${e.iata}_${e.arrFlight}_arr`;
-        const pid  = `pax_fifa_${e.iata}_${e.arrFlight}_arr`;
-        const cid  = `cancel_fifa_${e.iata}_${e.arrFlight}`;
-        fifaHtml += `<tr class="arr-row" id="leg_hs_${etid}">
-          <td class="cell-fnum">${e.arrFlight}</td>
-          <td class="cell-city">${e.arrDest||'—'}</td>
-          <td class="cell-arr-time">STA ${e.arrTime||'—'}</td>
-          <td><input class="cell-eta" id="${etid}" type="text" maxlength="5" placeholder="––:––" oninput="updateEtaColor(this,'${e.arrTime||''}',true)"></td>
-          <td class="cell-gate">${gate}</td>
-          <td class="cell-stand">${pad}</td>
-          <td><input class="cell-pax-input" id="${pid}" type="number" min="0" placeholder="—"${e._pax ? ` value="${e._pax}"` : ''}></td>
-          <td><span class="${intlCls}">${intlLbl}</span></td>
-          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}',this.checked)"></td>
-        </tr>
-        <tr class="note-row">
-          <td colspan="9"><span class="cell-note-label">Note</span><input class="cell-note-input" id="note_fifa_${e.iata}_${e.arrFlight}_arr" type="text" maxlength="100" placeholder="Add note (100 char max)…"></td>
-        </tr>`;
-      }
-      if (e.depFlight) {
-        const etid = `etd_fifa_${e.iata}_${e.depFlight}_dep`;
-        const pid  = `pax_fifa_${e.iata}_${e.depFlight}_dep`;
-        const cid  = `cancel_fifa_${e.iata}_${e.depFlight}`;
-        fifaHtml += `<tr class="dep-row" id="leg_hs_${etid}">
-          <td class="cell-fnum">${e.depFlight}</td>
-          <td class="cell-city">${e.depDest||'—'}</td>
-          <td class="cell-dep-time">STD ${e.depTime||'—'}</td>
-          <td><input class="cell-eta" id="${etid}" type="text" maxlength="5" placeholder="––:––" oninput="updateEtaColor(this,'${e.depTime||''}',false)"></td>
-          <td class="cell-gate">${gate}</td>
-          <td class="cell-stand">${pad}</td>
-          <td><input class="cell-pax-input" id="${pid}" type="number" min="0" placeholder="—"${e._pax ? ` value="${e._pax}"` : ''}></td>
-          <td><span class="${intlCls}">${intlLbl}</span></td>
-          <td><input type="checkbox" class="cxl-chk cancel-chk" id="${cid}" onchange="toggleCanceled('${cid}',this.checked)"></td>
-        </tr>
-        <tr class="note-row">
-          <td colspan="9"><span class="cell-note-label">Note</span><input class="cell-note-input" id="note_fifa_${e.iata}_${e.depFlight}_dep" type="text" maxlength="100" placeholder="Add note (100 char max)…"></td>
-        </tr>`;
-      }
-      fifaHtml += `</tbody></table></div>`;
-    });
-    fifaHtml += '</div>';
-    h += fifaHtml;
-  }
-  h += `</div>`; // close fifa-section
-
   // ── Two-column grid ───────────────────────────────────────────────────────
   h += `<div class="briefing-grid">`;
 
@@ -2602,6 +2437,14 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
       </div>
     </div>
   </div>`;
+
+  const _hsLeftEntries = Object.values(_hsRecentlyLeft);
+  if (_hsLeftEntries.length) {
+    h += `<div style="background:#FFF4E0;border:1px solid #F2A900;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:.8rem;color:#6B4E00">
+      <strong>🚌 Recently moved off hardstand — bus no longer needed there:</strong>
+      ${_hsLeftEntries.map(r => `<div style="margin-top:4px">${escapeHtml(r.iata)} ${escapeHtml(r.flight)}: ${escapeHtml(r.prevStand)} → now at gate ${escapeHtml(r.newGate || '—')}</div>`).join('')}
+    </div>`;
+  }
 
   if (!data.hardstand.length) {
     h += `<p style="color:var(--text-3);font-size:.88rem;padding:8px 0">No hardstand operations planned.</p>`;
@@ -2722,327 +2565,6 @@ function updateHardstandVisibility() {
   });
   // Terminal list: CXL'd flights stay visible (struck through) until their time passes.
   // No hiding needed — the row-canceled CSS handles the visual treatment.
-}
-
-function exportPDF() {
-  try {
-    if (!briefingData) { alert('No briefing data loaded yet.'); return; }
-    if (typeof window.jspdf === 'undefined') { alert('jsPDF not loaded. Check internet connection.'); return; }
-
-    const {jsPDF} = window.jspdf;
-    const doc = new jsPDF({orientation:'portrait', unit:'pt', format:'letter'});
-    const PW = doc.internal.pageSize.getWidth();
-    const PH = doc.internal.pageSize.getHeight();
-    const ML=36, MR=36; let y=36;
-    const dk = briefingData.dateFrom;
-    const BODY_W = PW - ML - MR;
-
-    // ── Colors ──
-    const C_ORANGE  = [255,80,0];
-    const C_TEAL    = [62,177,200];
-    const C_PURPLE  = [65,57,95];
-    const C_WHITE   = [255,255,255];
-    const C_DARK    = [26,16,24];
-    const C_GRAY    = [88,88,88];
-    const C_LTGRAY  = [245,245,245];
-    const C_BLACK   = [30,30,30];
-    const C_GREEN   = [26,122,94];
-    const C_RED     = [192,57,43];
-    const C_BLUE    = [26,74,138];
-    const C_PURPLELT= [235,232,245];
-    const C_PURPLEDARK=[65,57,95];
-
-    const sameDay    = briefingData.dateFrom === briefingData.dateTo;
-    const dateLabel  = sameDay ? fmtDateLong(briefingData.dateFrom) : `${fmtDateLong(briefingData.dateFrom)} – ${fmtDateLong(briefingData.dateTo)}`;
-    const timeLabel  = (currentTimeFrom === '00:00' && currentTimeTo === '23:59') ? 'Full Day' : `${currentTimeFrom}–${currentTimeTo}`;
-    const shiftLabel = timeLabel;
-
-    function addHeader() {
-      doc.setFillColor(...C_DARK); doc.rect(0,0,PW,46,'F');
-      doc.setFillColor(...C_ORANGE); doc.rect(0,43,PW,3,'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...C_ORANGE);
-      doc.text('DFW', ML, 30);
-      doc.setFontSize(11); doc.setTextColor(...C_WHITE);
-      doc.text('Terminal D Operations Briefing', ML+38, 30);
-      doc.setFontSize(11); doc.setTextColor(180,180,180);
-      doc.text(`${dateLabel}  ·  ${shiftLabel}`, PW-MR, 30, {align:'right'});
-    }
-    addHeader(); y=58;
-
-    function checkPage(need=40) {
-      if (y+need > PH-36) { doc.addPage(); addHeader(); y=58; }
-    }
-
-    function sectionBar(label, color) {
-      checkPage(28);
-      doc.setFillColor(...color);
-      doc.rect(ML, y, BODY_W, 18, 'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.setTextColor(...C_WHITE);
-      doc.text(label.toUpperCase(), ML+8, y+13);
-      y+=24;
-    }
-
-    // Helper: parse "HH:MM" into minutes
-    function toMins(t) {
-      if (!t) return null;
-      const [h,m] = t.split(':').map(Number);
-      return isNaN(h)||isNaN(m) ? null : h*60+m;
-    }
-
-    // ETA color: green if earlier than STA, red if later or next-day
-    function etaColor(scheduled, estimated, isArr) {
-      const s = toMins(scheduled), e = toMins(estimated);
-      if (s===null || e===null) return C_GRAY;
-      if (isNextDay(scheduled, estimated)) return C_RED;  // next-day slip = delayed
-      if (isArr) return e <= s ? C_GREEN : C_RED;   // arrival: early=good
-      return e <= s ? C_BLACK : C_RED;               // departure: late=bad, on-time=neutral
-    }
-
-    // ── SECTION 1: HARDSTAND ──────────────────────────────────────────────────
-    // Column positions used by both hardstand and terminal sections
-    const COL   = { flight:ML+4, dest:ML+58, sched:ML+108, eta:ML+162 };
-    const ROW_W = 145; // background rect width — just covers content columns
-
-    sectionBar('Planned Hardstand Operations — F-Hardstand', C_ORANGE);
-
-    if (!briefingData.hardstand.length) {
-      doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(...C_GRAY);
-      doc.text('No hardstand operations planned.', ML, y+10); y+=22;
-    } else {
-      const HS_COL = { flight:ML+4, dest:ML+58, sched:ML+108, eta:ML+162 };
-      const PAX_X  = ML+220;
-      briefingData.hardstand.forEach(e => {
-        const pad        = e.arrStand || e.depStand || e.stand;
-        const arrGate    = e.arrGate || e.gate;
-        const depGate    = e.depGate || e.gate;
-        const arrIsIntl  = INTL_AIRPORTS.has((e.arrDest||'').toUpperCase());
-        const depIsIntl  = INTL_AIRPORTS.has((e.depDest||'').toUpperCase());
-
-        const arrCanceled = e.arrFlight ? (document.getElementById(`cancel_${e.iata}_${e.arrFlight}`)?.checked||false) : true;
-        const depCanceled = e.depFlight ? (document.getElementById(`cancel_${e.iata}_${e.depFlight}`)?.checked||false) : true;
-        const allCanceled = e.arrFlight && e.depFlight ? (arrCanceled&&depCanceled) : e.arrFlight ? arrCanceled : depCanceled;
-        if (allCanceled) return;
-
-        checkPage(60);
-
-        // Airline header — identical to terminal section
-        doc.setFillColor(...C_PURPLELT);
-        doc.rect(ML, y, ROW_W+50, 16, 'F');
-        doc.setFillColor(...C_PURPLEDARK);
-        doc.rect(ML, y, 3, 16, 'F');
-        doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...C_PURPLEDARK);
-        doc.text(e.airline, ML+8, y+12);
-        y+=18;
-
-        // Arrival row — identical layout to terminal rows
-        if (e.arrFlight && !arrCanceled) {
-          checkPage(14);
-          const eta = document.getElementById(`eta_${e.iata}_${e.arrFlight}_arr`)?.value||'';
-          const pax = document.getElementById(`pax_${e.iata}_${e.arrFlight}_arr`)?.value||'';
-          doc.setFillColor(248,248,252); doc.rect(ML, y, ROW_W+(eta?50:0)+80, 13, 'F');
-          doc.setFont('courier','bold'); doc.setFontSize(11); doc.setTextColor(...C_BLACK);
-          doc.text(e.arrFlight, HS_COL.flight, y+9);
-          doc.setFont('helvetica','normal'); doc.setTextColor(...C_BLACK);
-          doc.text(e.arrDest, HS_COL.dest, y+9);
-          doc.setFont('helvetica','normal'); doc.setTextColor(...C_PURPLEDARK);
-          doc.text('STA '+e.arrTime, HS_COL.sched, y+9);
-          if (eta) {
-            doc.setFont('helvetica','bold'); doc.setTextColor(...etaColor(e.arrTime,eta,true));
-            const nd = isNextDay(e.arrTime, eta) ? ' +1' : '';
-            doc.text('ETA '+eta+nd, HS_COL.eta, y+9);
-          }
-          doc.setFont('helvetica','normal'); doc.setTextColor(...C_GRAY);
-          doc.text('PAX: '+(pax||'—'), PAX_X, y+9);
-          y+=14;
-          const arrNote = getNote(e.iata, e.arrFlight, 'arr');
-          if (arrNote) {
-            checkPage(12);
-            doc.setFont('helvetica','italic'); doc.setFontSize(9); doc.setTextColor(...C_GRAY);
-            doc.text('Note: '+arrNote, ML+8, y+8);
-            y+=12;
-          }
-        }
-
-        // Departure row
-        if (e.depFlight && !depCanceled) {
-          checkPage(14);
-          const etd = document.getElementById(`etd_${e.iata}_${e.depFlight}_dep`)?.value||'';
-          const pax = document.getElementById(`pax_${e.iata}_${e.depFlight}_dep`)?.value||'';
-          doc.setFillColor(255,255,255); doc.rect(ML, y, ROW_W+(etd?50:0)+80, 13, 'F');
-          doc.setFont('courier','bold'); doc.setFontSize(11); doc.setTextColor(...C_BLACK);
-          doc.text(e.depFlight, HS_COL.flight, y+9);
-          doc.setFont('helvetica','normal'); doc.setTextColor(...C_BLACK);
-          doc.text(e.depDest, HS_COL.dest, y+9);
-          doc.setFont('helvetica','normal'); doc.setTextColor(...C_PURPLEDARK);
-          doc.text('STD '+e.depTime, HS_COL.sched, y+9);
-          if (etd) {
-            doc.setFont('helvetica','bold'); doc.setTextColor(...etaColor(e.depTime,etd,false));
-            const nd = isNextDay(e.depTime, etd) ? ' +1' : '';
-            doc.text('ETD '+etd+nd, HS_COL.eta, y+9);
-          }
-          doc.setFont('helvetica','normal'); doc.setTextColor(...C_GRAY);
-          doc.text('PAX: '+(pax||'—'), PAX_X, y+9);
-          y+=14;
-          const depNote = getNote(e.iata, e.depFlight, 'dep');
-          if (depNote) {
-            checkPage(12);
-            doc.setFont('helvetica','italic'); doc.setFontSize(9); doc.setTextColor(...C_GRAY);
-            doc.text('Note: '+depNote, ML+8, y+8);
-            y+=12;
-          }
-        }
-
-        // Badges — stacked vertically, per-leg intl/dom
-        const drawBadge = (txt, isIntl) => {
-          checkPage(16);
-          const tw = doc.getTextWidth(txt)+16;
-          doc.setFillColor(...(isIntl ? C_RED : C_BLUE));
-          doc.roundedRect(ML+4, y, tw, 13, 2, 2, 'F');
-          doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...C_WHITE);
-          doc.text(txt, ML+10, y+9);
-          y+=16;
-        };
-        if (e.arrFlight && !arrCanceled && arrGate) drawBadge(`${arrIsIntl?'International':'Domestic'} Arrival — Gate ${arrGate}${pad?' — Pad '+pad:''}`, arrIsIntl);
-        if (e.depFlight && !depCanceled && depGate) drawBadge(`${depIsIntl?'International':'Domestic'} Departure — Gate ${depGate}${pad?' — Pad '+pad:''}`, depIsIntl);
-        y+=6;
-      });
-    }
-
-    y+=8;
-
-    // ── SECTION 2: TERMINAL D ─────────────────────────────────────────────────
-    sectionBar('Terminal D Flight Operations', C_TEAL);
-
-    const CARD_W = BODY_W;
-    const LEG_W  = Math.floor(CARD_W / 2) - 1;
-    const LEG_R  = ML + LEG_W + 2;
-
-    // Draw one leg (arrival or departure) at x offset
-    function drawLeg(e, isArr, xBase, legW, canceled, eta, pax) {
-      const fnum    = isArr ? e.arrFlight : e.depFlight;
-      const dest    = isArr ? e.arrDest   : e.depDest;
-      const sched   = isArr ? e.arrTime   : e.depTime;
-      const schedLbl= isArr ? 'STA' : 'STD';
-      const etaLbl  = isArr ? 'ETA' : 'ETD';
-      const schedC  = isArr ? C_GREEN : C_TEAL;
-
-      // Column x positions within this leg
-      const cFlight = xBase + 3;
-      const cCity   = xBase + Math.floor(legW * 0.28);
-      const cSched  = xBase + Math.floor(legW * 0.46);
-      const cEta    = xBase + Math.floor(legW * 0.70);
-
-      // Column header row
-      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(170,170,170);
-      doc.text('FLIGHT', cFlight, y+6);
-      doc.text('CITY',   cCity,   y+6);
-      doc.text(schedLbl, cSched,  y+6);
-      doc.text(etaLbl,   cEta,    y+6);
-
-      // Data row
-      const tc = canceled ? C_RED : C_BLACK;
-      doc.setFont('courier','bold'); doc.setFontSize(9.5);
-      doc.setTextColor(...tc);
-      if (canceled) {
-        doc.setFont('courier','bolditalic');
-      }
-      doc.text(fnum, cFlight, y+17);
-      doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...tc);
-      doc.text(dest, cCity, y+17);
-
-      if (canceled) {
-        doc.setFont('helvetica','bolditalic'); doc.setTextColor(...C_RED);
-        doc.text(schedLbl+' '+sched, cSched, y+17);
-        doc.text('CANCELED', cEta, y+17);
-      } else {
-        doc.setFont('helvetica','normal'); doc.setTextColor(...schedC);
-        doc.text(schedLbl+' '+sched, cSched, y+17);
-        if (eta) {
-          doc.setFont('helvetica','bold'); doc.setTextColor(...etaColor(sched, eta, isArr));
-          const nd = isNextDay(sched, eta) ? ' +1' : '';
-          doc.text(eta+nd, cEta, y+17);
-        }
-        if (pax !== null && pax !== undefined) {
-          doc.setFont('helvetica','normal'); doc.setTextColor(...C_GRAY);
-          doc.text('PAX: '+(pax||'—'), cEta, y+26);
-        }
-      }
-    }
-
-    briefingData.terminal.forEach(e => {
-      const arrCxl = e.arrFlight ? (document.getElementById(`cancel_${e.iata}_${e.arrFlight}`)?.checked||false) : false;
-      const depCxl = e.depFlight ? (document.getElementById(`cancel_${e.iata}_${e.depFlight}`)?.checked||false) : false;
-      const eta    = e.arrFlight ? (document.getElementById(`term_eta_${e.iata}_${e.arrFlight}`)?.value||'') : '';
-      const etd    = e.depFlight ? (document.getElementById(`term_etd_${e.iata}_${e.depFlight}`)?.value||'') : '';
-      const hasPax = e.isHardstand || false;
-
-      const cardH = hasPax ? 46 : 38;
-      checkPage(cardH + 18);
-
-      // Airline header
-      doc.setFillColor(...C_PURPLEDARK);
-      doc.rect(ML, y, CARD_W, 13, 'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...C_WHITE);
-      doc.text(e.airline, ML+5, y+9.5);
-      y += 13;
-
-      // Leg backgrounds
-      if (e.arrFlight) {
-        doc.setFillColor(arrCxl ? 255 : 248, arrCxl ? 245 : 248, arrCxl ? 245 : 252);
-        doc.rect(ML, y, LEG_W, cardH, 'F');
-      }
-      if (e.depFlight) {
-        doc.setFillColor(depCxl ? 255 : 250, depCxl ? 245 : 250, depCxl ? 245 : 250);
-        doc.rect(LEG_R, y, LEG_W, cardH, 'F');
-      }
-
-      // Divider
-      if (e.arrFlight && e.depFlight) {
-        doc.setDrawColor(220,220,220); doc.line(LEG_R, y, LEG_R, y+cardH);
-      }
-
-      // Draw legs
-      if (e.arrFlight) drawLeg(e, true,  ML,    LEG_W, arrCxl, eta, null);
-      if (e.depFlight) drawLeg(e, false, LEG_R, LEG_W, depCxl, etd, null);
-
-      y += cardH + 4;
-
-      // Notes: render under the card, one line per leg that has a note
-      const arrNote = e.arrFlight ? getNote(e.iata, e.arrFlight, 'arr') : '';
-      const depNote = e.depFlight ? getNote(e.iata, e.depFlight, 'dep') : '';
-      if (arrNote) {
-        checkPage(11);
-        doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor(...C_GRAY);
-        doc.text('Note (ARR): '+arrNote, ML+4, y+7);
-        y += 11;
-      }
-      if (depNote) {
-        checkPage(11);
-        doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor(...C_GRAY);
-        doc.text('Note (DEP): '+depNote, ML+4, y+7);
-        y += 11;
-      }
-      if (arrNote || depNote) y += 2;
-    });
-
-    // ── Footer ────────────────────────────────────────────────────────────────
-    const pg = doc.internal.getNumberOfPages();
-    for (let i=1;i<=pg;i++) {
-      doc.setPage(i);
-      doc.setFillColor(...C_DARK); doc.rect(0,PH-22,PW,22,'F');
-      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C_GRAY);
-      doc.text('Dallas/Fort Worth International Airport — Terminal D', ML, PH-8);
-      doc.text(`Page ${i} of ${pg}  ·  ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}`, PW-MR, PH-8, {align:'right'});
-    }
-
-    const fileDate = briefingData.dateFrom === briefingData.dateTo ? briefingData.dateFrom : `${briefingData.dateFrom}_${briefingData.dateTo}`;
-    doc.save(`Terminal_D_Ops_${fileDate}_${currentTimeFrom.replace(':','')}${currentTimeTo.replace(':','')}.pdf`);
-
-  } catch(err) {
-    alert('PDF export error: ' + err.message + '\n\nCheck browser console (Cmd+Option+J) for details.');
-    console.error('PDF export failed:', err);
-  }
 }
 
 function setStatus(t,m) {
@@ -3512,7 +3034,7 @@ async function publishToBusBoard() {
   }
 
   const btn = document.getElementById('btnBusBoard');
-  btn.disabled = true;
+  if (btn) btn.disabled = true;
   _bbSetStatus('Publishing…', '');
 
   // Build payload from hardstand list only
@@ -3532,7 +3054,10 @@ async function publishToBusBoard() {
     date_from:    briefingData.dateFrom || '',
     date_to:      briefingData.dateTo   || '',
     title:        'DFW Terminal D — Hardstand',
-    turns:        visibleTurns
+    turns:        visibleTurns,
+    // Flights that just moved from a hardstand to a gate — kept visible for a
+    // few cycles so drivers see the transition instead of the entry vanishing.
+    recently_left_hardstand: Object.values(_hsRecentlyLeft)
   };
 
   try {
@@ -3554,7 +3079,7 @@ async function publishToBusBoard() {
     console.error('[BusBoard] publish failed:', err);
     _bbSetStatus(`✗ ${err.message || 'publish failed'}`, 'err');
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -3916,27 +3441,6 @@ function demoteHardstand(iata, arrFlight, depFlight) {
 }
 
 
-function getSelectedTermData() {
-  const cards = document.querySelectorAll('[data-arr-etid].selected, [data-dep-etid].selected');
-  const results = [];
-  cards.forEach(card => {
-    const d = card.dataset;
-    results.push({
-      iata:     d.iata,
-      airline:  d.airline,
-      arrFlight: d.arr,
-      depFlight: d.dep,
-      arrDest:  d.arrDest,
-      depDest:  d.depDest,
-      arrTime:  d.arrTime,
-      depTime:  d.depTime,
-      arrEtid:  d.arrEtid,
-      depEtid:  d.depEtid,
-    });
-  });
-  return results;
-}
-
 function copySelectedTermEmail() {
   const turns = getSelectedTurnData();
   if (!turns.length) return;
@@ -4190,88 +3694,6 @@ const CALLSIGNS = {
   Y4:'Volaris',
 };
 
-// ── SHARED EMAIL CARD BUILDER ─────────────────────────────────────────────────
-function buildEmailCards(entries, isHardstand) {
-  let html = '';
-  entries.forEach(e => {
-    const pad     = e.arrStand||e.depStand||e.stand;
-    const arrGate = e.arrGate||e.gate, depGate = e.depGate||e.gate;
-    const arrCxl  = e.arrFlight ? getChk(`cancel_${e.iata}_${e.arrFlight}`) : true;
-    const depCxl  = e.depFlight ? getChk(`cancel_${e.iata}_${e.depFlight}`) : true;
-    const allCxl  = e.arrFlight && e.depFlight ? (arrCxl&&depCxl) : e.arrFlight ? arrCxl : depCxl;
-    if (allCxl) return;
-
-    const buildLegBlock = (fnum, dest, lbl, t, etId, paxId, isArr, canceled, note) => {
-      const et  = canceled ? '' : getVal(etId);
-      const pax = (!canceled && paxId) ? getVal(paxId) : null;
-      const etColor  = et ? etaHexColor(t, et, isArr) : '#585858';
-      const nextDay  = et && isNextDay(t, et);
-      const ndBadge  = nextDay ? `&nbsp;<span style="display:inline-block;padding:1px 5px;font-size:10px;font-weight:700;color:#fff;background:#C0392B;border-radius:2px;font-family:Arial,Helvetica,sans-serif;vertical-align:middle">+1</span>` : '';
-      const strike   = canceled ? 'text-decoration:line-through;opacity:.55;' : '';
-      const legColor = isArr ? '#1A7A5E' : '#3EB1C8';
-      const legLabel = isArr ? '▲ ARR' : '▼ DEP';
-      const bg       = isArr ? '#FFFFFF' : '#F8F8FA';
-
-      let inner = `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:${legColor};margin-bottom:4px">${legLabel}</div>`;
-      inner += `<span style="font-family:'Courier New',monospace;font-weight:700;font-size:16px;${strike}color:${canceled?'#C0392B':'#1A1A1A'}">${fnum}</span>`;
-      inner += `<span style="color:${canceled?'#C0392B':'#555'};font-size:14px;margin-left:8px;${strike}font-family:'Courier New',monospace">${dest}</span>`;
-      inner += `<br><span style="color:${canceled?'#C0392B':legColor};font-weight:700;font-size:14px;${strike}">${lbl}&nbsp;${t}</span>`;
-      if (canceled) {
-        inner += `<span style="color:#C0392B;font-weight:700;font-style:italic;font-size:14px;margin-left:10px">— CANCELED</span>`;
-      } else {
-        if (et) inner += `<span style="color:${etColor};font-weight:700;font-size:14px;margin-left:10px">${isArr?'ETA':'ETD'}&nbsp;${et}</span>${ndBadge}`;
-        if (pax !== null) inner += `<span style="color:#555;font-size:13px;margin-left:10px">PAX&nbsp;${pax||'—'}</span>`;
-      }
-      if (note) {
-        inner += `<div style="margin-top:5px;font-size:12px;font-style:italic;color:#666;line-height:1.4"><strong style="font-style:normal;color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Note:</strong> ${escapeHtml(note)}</div>`;
-      }
-      return `<tr><td style="padding:10px 14px;background:${bg};vertical-align:top;line-height:1.6">${inner}</td></tr>`;
-    };
-
-    html += `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #E0E0E0;border-collapse:collapse;margin-bottom:12px;font-family:Arial,sans-serif;max-width:100%">`;
-    const _chgLbl = (isHardstand && e.gateChanged) ? `<span style="font-size:11px;font-weight:700;font-family:Arial,Helvetica,sans-serif;background:#FFF3CD;color:#856404;border:1px solid #FFCD39;border-radius:3px;padding:2px 7px;margin-left:8px;white-space:nowrap">&#9888; Gate/Pad Changed</span>` : '';
-    html += `<tr><td style="background:${AIRLINE_COLORS[e.iata]||'#41395F'};color:${contrastColor(AIRLINE_COLORS[e.iata]||'#41395F')};font-weight:700;padding:8px 14px;font-size:15px">${e.airline}${_chgLbl}</td></tr>`;
-
-    // Arrival row first
-    if (e.arrFlight) {
-      const etaId = isHardstand ? `eta_${e.iata}_${e.arrFlight}_arr` : `term_eta_${e.iata}_${e.arrFlight}`;
-      const paxId = isHardstand ? `pax_${e.iata}_${e.arrFlight}_arr` : null;
-      const note  = getNote(e.iata, e.arrFlight, 'arr');
-      html += buildLegBlock(e.arrFlight, e.arrDest, 'STA', e.arrTime, etaId, paxId, true, arrCxl, note);
-    }
-
-    // Divider between legs
-    if (e.arrFlight && e.depFlight) {
-      html += `<tr><td style="height:2px;background:#EBEBEB;padding:0"></td></tr>`;
-    }
-
-    // Departure row below
-    if (e.depFlight) {
-      const etdId = isHardstand ? `etd_${e.iata}_${e.depFlight}_dep` : `term_etd_${e.iata}_${e.depFlight}`;
-      const paxId = isHardstand ? `pax_${e.iata}_${e.depFlight}_dep` : null;
-      const note  = getNote(e.iata, e.depFlight, 'dep');
-      html += buildLegBlock(e.depFlight, e.depDest, 'STD', e.depTime, etdId, paxId, false, depCxl, note);
-    }
-
-    if (isHardstand) {
-      let badgeHtml = '';
-      if (e.arrFlight && !arrCxl && arrGate) {
-        const ai = INTL_AIRPORTS.has((e.arrDest||'').toUpperCase());
-        const bc = ai?'#B03030':'#1A4A8A', bg = ai?'#FFF0F0':'#EFF5FF', bd = ai?'#E8AAAA':'#AABDE8';
-        badgeHtml += `<div style="display:inline-block;background:${bg};border:1px solid ${bd};color:${bc};font-size:12px;font-weight:700;padding:3px 9px;margin-bottom:4px">${ai?'International':'Domestic'} Arrival &#8212; Gate ${arrGate}${pad?' &#8212; Pad '+pad:''}</div><br>`;
-      }
-      if (e.depFlight && !depCxl && depGate) {
-        const di = INTL_AIRPORTS.has((e.depDest||'').toUpperCase());
-        const bc = di?'#B03030':'#1A4A8A', bg = di?'#FFF0F0':'#EFF5FF', bd = di?'#E8AAAA':'#AABDE8';
-        badgeHtml += `<div style="display:inline-block;background:${bg};border:1px solid ${bd};color:${bc};font-size:12px;font-weight:700;padding:3px 9px">${di?'International':'Domestic'} Departure &#8212; Gate ${depGate}${pad?' &#8212; Pad '+pad:''}</div>`;
-      }
-      if (badgeHtml) html += `<tr><td style="padding:7px 14px 9px;background:#F0EEF5">${badgeHtml}</td></tr>`;
-    }
-
-    html += `</table>`;
-  });
-  return html;
-}
 function copyEmailHtml(fullHtml, btnId, btnEl, resetLabel) {
   const leftHtml = fullHtml
     .replace(/margin:\s*0\s+auto/gi, 'margin:0')
@@ -4344,66 +3766,6 @@ function openMailto(listKey, subject) {
   const mailto  = `mailto:${to}?subject=${encodeURIComponent(subject)}`;
   // Small delay so clipboard write completes first
   setTimeout(() => { window.location.href = mailto; }, 300);
-}
-
-function emailShell(body, title, dateLong, shiftLabel, now) {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body{margin:0;padding:12px;background:#F0F0F0;font-family:Arial,sans-serif;-webkit-text-size-adjust:100%}
-    .shell{max-width:520px;width:100%;margin:0 auto;background:#fff;overflow:hidden;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-    .hdr{background:#FFF0EB;padding:12px 16px;border-bottom:3px solid #FF5000}
-    .hdr-logo{font-size:24px;font-weight:900;color:#FF5000;letter-spacing:.04em}
-    .hdr-title{font-size:15px;font-weight:700;color:#222;margin-top:2px}
-    .hdr-date{font-size:13px;color:#444;margin-top:5px}
-    .hdr-shift{font-size:12px;color:#666;margin-top:2px}
-    .body{padding:14px 16px}
-    .ftr{background:#F9F9F9;border-top:1px solid #EEE;padding:7px 16px}
-    .ftr-tbl{width:100%;border-collapse:collapse}
-    .ftr-tbl td{font-size:11px;color:#AAA;font-family:Arial,sans-serif;padding:0}
-    /* Card table */
-    .card-tbl{width:100%;border-collapse:collapse;margin-bottom:10px;border:1px solid #E0E0E0;font-family:Arial,sans-serif}
-    .card-hdr td{font-weight:700;padding:7px 10px;font-size:14px}
-    .leg-row td{padding:5px 8px;font-size:14px;vertical-align:middle}
-    .leg-sep td{padding:0;height:3px;background:#F0EEF5}
-    .leg-hdr td{padding:4px 8px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(65,57,95,.06);color:#888}
-    .cell-fnum{font-weight:700;color:#222;font-family:'Courier New',monospace}
-    .cell-dest{color:#555;font-family:'Courier New',monospace}
-    .cell-sched{font-weight:600;font-family:'Courier New',monospace}
-    .cell-eta{font-weight:700;font-family:'Courier New',monospace}
-    .cell-pax{color:#555}
-    .cell-cxl{color:#C0392B;font-weight:700;font-style:italic}
-    .badge-area{padding:5px 10px 7px;background:#F0EEF5}
-    .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;margin:2px 4px 2px 0;border-radius:3px;border:1px solid}
-    @media only screen and (max-width:520px){
-      body{padding:0}
-      .shell{max-width:100%;border-radius:0}
-      .body{padding:10px 12px}
-      .card-hdr td{font-size:15px}
-      .leg-row td{font-size:15px}
-    }
-  </style>
-</head>
-<body>
-<div class="shell">
-  <div class="hdr">
-    <div class="hdr-logo">DFW</div>
-    <div class="hdr-title">${title}</div>
-    <div class="hdr-date">${dateLong}</div>
-    <div class="hdr-shift">${shiftLabel}</div>
-  </div>
-  <div class="body">${body}</div>
-  <div class="ftr">
-    <table class="ftr-tbl"><tr>
-      <td>DFW Terminal D</td>
-      <td style="text-align:right">TDOP V1.0.3 · Generated ${now}</td>
-    </tr></table>
-  </div>
-</div>
-</body></html>`;
 }
 
 // ── LF OPS EMAIL ──────────────────────────────────────────────────────────────
@@ -4755,205 +4117,6 @@ async function postIntlToTeams(entries, dateLong, now) {
   }
 }
 
-// ── PROSPECT ──────────────────────────────────────────────────────────────────
-function exportProspect() {
-  if (!briefingData) return;
-  const dk         = briefingData.dateFrom;
-  const dateLong   = fmtDateLong(dk);
-  const shiftLabel = (currentTimeFrom === '00:00' && currentTimeTo === '23:59') ? 'Full Day' : `${currentTimeFrom}–${currentTimeTo}`;
-  const now        = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
-
-  // All terminal arrivals not canceled, sorted by arrival time
-  const seen = new Set();
-  const entries = [];
-  [...briefingData.terminal, ...briefingData.hardstand].forEach(e => {
-    if (!e.arrFlight || seen.has(e.arrFlight)) return;
-    if (getChk(`cancel_${e.iata}_${e.arrFlight}`)) return;
-    seen.add(e.arrFlight);
-    entries.push(e);
-  });
-  entries.sort((a, b) => (a.arrTime||'').localeCompare(b.arrTime||''));
-
-  if (!entries.length) { alert('No arrivals found.'); return; }
-
-  const S = 'font-family:Arial,sans-serif;font-size:12px;';
-  let rows = '';
-  entries.forEach((e, i) => {
-    const eta   = getVal(`eta_${e.iata}_${e.arrFlight}_arr`) || getVal(`term_eta_${e.iata}_${e.arrFlight}`);
-    const gate  = e.arrGate||e.gate;
-    const etColor = eta ? etaHexColor(e.arrTime, eta, true) : '#888';
-    const bg = i%2===0 ? '#ffffff' : '#F8F8FA';
-    const note = getNote(e.iata, e.arrFlight, 'arr');
-    rows += `<tr style="background:${bg}">
-      <td style="${S}padding:6px 10px;color:#222;font-weight:600">${e.airline}</td>
-      <td style="${S}padding:6px 10px;font-weight:700;color:#222;font-family:'Courier New',monospace">${e.arrFlight}</td>
-      <td style="${S}padding:6px 10px;color:#555">${gate||'—'}</td>
-      <td style="${S}padding:6px 10px;font-weight:700;color:${etColor}">${eta||'—'}</td>
-    </tr>`;
-    if (note) {
-      rows += `<tr style="background:${bg}">
-        <td colspan="4" style="${S}padding:0 10px 6px 10px;font-size:11px;font-style:italic;color:#666"><strong style="font-style:normal;color:#888">Note:</strong> ${escapeHtml(note)}</td>
-      </tr>`;
-    }
-  });
-
-  const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:10px;background:#F0F0F0;font-family:Arial,sans-serif">
-<div style="max-width:480px;margin:0 auto;background:#fff;border-radius:6px;overflow:hidden">
-  <div style="background:#FEF3E8;border-bottom:3px solid #E67E22;padding:8px 12px">
-    <div style="font-size:18px;font-weight:900;color:#E67E22;letter-spacing:.04em">DFW</div>
-    <div style="font-size:12px;font-weight:600;color:#333;margin-top:1px">Prospect Lineup</div>
-    <div style="font-size:11px;color:#666;margin-top:2px">${dateLong} · ${shiftLabel}</div>
-  </div>
-  <div style="padding:10px 12px">
-    <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif">
-      <tr style="background:rgba(230,126,34,.1)">
-        <td style="padding:4px 10px;font-size:10px;font-weight:700;color:#E67E22;text-transform:uppercase;letter-spacing:.05em">Airline</td>
-        <td style="padding:4px 10px;font-size:10px;font-weight:700;color:#E67E22;text-transform:uppercase;letter-spacing:.05em">Flight</td>
-        <td style="padding:4px 10px;font-size:10px;font-weight:700;color:#E67E22;text-transform:uppercase;letter-spacing:.05em">Gate</td>
-        <td style="padding:4px 10px;font-size:10px;font-weight:700;color:#E67E22;text-transform:uppercase;letter-spacing:.05em">ETA</td>
-      </tr>
-      ${rows}
-    </table>
-  </div>
-  <div style="background:#F9F9F9;border-top:1px solid #EEE;padding:5px 12px;font-size:10px;color:#AAA">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif">DFW Terminal D</td>
-      <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif;text-align:right">TDOP V1.0.3 · Generated ${now}</td>
-    </tr></table>
-  </div>
-</div></body></html>`;
-
-  copyEmailHtml(fullHtml, 'btnProspect');
-}
-
-// ── GROUND HANDLER EXPORTS ────────────────────────────────────────────────────
-const HANDLER_AIRLINES = {
-  'Swissport': new Set(['JL','KG','AM','TK','LH','AY','FJ','BA','BR']),
-  'WFS':       new Set(['EK','QR','KE','IB','VB','QF','AV','CX','AF']),
-};
-const HANDLER_COLORS = {
-  'Swissport': { accent:'#C0392B', light:'rgba(192,57,43,.08)' },
-  'WFS':       { accent:'#2980B9', light:'rgba(41,128,185,.08)' },
-};
-// Only show idle/stand if it matches one of these prefixes
-const STAND_WHITELIST = ['T91','H97','H94','H91','H88','H85'];
-function whitelistStand(s) {
-  if (!s) return '';
-  const u = s.toUpperCase();
-  return STAND_WHITELIST.some(p => u.startsWith(p)) ? s : '';
-}
-
-function exportHandler(handlerName) {
-  if (!briefingData) return;
-  const dk         = briefingData.dateFrom;
-  const dateLong   = fmtDateLong(dk);
-  const shiftLabel = (currentTimeFrom === '00:00' && currentTimeTo === '23:59') ? 'Full Day' : `${currentTimeFrom}–${currentTimeTo}`;
-  const now        = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
-  const allowed    = HANDLER_AIRLINES[handlerName];
-  const col        = HANDLER_COLORS[handlerName];
-
-  // Collect unique turns for this handler
-  const seen = new Set();
-  const turns = [];
-  [...briefingData.terminal, ...briefingData.hardstand].forEach(e => {
-    if (!allowed.has(e.iata)) return;
-    const key = (e.arrFlight||'') + '|' + (e.depFlight||'');
-    if (seen.has(key)) return;
-    seen.add(key);
-    turns.push(e);
-  });
-
-  if (!turns.length) { alert(`No ${handlerName} flights found.`); return; }
-
-  // Sort by arrival time (or departure time if arr-only turn)
-  turns.sort((a,b) => {
-    const aTime = a.arrTimeIso || a.depTimeIso || '';
-    const bTime = b.arrTimeIso || b.depTimeIso || '';
-    return aTime.localeCompare(bTime);
-  });
-
-  const S = 'font-family:Arial,sans-serif;font-size:16px;';
-  const hdrTd = (txt) => `<td style="${S}padding:7px 10px;font-size:12px;font-weight:700;color:${col.accent};text-transform:uppercase;letter-spacing:.05em;background:${col.light};border:1px solid #E0E0E0">${txt}</td>`;
-
-  let tableRows = '';
-  turns.forEach((e, i) => {
-    const arrCanceled = e.arrFlight ? getChk(`cancel_${e.iata}_${e.arrFlight}`) : false;
-    const depCanceled = e.depFlight ? getChk(`cancel_${e.iata}_${e.depFlight}`) : false;
-    const allCanceled = (e.arrFlight && e.depFlight) ? (arrCanceled && depCanceled) : e.arrFlight ? arrCanceled : depCanceled;
-    if (allCanceled) return;
-
-    const bg = i%2===0 ? '#ffffff' : '#F8F8FA';
-    
-    // Flight column: show both arr and dep if turn, or single flight
-    let flightCell = '';
-    if (e.arrFlight && e.depFlight) {
-      // It's a turn - show both
-      const arrStrike = arrCanceled ? 'text-decoration:line-through;' : '';
-      const depStrike = depCanceled ? 'text-decoration:line-through;' : '';
-      flightCell = `<div style="${arrStrike}">${e.arrFlight}</div><div style="${depStrike}">${e.depFlight}</div>`;
-    } else if (e.arrFlight) {
-      const strike = arrCanceled ? 'text-decoration:line-through;' : '';
-      flightCell = `<div style="${strike}">${e.arrFlight}</div>`;
-    } else {
-      const strike = depCanceled ? 'text-decoration:line-through;' : '';
-      flightCell = `<div style="${strike}">${e.depFlight}</div>`;
-    }
-
-    // Stand column: arrival stand or departure stand
-    const stand = e.arrStand || e.depStand || e.stand || '';
-
-    // Tow To column: typically the tow-to gate (T91X format) or idle stand
-    const towTo = e.idleStand || '';
-
-    // Note column: reads per-leg notes from DOM via getNote() which handles
-    // the hardstand/terminal mirror case. Joins arr+dep notes with " · "
-    // if both legs have notes. Falls back to e.notes if set (legacy / future API).
-    const arrNote = getNote(e.iata, e.arrFlight, 'arr');
-    const depNote = getNote(e.iata, e.depFlight, 'dep');
-    const note = [arrNote, depNote].filter(Boolean).join(' · ') || e.notes || '';
-
-    const noteRow = note
-      ? `<tr style="background:${bg}">
-          <td colspan="4" style="${S}padding:4px 10px 8px 10px;color:#666;border:1px solid #E0E0E0;border-top:none;font-size:11px;font-style:italic"><strong style="font-style:normal;color:#888">Note:</strong> ${escapeHtml(note)}</td>
-        </tr>`
-      : '';
-
-    tableRows += `<tr style="background:${bg}">
-      <td style="${S}padding:9px 10px;font-family:'Courier New',monospace;font-weight:700;color:#222;border:1px solid #E0E0E0">${flightCell}</td>
-      <td style="${S}padding:9px 10px;color:#555;border:1px solid #E0E0E0">${stand}</td>
-      <td style="${S}padding:9px 10px;color:#555;border:1px solid #E0E0E0">${towTo}</td>
-      <td style="${S}padding:9px 10px;color:#555;border:1px solid #E0E0E0">${escapeHtml(note)}</td>
-    </tr>${noteRow}`;
-  });
-
-  const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:10px;background:#F0F0F0;font-family:Arial,sans-serif">
-<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:6px;overflow:hidden">
-  <div style="background:#F8F9FA;border-bottom:3px solid ${col.accent};padding:10px 14px">
-    <div style="font-size:20px;font-weight:900;color:${col.accent};letter-spacing:.04em">DFW</div>
-    <div style="font-size:14px;font-weight:600;color:#333;margin-top:2px">${handlerName} — Terminal D Turns</div>
-    <div style="font-size:12px;color:#666;margin-top:3px">${dateLong} · ${shiftLabel}</div>
-  </div>
-  <div style="padding:12px 14px">
-    <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif">
-      <tr>${hdrTd('Flight')}${hdrTd('Stand')}${hdrTd('Tow To')}${hdrTd('Note')}</tr>
-      ${tableRows}
-    </table>
-  </div>
-  <div style="background:#F9F9F9;border-top:1px solid #EEE;padding:5px 12px;font-size:10px;color:#AAA">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif">DFW Terminal D</td>
-      <td style="font-size:10px;color:#AAA;font-family:Arial,sans-serif;text-align:right">TDOP V1.0.3 · Generated ${now}</td>
-    </tr></table>
-  </div>
-</div></body></html>`;
-
-  const btnId = handlerName === 'Swissport' ? 'btnSwissport' : 'btnWFS';
-  copyEmailHtml(fullHtml, btnId);
-}
-
-
 // ── HS OPS EMAIL ──────────────────────────────────────────────────────────────
 // Mirrors the hardstand section of the main Email export exactly —
 // 8-column table: Flight · City · SKD · ETA/ETD · Gate · Stand · PAX · Type
@@ -5141,16 +4304,6 @@ function getTowInfo(e) {
 
 
 
-const ON_STANDS = new Set([
-  'D6','D8A','D10','D11','D11A','D14','D14A',
-  'D15','D15A','D16','D16X',
-  'T93','T92','T91','T90','T85','T84','T83'
-]);
-function hasONStand(e) {
-  const stand = (e.arrStand || e.depStand || e.stand || '').trim().toUpperCase();
-  return ON_STANDS.has(stand);
-}
-
 const TRAFFIC_CFG = { accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0' };
 
 function exportTrafficWindow() {
@@ -5293,147 +4446,6 @@ function exportTrafficWindow() {
 
 
 // ── SEESAY ────────────────────────────────────────────────────────────────────
-// ── FIFA CHARTERS ─────────────────────────────────────────────────────────────
-function updateFifaForm() {
-  const type = document.querySelector('input[name="fifa_type"]:checked')?.value || 'arr';
-  document.getElementById('fifa_arr_section').style.display = (type==='arr'||type==='turn') ? '' : 'none';
-  document.getElementById('fifa_dep_section').style.display = (type==='dep'||type==='turn') ? '' : 'none';
-}
-
-function openFifaModal() {
-  fifaEditId = null;
-  document.getElementById('fifaModalTitle').textContent = '⚽ Add FIFA Charter';
-  document.getElementById('fifaSubmitBtn').textContent = 'Add Charter';
-  // Reset radio to ARR and clear all fields
-  const arrRadio = document.getElementById('fifa_type_arr');
-  if (arrRadio) { arrRadio.checked = true; }
-  ['fifa_iata','fifa_airline','fifa_arr_fnum','fifa_arr_city','fifa_arr_time',
-   'fifa_dep_fnum','fifa_dep_city','fifa_dep_time','fifa_gate','fifa_stand','fifa_pax']
-    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  const intlSel = document.getElementById('fifa_intl');
-  if (intlSel) intlSel.value = 'INTL';
-  updateFifaForm();
-  document.getElementById('fifaModal').style.display = 'flex';
-  setTimeout(() => { const el = document.getElementById('fifa_iata'); if (el) el.focus(); }, 80);
-}
-
-function editFifaCharter(id) {
-  const e = fifaCharters.find(c => c._id === id);
-  if (!e) { alert('Could not locate that charter to edit.'); return; }
-
-  fifaEditId = id;
-  document.getElementById('fifaModalTitle').textContent = '✏ Edit FIFA Charter';
-  document.getElementById('fifaSubmitBtn').textContent = 'Save Changes';
-
-  const type = (e.arrFlight && e.depFlight) ? 'turn' : (e.arrFlight ? 'arr' : 'dep');
-  document.getElementById('fifa_type_' + type).checked = true;
-  document.getElementById('fifa_iata').value     = e.iata || '';
-  document.getElementById('fifa_airline').value  = e.airline || '';
-  document.getElementById('fifa_arr_fnum').value = e.arrFlight || '';
-  document.getElementById('fifa_arr_city').value = e.arrDest || '';
-  document.getElementById('fifa_arr_time').value = e.arrTime || '';
-  document.getElementById('fifa_dep_fnum').value = e.depFlight || '';
-  document.getElementById('fifa_dep_city').value = e.depDest || '';
-  document.getElementById('fifa_dep_time').value = e.depTime || '';
-  document.getElementById('fifa_gate').value     = e.gate || '';
-  document.getElementById('fifa_stand').value    = e.stand || '';
-  document.getElementById('fifa_pax').value      = e._pax || '';
-  document.getElementById('fifa_intl').value     = e.isIntl ? 'INTL' : 'DOM';
-
-  updateFifaForm();
-  document.getElementById('fifaModal').style.display = 'flex';
-  setTimeout(() => { const el = document.getElementById('fifa_iata'); if (el) el.focus(); }, 80);
-}
-
-function closeFifaModal() {
-  document.getElementById('fifaModal').style.display = 'none';
-  fifaEditId = null;
-}
-
-function addFifaCharter() {
-  const iata       = (document.getElementById('fifa_iata').value || '').trim().toUpperCase();
-  const airlineTxt = (document.getElementById('fifa_airline').value || '').trim();
-  const flightType = document.querySelector('input[name="fifa_type"]:checked')?.value || 'arr';
-  const needArr    = flightType === 'arr' || flightType === 'turn';
-  const needDep    = flightType === 'dep' || flightType === 'turn';
-  const arrFnum    = needArr ? (document.getElementById('fifa_arr_fnum').value || '').trim().toUpperCase() : '';
-  const arrCity    = needArr ? (document.getElementById('fifa_arr_city').value || '').trim().toUpperCase() : '';
-  const arrTime    = needArr ? (document.getElementById('fifa_arr_time').value || '').trim() : '';
-  const depFnum    = needDep ? (document.getElementById('fifa_dep_fnum').value || '').trim().toUpperCase() : '';
-  const depCity    = needDep ? (document.getElementById('fifa_dep_city').value || '').trim().toUpperCase() : '';
-  const depTime    = needDep ? (document.getElementById('fifa_dep_time').value || '').trim() : '';
-  const gate       = (document.getElementById('fifa_gate').value || '').trim().toUpperCase();
-  const stand      = (document.getElementById('fifa_stand').value || '').trim().toUpperCase();
-  const pax        = document.getElementById('fifa_pax').value;
-  const intlVal    = document.getElementById('fifa_intl').value;
-
-  if (!iata) { alert('Please enter an Airline IATA code.'); return; }
-  if (!arrFnum && !depFnum) { alert('Please enter at least one flight number.'); return; }
-
-  const airline = airlineTxt || NAMES[iata] || iata;
-  const isIntl  = intlVal === 'INTL';
-
-  if (fifaEditId) {
-    const existing = fifaCharters.find(c => c._id === fifaEditId);
-    if (!existing) { alert('Could not locate that charter — it may have been removed.'); closeFifaModal(); return; }
-    existing.iata = iata; existing.airline = airline; existing.isIntl = isIntl;
-    existing.arrFlight = arrFnum || null; existing.arrDest = arrCity || ''; existing.arrTime = arrTime || '';
-    existing.depFlight = depFnum || null; existing.depDest = depCity || ''; existing.depTime = depTime || '';
-    existing.gate = gate || ''; existing.arrGate = gate || ''; existing.depGate = gate || '';
-    existing.stand = stand || ''; existing.arrStand = stand || ''; existing.depStand = stand || '';
-    existing._pax = pax || '';
-
-    closeFifaModal();
-    kvSave({ silent: true }); // persist immediately so other users see the change
-
-    if (briefingData) {
-      renderBriefing(briefingData, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
-      restoreUserInputs();
-    }
-    return;
-  }
-
-  const entry = {
-    iata, airline, isIntl,
-    arrFlight: arrFnum || null,
-    arrDest:   arrCity || '',
-    arrTime:   arrTime || '',
-    depFlight: depFnum || null,
-    depDest:   depCity || '',
-    depTime:   depTime || '',
-    gate:      gate || '',
-    arrGate:   gate || '',
-    depGate:   gate || '',
-    stand:     stand || '',
-    arrStand:  stand || '',
-    depStand:  stand || '',
-    _pax:      pax || '',
-    isFifa:    true,
-    _id:       Date.now() + Math.random()
-  };
-
-  fifaCharters.push(entry);
-  closeFifaModal();
-  kvSave({ silent: true }); // persist immediately so other users see the new charter
-
-  // Re-render if a briefing is loaded, otherwise show a notice
-  if (briefingData) {
-    renderBriefing(briefingData, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
-    restoreUserInputs();
-  } else {
-    alert('Charter added. Refresh the briefing to see it in the FIFA Charters section.');
-  }
-}
-
-function deleteFifaCharter(id) {
-  fifaCharters = fifaCharters.filter(e => e._id !== id);
-  kvSave({ silent: true }); // persist immediately so other users see the removal
-  if (briefingData) {
-    renderBriefing(briefingData, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
-    restoreUserInputs();
-  }
-}
-
 // ── BUS NEEDED ────────────────────────────────────────────────────────────────
 function openBusNeededModal() {
   document.getElementById('busAirline').value = '';
@@ -5525,9 +4537,19 @@ function toggleAlertsDropdown(e) {
   document.getElementById('alertsDropdown').classList.toggle('open');
 }
 
+// ── HEADER DROPDOWN MENUS (Send Report / Boards / Reference) ──────────────────
+function toggleHdrMenu(e, id) {
+  e.stopPropagation();
+  const el = document.getElementById(id);
+  const isOpen = el.classList.contains('open');
+  document.querySelectorAll('.hdr-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
+}
+
 // Close dropdown if user clicks anywhere else
 document.addEventListener('click', function() {
   document.getElementById('alertsDropdown')?.classList.remove('open');
+  document.querySelectorAll('.hdr-menu-dropdown.open').forEach(d => d.classList.remove('open'));
 });
 
 function openAlertModal(level) {
@@ -5913,49 +4935,6 @@ function exportEmail() {
       <td style="font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1C1C1E;padding:0 0 2px 0">${icon}&nbsp;${txt}</td>
     </tr></table>`;
 
-  // ── FIFA Charters html ──────────────────────────────────────────────────────
-  const buildFifaCard = (e) => {
-    const pad    = e.stand || '—';
-    const gate   = e.gate  || '—';
-    const isIntl = e.isIntl;
-    const intlLbl = isIntl ? 'INTL' : 'DOM';
-    const FS2    = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;';
-    const FSS2   = 'font-family:Arial,Helvetica,sans-serif;font-size:11px;';
-    const buildRow = (fnum, dest, schedLbl, schedTime, isArr) => {
-      if (!fnum) return '';
-      const schedColor = isArr ? '#1A7A5E' : '#3EB1C8';
-      const bg = isArr ? '#FFFFFF' : '#F8F8FA';
-      const td = (c, w='auto', extra='') =>
-        `<td style="${FS2}padding:7px 8px;vertical-align:middle;background:${bg};${extra}${w!=='auto'?'width:'+w+';':''}white-space:nowrap">${c}</td>`;
-      return `<tr>
-        ${td(`<span style="font-weight:700;color:#1C1C1E">${fnum}</span>`)}
-        ${td(`<span style="color:#585858">${dest||'—'}</span>`)}
-        ${td(`<span style="font-weight:600;color:${schedColor}">${schedLbl}&nbsp;${schedTime||'—'}</span>`)}
-        ${td('<span style="color:#CCC">——</span>')}
-        ${td(`<span style="font-weight:700;color:#FF5000">${gate}</span>`,'52px')}
-        ${td(`<span style="color:#585858">${pad}</span>`,'44px')}
-        ${td(`<span style="color:#555">${e._pax||'—'}</span>`,'36px')}
-        ${td(`<span style="display:inline-block;border:1px solid ${isIntl?'#E8AAAA':'#AABDE8'};color:${isIntl?'#B03030':'#1A4A8A'};font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px">${intlLbl}</span>`,'44px')}
-      </tr>`;
-    };
-    const alBg = AIRLINE_COLORS[e.iata] || '#1565C0';
-    const alFg = contrastColor(alBg);
-    const rows = buildRow(e.arrFlight, e.arrDest, 'STA', e.arrTime, true)
-               + buildRow(e.depFlight, e.depDest, 'STD', e.depTime, false);
-    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-bottom:10px;border:1px solid #DEDEDE;border-radius:7px;overflow:hidden;font-family:Arial,Helvetica,sans-serif">
-      <tr><td colspan="8" style="padding:8px 12px;background:${alBg}">
-        <span style="font-size:16px;font-weight:700;color:${alFg};font-family:Arial,Helvetica,sans-serif">${e.airline}</span>
-      </td></tr>
-      <tr><td colspan="8" style="background:#FFFFFF">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0">
-          <tr>${hdrTd('Flight')}${hdrTd('City')}${hdrTd('SKD')}${hdrTd('ETA/ETD')}${hdrTd('Gate')}${hdrTd('Stand')}${hdrTd('PAX')}${hdrTd('Type')}</tr>
-          ${rows}
-        </table>
-      </td></tr>
-    </table>`;
-  };
-  const fifaHtml = fifaCharters.map(e => buildFifaCard(e)).join('');
-
   // HS section: skip fully-canceled turns (they go to terminal section instead)
   let hsHtml = briefingData.hardstand.map(e => buildHsCard(e)).filter(Boolean).join('');
 
@@ -6070,20 +5049,8 @@ function exportEmail() {
       </tr></table>
     </td></tr>
 
-    ${fifaCharters.length ? `
-    <!-- FIFA CHARTERS SECTION HEADER -->
-    <tr><td style="background:#0D47A1;padding:11px 16px 9px">
-      <span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#FFFFFF">⚽&nbsp; FIFA Charters</span>
-    </td></tr>
-
-    <!-- FIFA CHARTER CARDS -->
-    <tr><td style="padding:12px 16px 8px">
-      <div class="card-scroll">${fifaHtml}</div>
-    </td></tr>
-    ` : ''}
-
     <!-- HARDSTAND SECTION HEADER -->
-    <tr><td style="background:#3D3D3D;padding:11px 16px 9px;${fifaCharters.length ? 'border-top:3px solid #DEDEDE;' : ''}">
+    <tr><td style="background:#3D3D3D;padding:11px 16px 9px">
       <span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#FFFFFF">✈&nbsp; F-Hardstand Operations</span>
     </td></tr>
 
@@ -6119,400 +5086,6 @@ function exportEmail() {
 }
 
 
-</script>
-
-<!-- ── GATE COUNTS MODAL ───────────────────────────────────────────────── -->
-<div id="gcModal">
-  <div id="gcModalInner">
-    <button id="gcModalClose" onclick="closeGateCounts()">✕ Close</button>
-
-    <!-- Embedded gatecounts styles (scoped via .gc- prefix where needed) -->
-    <style>
-    #gcModalInner *,#gcModalInner *::before,#gcModalInner *::after{box-sizing:border-box}
-    #gcModalInner{font-family:"Montserrat",sans-serif;color:#1c1a16;font-size:21px;line-height:1.5}
-    #gc-header{background:#41395F;position:relative;top:0;z-index:200}
-    .gc-header-top{display:flex;align-items:center;justify-content:space-between;padding:0 1.75rem;height:54px;border-bottom:1px solid rgba(255,255,255,0.1)}
-    .gc-logo-area{display:flex;align-items:center;gap:14px}
-    .gc-logo-text .gc-logo-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:0.03em;line-height:1.1}
-    .gc-logo-text .gc-logo-sub{font-size:14px;color:rgba(255,255,255,0.6);font-weight:500;letter-spacing:0.05em;margin-top:2px}
-    .gc-header-right{font-size:14px;color:rgba(255,255,255,0.4);font-family:"B612 Mono",monospace;padding-right:80px}
-    .gc-gate-strip{padding:6px 1.75rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:rgba(0,0,0,0.2)}
-    .gc-gate-strip-label{font-size:13px;font-weight:700;letter-spacing:0.12em;color:rgba(255,255,255,0.45);text-transform:uppercase;margin-right:4px;white-space:nowrap}
-    .gc-gate-pill{font-family:"B612 Mono",monospace;font-size:14px;font-weight:700;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:2px 7px;letter-spacing:0.04em}
-    #gc-main{padding:1.25rem;max-width:100%;margin:0 auto}
-    .gc-controls{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:1.25rem;padding:1rem 1.25rem;background:#fff;border:1px solid #d0ccbf;border-radius:10px}
-    .gc-cg{display:flex;flex-direction:column;gap:4px}
-    .gc-cl{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6760;text-transform:uppercase}
-    #gc-main input[type=date],#gc-main select{font-family:"Montserrat",sans-serif;background:#ece8df;border:1px solid #d0ccbf;border-radius:6px;color:#1c1a16;padding:0 10px;height:44px;font-size:17px;font-weight:500;outline:none}
-    #gc-main input[type=date]:focus,#gc-main select:focus{border-color:#41395F}
-    .gc-btn{font-family:"Montserrat",sans-serif;height:44px;padding:0 14px;border-radius:6px;border:none;font-size:16px;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:opacity .15s,transform .1s;white-space:nowrap}
-    .gc-btn:active{transform:scale(.97)}
-    .gc-btn:disabled{opacity:.4;cursor:default;transform:none}
-    .gc-btn-primary{background:#41395F;color:#fff}
-    .gc-btn-primary:hover:not(:disabled){opacity:.88}
-    .gc-btn-success{background:#155a30;color:#fff}
-    .gc-btn-success:hover:not(:disabled){opacity:.88}
-    .gc-sep{width:1px;height:44px;background:#d0ccbf;margin:0 2px}
-    .gc-loader{height:5px;background:linear-gradient(90deg,#FF5000,#F2A900,#3EB1C8,#FF5000);background-size:300%;animation:gc-sh 1.5s infinite;border-radius:2px;margin-bottom:.75rem;display:none}
-    .gc-loader.on{display:block}
-    @keyframes gc-sh{0%{background-position:-300% 0}100%{background-position:300% 0}}
-    #gc-status{font-size:16px;font-weight:500;color:#6b6760;min-height:16px;margin-bottom:.75rem}
-    #gc-status.err{color:#8b1a0e}
-    .gc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.25rem}
-    .gc-card{background:#fff;border:1px solid #d0ccbf;border-radius:10px;padding:.75rem 1rem}
-    .gc-card-label{font-size:12px;font-weight:700;letter-spacing:.1em;color:#6b6760;text-transform:uppercase;margin-bottom:4px}
-    .gc-card-val{font-family:"B612 Mono",monospace;font-size:36px;line-height:1}
-    .gc-card-sub{font-size:14px;font-weight:500;color:#6b6760;margin-top:3px}
-    .gc-card-arr .gc-card-val{color:#155a30}
-    .gc-card-dep .gc-card-val{color:#8b1a0e}
-    .gc-card-acc .gc-card-val{color:#41395F}
-    .gc-month-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.75rem}
-    .gc-tab{font-family:"Montserrat",sans-serif;font-size:14px;font-weight:700;letter-spacing:.05em;height:40px;padding:0 12px;border-radius:6px;border:1px solid #d0ccbf;background:#fff;color:#6b6760;cursor:pointer;transition:all .15s;text-transform:uppercase}
-    .gc-tab:hover{background:#ece8df;color:#1c1a16}
-    .gc-tab.active{background:#41395F;color:#fff;border-color:#41395F}
-    .gc-view-row{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
-    .gc-vtoggle{display:flex;gap:3px;background:#fff;border:1px solid #d0ccbf;border-radius:6px;padding:3px}
-    .gc-vtoggle .gc-btn{height:36px;padding:0 10px;font-size:13px;border-radius:4px;background:transparent;color:#6b6760;border:none}
-    .gc-vtoggle .gc-btn.active{background:#41395F;color:#fff}
-    .gc-tbl-wrap{border:1px solid #d0ccbf;border-radius:10px;overflow:auto;max-height:55vh;background:#fff}
-    #gc-main table{width:100%;border-collapse:collapse;font-size:18px;min-width:500px}
-    #gc-main thead th{font-family:"Montserrat",sans-serif;background:#41395F;color:rgba(255,255,255,.85);padding:8px 12px;font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;position:sticky;top:0;z-index:10;border-right:1px solid rgba(255,255,255,.08)}
-    #gc-main thead th:first-child{text-align:left;position:sticky;left:0;z-index:20}
-    #gc-main .gc-sec-row td{font-family:"Montserrat",sans-serif;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:#ece8df;color:#41395F;padding:6px 12px;border-top:2px solid #b8b4a6}
-    #gc-main tbody tr{border-top:1px solid #d0ccbf}
-    #gc-main tbody tr:hover td{background:#f9f7f2}
-    #gc-main td{font-family:"B612 Mono",monospace;padding:7px 12px;white-space:nowrap;font-size:18px}
-    #gc-main td:first-child{font-family:"Montserrat",sans-serif;font-weight:600;font-size:18px;position:sticky;left:0;background:#fff;z-index:5;border-right:1px solid #d0ccbf}
-    #gc-main tbody tr:hover td:first-child{background:#f9f7f2}
-    #gc-main .num{text-align:right}
-    #gc-main .arr{color:#155a30}
-    #gc-main .dep{color:#8b1a0e}
-    #gc-main .zero{color:#b8b4a6}
-    #gc-main .muted{color:#6b6760}
-    #gc-main .total-row td{font-family:"Montserrat",sans-serif;font-weight:700;font-size:17px;background:#ece8df !important;border-top:2px solid #b8b4a6 !important}
-    #gc-main .total-row td.num{font-family:"B612 Mono",monospace}
-    #gc-main .total-row td:first-child{background:#ece8df !important}
-    #gc-main .gc-empty{text-align:center;padding:3rem 2rem;color:#6b6760}
-    #gc-main .gc-empty p{font-size:18px;font-weight:500}
-    .gc-export-wrap{position:relative}
-    .gc-export-menu{position:absolute;right:0;top:38px;background:#fff;border:1px solid #d0ccbf;border-radius:10px;padding:4px;min-width:200px;z-index:300;display:none;flex-direction:column;gap:2px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
-    .gc-export-menu.open{display:flex}
-    .gc-export-item{font-family:"Montserrat",sans-serif;padding:8px 10px;border-radius:4px;cursor:pointer;font-size:16px;font-weight:600;transition:background .1s;color:#1c1a16}
-    .gc-export-item:hover{background:#ece8df}
-    .gc-export-item small{display:block;color:#6b6760;font-size:14px;font-weight:400;margin-top:2px}
-    </style>
-
-    <!-- Gate Counts Header -->
-    <div id="gc-header">
-      <div class="gc-header-top">
-        <div class="gc-logo-area">
-          <div class="gc-logo-text">
-            <div class="gc-logo-title">DFW Stand &amp; Gate Counter</div>
-            <div class="gc-logo-sub">Terminal D &amp; E</div>
-          </div>
-        </div>
-        <div class="gc-header-right" id="gc-last-fetch"></div>
-      </div>
-      <div class="gc-gate-strip">
-        <span class="gc-gate-strip-label">Tracking</span>
-        <span class="gc-gate-pill">D6</span><span class="gc-gate-pill">D8A</span><span class="gc-gate-pill">D10</span><span class="gc-gate-pill">D11</span><span class="gc-gate-pill">D11A</span><span class="gc-gate-pill">D11X</span><span class="gc-gate-pill">D14</span><span class="gc-gate-pill">D14A</span><span class="gc-gate-pill">D15</span><span class="gc-gate-pill">D15A</span><span class="gc-gate-pill">D16</span><span class="gc-gate-pill">D16X</span><span class="gc-gate-pill">E2</span><span class="gc-gate-pill">E2A</span><span class="gc-gate-pill">E7</span><span class="gc-gate-pill">E7X</span><span class="gc-gate-pill">E10</span><span class="gc-gate-pill">E32</span><span class="gc-gate-pill">E33</span>
-      </div>
-    </div>
-
-    <!-- Gate Counts Main -->
-    <div id="gc-main">
-      <div class="gc-controls">
-        <div class="gc-cg"><label class="gc-cl">From</label><input type="date" id="gc-from-date"/></div>
-        <div class="gc-cg"><label class="gc-cl">To</label><input type="date" id="gc-to-date"/></div>
-        <div class="gc-cg">
-          <label class="gc-cl">Quick select</label>
-          <select id="gc-quick" onchange="gcApplyQuick()">
-            <option value="">Custom</option>
-            <option value="0">This month</option>
-            <option value="1">Last month</option>
-            <option value="7" selected>Last 7 days</option>
-            <option value="14">Last 14 days</option>
-            <option value="30">Last 30 days</option>
-          </select>
-        </div>
-        <div class="gc-sep"></div>
-        <button class="gc-btn gc-btn-primary" id="gc-fetch-btn" onclick="gcLoadData()">Fetch Data</button>
-        <div class="gc-sep"></div>
-        <div class="gc-export-wrap" id="gc-export-wrap">
-          <button class="gc-btn gc-btn-success" id="gc-export-btn" onclick="gcToggleExportMenu()" disabled>&#8595; Export Excel</button>
-          <div class="gc-export-menu" id="gc-export-menu">
-            <div class="gc-export-item" onclick="gcExportExcel('current')">Current month (1 sheet)<small>Active month tab as one Excel sheet</small></div>
-            <div class="gc-export-item" onclick="gcExportExcel('all')">All months (one sheet each)<small>One sheet per month in the loaded range</small></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="gc-loader" id="gc-loader"></div>
-      <div id="gc-status"></div>
-
-      <div class="gc-cards" id="gc-cards" style="display:none">
-        <div class="gc-card gc-card-arr">
-          <div class="gc-card-label">Total Arrivals</div>
-          <div class="gc-card-val" id="gc-s-arr">-</div>
-          <div class="gc-card-sub" id="gc-s-arr-sub"></div>
-        </div>
-        <div class="gc-card gc-card-dep">
-          <div class="gc-card-label">Total Departures</div>
-          <div class="gc-card-val" id="gc-s-dep">-</div>
-          <div class="gc-card-sub" id="gc-s-dep-sub"></div>
-        </div>
-        <div class="gc-card gc-card-acc">
-          <div class="gc-card-label">Total Movements</div>
-          <div class="gc-card-val" id="gc-s-mov">-</div>
-        </div>
-        <div class="gc-card">
-          <div class="gc-card-label">Days with data</div>
-          <div class="gc-card-val" id="gc-s-days">-</div>
-        </div>
-        <div class="gc-card">
-          <div class="gc-card-label">Months</div>
-          <div class="gc-card-val" id="gc-s-months">-</div>
-        </div>
-      </div>
-
-      <div id="gc-month-tabs" class="gc-month-tabs" style="display:none"></div>
-
-      <div class="gc-view-row" id="gc-view-row" style="display:none">
-        <div class="gc-vtoggle">
-          <button class="gc-btn active" onclick="gcSetView('both',this)">Arr &amp; Dep</button>
-          <button class="gc-btn" onclick="gcSetView('arr',this)">Arrivals</button>
-          <button class="gc-btn" onclick="gcSetView('dep',this)">Departures</button>
-        </div>
-      </div>
-
-      <div id="gc-tbl-container"><div class="gc-empty"><p>Select a date range and click <strong>Fetch Data</strong></p></div></div>
-    </div><!-- /gc-main -->
-  </div><!-- /gcModalInner -->
-</div><!-- /gcModal -->
-
-<script>
-// ── Gate Counts Modal ────────────────────────────────────────────────────
-function openGateCounts() {
-  document.getElementById('gcModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  // init dates on first open
-  if (!document.getElementById('gc-to-date').value) {
-    var now = new Date();
-    var toISO = function(d){return d.toISOString().slice(0,10);};
-    document.getElementById('gc-to-date').value = toISO(now);
-    var f = new Date(now); f.setDate(f.getDate()-6);
-    document.getElementById('gc-from-date').value = toISO(f);
-  }
-}
-function closeGateCounts() {
-  document.getElementById('gcModal').classList.remove('open');
-  document.body.style.overflow = '';
-}
-// Close modal on backdrop click
-document.getElementById('gcModal').addEventListener('click', function(e){
-  if (e.target === this) closeGateCounts();
-});
-
-// ── Gate Counts Logic (namespaced with gc prefix) ───────────────────────
-var GC_WORKER = 'https://billowing-thunder-d278.bsapit-af2.workers.dev';
-var GC_GATES = ['D6','D8A','D10','D11','D11A','D11X','D14','D14A','D15','D15A','D16','D16X','E2','E2A','E7','E7X','E10','E32','E33'];
-var GC_MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-var gcAllData = [], gcByMonth = {}, gcMonths = [], gcActiveMonth = null, gcView = 'both';
-
-function gcToISO(d){return d.toISOString().slice(0,10);}
-
-function gcApplyQuick(){
-  var v = document.getElementById('gc-quick').value;
-  if(!v) return;
-  var to = new Date(), fr = new Date();
-  if(v==='0'){fr.setDate(1);}
-  else if(v==='1'){fr.setMonth(fr.getMonth()-1,1);to.setDate(0);}
-  else{fr.setDate(fr.getDate()-(parseInt(v)-1));}
-  document.getElementById('gc-from-date').value = gcToISO(fr);
-  document.getElementById('gc-to-date').value = gcToISO(to);
-}
-function gcSetStatus(msg,err){
-  var el = document.getElementById('gc-status');
-  el.textContent = msg; el.className = err?'err':'';
-}
-function gcSetLoading(on){
-  document.getElementById('gc-loader').classList.toggle('on',on);
-  document.getElementById('gc-fetch-btn').disabled = on;
-}
-function gcToggleExportMenu(){document.getElementById('gc-export-menu').classList.toggle('open');}
-document.addEventListener('click',function(e){
-  var wrap = document.getElementById('gc-export-wrap');
-  if(wrap && !wrap.contains(e.target)) document.getElementById('gc-export-menu').classList.remove('open');
-});
-function gcLoadData(){
-  var from = document.getElementById('gc-from-date').value;
-  var to = document.getElementById('gc-to-date').value;
-  if(!from||!to){gcSetStatus('Select a date range.',true);return;}
-  if(from>to){gcSetStatus('From must be before To.',true);return;}
-  gcSetLoading(true); gcSetStatus('Fetching data...');
-  fetch(GC_WORKER+'/api/data?from='+from+'&to='+to)
-    .then(function(res){return res.json().then(function(b){return{ok:res.ok,b:b};});})
-    .then(function(r){
-      if(!r.ok) throw new Error(r.b.error||'Request failed');
-      gcAllData = r.b.data||[];
-      if(!gcAllData.length){gcSetStatus('No data returned.');return;}
-      gcProcessData(); gcRenderAll();
-      gcSetStatus('Loaded '+gcAllData.length+' records ('+from+' to '+to+').');
-      document.getElementById('gc-last-fetch').textContent='Fetched '+new Date().toLocaleTimeString();
-      document.getElementById('gc-export-btn').disabled=false;
-    })
-    .catch(function(e){gcSetStatus('Error: '+e.message,true);})
-    .finally(function(){gcSetLoading(false);});
-}
-function gcProcessData(){
-  gcByMonth={};
-  gcAllData.forEach(function(r){
-    var ym=r.date.slice(0,7);
-    if(!gcByMonth[ym]) gcByMonth[ym]=[];
-    gcByMonth[ym].push(r);
-  });
-  gcMonths=Object.keys(gcByMonth).sort();
-  gcActiveMonth=gcMonths[gcMonths.length-1];
-}
-function gcRenderAll(){
-  gcRenderCards(); gcRenderTabs(); gcRenderTable();
-  document.getElementById('gc-cards').style.display='grid';
-  document.getElementById('gc-month-tabs').style.display='flex';
-  document.getElementById('gc-view-row').style.display='flex';
-}
-function gcRenderCards(){
-  var tA=0,tD=0,seen={};
-  gcAllData.forEach(function(r){tA+=r.arrivals||0;tD+=r.departures||0;seen[r.date]=1;});
-  var days=Object.keys(seen).length;
-  document.getElementById('gc-s-arr').textContent=tA.toLocaleString();
-  document.getElementById('gc-s-dep').textContent=tD.toLocaleString();
-  document.getElementById('gc-s-mov').textContent=(tA+tD).toLocaleString();
-  document.getElementById('gc-s-days').textContent=days;
-  document.getElementById('gc-s-months').textContent=gcMonths.length;
-  document.getElementById('gc-s-arr-sub').textContent=days?'Avg '+Math.round(tA/days)+' / day':'';
-  document.getElementById('gc-s-dep-sub').textContent=days?'Avg '+Math.round(tD/days)+' / day':'';
-}
-function gcRenderTabs(){
-  var el=document.getElementById('gc-month-tabs');
-  el.innerHTML='';
-  gcMonths.forEach(function(ym){
-    var p=ym.split('-');
-    var btn=document.createElement('button');
-    btn.className='gc-tab'+(ym===gcActiveMonth?' active':'');
-    btn.textContent=GC_MN[parseInt(p[1])-1]+' '+p[0];
-    btn.setAttribute('data-ym',ym);
-    btn.onclick=function(){gcSwitchMonth(this.getAttribute('data-ym'),this);};
-    el.appendChild(btn);
-  });
-}
-function gcSwitchMonth(ym,btn){
-  gcActiveMonth=ym;
-  document.querySelectorAll('.gc-tab').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active'); gcRenderTable();
-}
-function gcSetView(v,btn){
-  gcView=v;
-  document.querySelectorAll('.gc-vtoggle .gc-btn').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active'); gcRenderTable();
-}
-function gcRenderTable(){
-  var rows=gcByMonth[gcActiveMonth]||[];
-  if(!rows.length){
-    document.getElementById('gc-tbl-container').innerHTML='<div class="gc-tbl-wrap"><div class="gc-empty"><p>No data for this month.</p></div></div>';
-    return;
-  }
-  var p=gcActiveMonth.split('-'),mon=parseInt(p[1]),mn=GC_MN[mon-1];
-  var daySet={};
-  rows.forEach(function(r){daySet[parseInt(r.date.slice(8))]=1;});
-  var days=Object.keys(daySet).map(Number).sort(function(a,b){return a-b;});
-  var idx={};
-  rows.forEach(function(r){idx[r.date+'__'+r.gate]=r;});
-  function dk(d){return gcActiveMonth+'-'+(d<10?'0':'')+d;}
-  var gA={},gD={};
-  GC_GATES.forEach(function(g){gA[g]={};gD[g]={};});
-  days.forEach(function(d){
-    GC_GATES.forEach(function(g){
-      var r=idx[dk(d)+'__'+g]||{arrivals:0,departures:0};
-      gA[g][d]=r.arrivals||0; gD[g][d]=r.departures||0;
-    });
-  });
-  var tA={},tD={};
-  GC_GATES.forEach(function(g){
-    tA[g]=days.reduce(function(s,d){return s+(gA[g][d]||0);},0);
-    tD[g]=days.reduce(function(s,d){return s+(gD[g][d]||0);},0);
-  });
-  var gA2=GC_GATES.reduce(function(s,g){return s+tA[g];},0);
-  var gD2=GC_GATES.reduce(function(s,g){return s+tD[g];},0);
-  var showA=gcView!=='dep',showD=gcView!=='arr';
-  var hdrs=days.map(function(d){return '<th class="num">'+d+'-'+mn+'</th>';}).join('');
-  var h='<div class="gc-tbl-wrap"><table><thead><tr><th>Gate / Stand</th>'+hdrs+'<th class="num">Totals</th><th class="num">Average</th></tr></thead><tbody>';
-  function sec(label,getV,tot,grand,cls){
-    var s='<tr class="gc-sec-row"><td colspan="'+(days.length+3)+'">'+label+'</td></tr>';
-    GC_GATES.forEach(function(g){
-      var cells=days.map(function(d){
-        var v=getV(g,d);
-        return '<td class="num '+cls+(v?'':' zero')+'">'+(v||'&mdash;')+'</td>';
-      }).join('');
-      var t=tot[g],avg=days.length?(t/days.length).toFixed(2):'0.00';
-      s+='<tr><td>'+g+'</td>'+cells+'<td class="num '+cls+'">'+t+'</td><td class="num muted">'+avg+'</td></tr>';
-    });
-    var dtots=days.map(function(d){
-      return '<td class="num '+cls+'">'+GC_GATES.reduce(function(s,g){return s+getV(g,d);},0)+'</td>';
-    }).join('');
-    var lbl=label==='Arrivals'?'Total Arrivals':'Total Departures';
-    var gavg=days.length?(grand/days.length).toFixed(2):'0.00';
-    s+='<tr class="total-row"><td>'+lbl+'</td>'+dtots+'<td class="num '+cls+'">'+grand+'</td><td class="num muted">'+gavg+'</td></tr>';
-    return s;
-  }
-  if(showA) h+=sec('Arrivals',function(g,d){return gA[g][d]||0;},tA,gA2,'arr');
-  if(showD) h+=sec('Departures',function(g,d){return gD[g][d]||0;},tD,gD2,'dep');
-  h+='</tbody></table></div>';
-  document.getElementById('gc-tbl-container').innerHTML=h;
-}
-function gcExportExcel(mode){
-  document.getElementById('gc-export-menu').classList.remove('open');
-  if(typeof XLSX==='undefined'){alert('Excel library not loaded.');return;}
-  var wb=XLSX.utils.book_new();
-  var target=mode==='all'?gcMonths:[gcActiveMonth];
-  target.forEach(function(ym){
-    var rows=gcByMonth[ym]||[],p=ym.split('-'),mon=parseInt(p[1]),mn=GC_MN[mon-1];
-    var sn=mn+' '+p[0];
-    var daySet={};
-    rows.forEach(function(r){daySet[parseInt(r.date.slice(8))]=1;});
-    var days=Object.keys(daySet).map(Number).sort(function(a,b){return a-b;});
-    var idx={};
-    rows.forEach(function(r){idx[r.date+'__'+r.gate]=r;});
-    function dk(d){return ym+'-'+(d<10?'0':'')+d;}
-    var data=[],hdr=[sn];
-    days.forEach(function(d){hdr.push(d+'-'+mn);});
-    hdr.push('Totals','Average'); data.push(hdr);
-    function addSec(label,getV){
-      data.push([label].concat(days.map(function(){return '';})).concat(['','']));
-      GC_GATES.forEach(function(g){
-        var row=[g],tot=0;
-        days.forEach(function(d){var v=getV(g,dk(d));row.push(v);tot+=v;});
-        row.push(tot,days.length?+(tot/days.length).toFixed(2):0);
-        data.push(row);
-      });
-      var tr=[label==='Arrivals'?'Total Arrivals':'Total Departures'],grand=0;
-      days.forEach(function(d){
-        var v=GC_GATES.reduce(function(s,g){return s+getV(g,dk(d));},0);
-        tr.push(v); grand+=v;
-      });
-      tr.push(grand,days.length?+(grand/days.length).toFixed(2):0);
-      data.push(tr);
-    }
-    addSec('Arrivals',function(g,dkey){return((idx[dkey+'__'+g]||{}).arrivals)||0;});
-    addSec('Departures',function(g,dkey){return((idx[dkey+'__'+g]||{}).departures)||0;});
-    var ws=XLSX.utils.aoa_to_sheet(data);
-    ws['!cols']=[{wch:10}].concat(days.map(function(){return{wch:9};})).concat([{wch:9},{wch:9}]);
-    XLSX.utils.book_append_sheet(wb,ws,sn);
-  });
-  var fname=mode==='all'
-    ?'StandGate_'+gcMonths[0]+'_to_'+gcMonths[gcMonths.length-1]+'.xlsx'
-    :'StandGate_'+gcActiveMonth+'.xlsx';
-  XLSX.writeFile(wb,fname);
-}
 </script>
 
 <button class="fab-top" id="fabTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
