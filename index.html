@@ -83,6 +83,8 @@ html,body{max-width:100%;overflow-x:hidden}
 .btn-alerts-dropdown button:first-child{border-bottom:1px solid rgba(0,0,0,.1)}
 .hdr-menu{position:relative}
 .hdr-menu>.hdr-menu-toggle{background:var(--surface-alt,#eee);color:var(--text-1,#1a1a1a);border:1px solid var(--border);font-family:var(--sans);font-size:.8rem;font-weight:700;padding:8px 13px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.hdr-menu>.hdr-menu-toggle.hdr-menu-toggle-purple{background:#9013FE;color:#fff;border-color:#9013FE}
+.hdr-menu>.hdr-menu-toggle.hdr-menu-toggle-purple:hover{background:#7A0FDB}
 .hdr-menu-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:170px;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:500;overflow:hidden}
 .hdr-menu-dropdown.open{display:block}
 .hdr-menu-dropdown button{display:block;width:100%;text-align:left;padding:9px 14px;font-family:var(--sans);font-size:.8rem;font-weight:600;border:none;cursor:pointer;white-space:nowrap;background:var(--surface);color:var(--text-1,#1a1a1a)}
@@ -297,7 +299,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
   </div>
   <div class="controls" style="margin-top:6px">
     <div class="hdr-menu">
-      <button class="hdr-menu-toggle" onclick="toggleHdrMenu(event,'sendReportMenu')">✉ Send Report ▾</button>
+      <button class="hdr-menu-toggle hdr-menu-toggle-purple" onclick="toggleHdrMenu(event,'sendReportMenu')">✉ Send Report ▾</button>
       <div class="hdr-menu-dropdown" id="sendReportMenu">
         <button id="btnEmail" onclick="exportEmail()" disabled>All Ops (full email)</button>
         <button id="btnHSOps" onclick="exportHSOps()" disabled>HS Ops (hardstand only)</button>
