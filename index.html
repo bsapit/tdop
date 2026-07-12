@@ -4393,6 +4393,15 @@ function exportF9Rons() {
 
     const isGated = document.getElementById(`gatedbtn_hs_${e.iata}_${(e.arrFlight||e.depFlight||'').replace(/\s/g,'')}`)?.classList.contains('active') || false;
 
+    const bagClaimFor = (gate, isArr) => {
+      if (!isArr) return '—'; // bag claim only applies to arrivals
+      const g = (gate || '').trim().toUpperCase();
+      if (g.startsWith('D'))                              return 'D15';
+      if (g === 'E7' || g === 'E10' || g === 'E2')         return 'E38';
+      if (g === 'E32' || g === 'E33')                      return 'E37';
+      return '—';
+    };
+
     const buildRow = (fnum, dest, schedLbl, schedTime, etId, paxId, isArr, gate, canceled, note) => {
       const et  = canceled ? '' : (getVal(etId)||'');
       const pax = paxId ? (canceled ? '' : (getVal(paxId)||'—')) : '—';
@@ -4401,8 +4410,8 @@ function exportF9Rons() {
       const ndBadge    = nextDay ? `&nbsp;<span style="display:inline-block;padding:1px 4px;font-size:9px;font-weight:700;color:#fff;background:#C0392B;border-radius:2px;font-family:Arial,Helvetica,sans-serif">+1</span>` : '';
       const schedColor = isArr ? '#1A7A5E' : '#3EB1C8';
       const strike     = (canceled || isGated) ? 'text-decoration:line-through;opacity:.45;' : '';
-      const isIntl     = INTL_AIRPORTS.has((dest||'').toUpperCase());
       const bg         = isArr ? '#FFFFFF' : '#F8F8FA';
+      const bagClaim   = bagClaimFor(gate, isArr);
       const td = (c, w='auto', extra='') =>
         `<td style="${FS}padding:7px 8px;vertical-align:middle;background:${bg};${extra}${w!=='auto'?'width:'+w+';':''}white-space:nowrap">${c}</td>`;
       const mainRow = `<tr>
@@ -4415,7 +4424,7 @@ function exportF9Rons() {
         ${td(`<span style="${strike}font-weight:700;color:#FF5000">${gate}</span>`,'52px')}
         ${td(`<span style="${strike}color:#585858">${pad}</span>`,'44px')}
         ${td(`<span style="${isGated?'text-decoration:line-through;opacity:.45;':''}color:#555">${pax||'—'}</span>`,'36px')}
-        ${td(`<span style="display:inline-block;border:1px solid ${isIntl?'#E8AAAA':'#AABDE8'};color:${isIntl?'#B03030':'#1A4A8A'};font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px">${isIntl?'INTL':'DOM'}</span>`,'44px')}
+        ${td(`<span style="${strike}font-weight:700;color:#585858">${bagClaim}</span>`,'44px')}
       </tr>`;
       const noteRow = note
         ? `<tr><td colspan="8" style="${FSS}padding:2px 10px 7px 10px;background:${bg};color:#666;font-style:italic;white-space:normal"><strong style="font-style:normal;color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Note:</strong> ${escapeHtml(note)}</td></tr>`
@@ -4449,7 +4458,7 @@ function exportF9Rons() {
       </td></tr>
       <tr><td colspan="8" style="background:#FFFFFF">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
-          <tr>${hdrTd('Flight')}${hdrTd('City')}${hdrTd('SKD')}${hdrTd('ETA/ETD')}${hdrTd('Gate')}${hdrTd('Stand')}${hdrTd('PAX')}${hdrTd('Type')}</tr>
+          <tr>${hdrTd('Flight')}${hdrTd('City')}${hdrTd('SKD')}${hdrTd('ETA/ETD')}${hdrTd('Gate')}${hdrTd('Stand')}${hdrTd('PAX')}${hdrTd('Bag Claim')}</tr>
           ${rows}
         </table>
       </td></tr>
