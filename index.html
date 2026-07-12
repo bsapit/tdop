@@ -304,6 +304,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
         <button id="btnLFOps" onclick="exportLFOps()" disabled>LF Ops</button>
         <button id="btnIntlOps" onclick="exportIntlOps()" disabled>Intl Ops</button>
         <button id="btnTraffic" onclick="exportTrafficWindow()" disabled>Traffic</button>
+        <button id="btnF9Rons" onclick="exportF9Rons()" disabled>F9 RONs</button>
         <button onclick="window.open('NightBrief.html','_blank')" title="Open NightBrief">NightBrief</button>
       </div>
     </div>
@@ -808,6 +809,7 @@ const INTL_AIRPORTS = new Set([
 
 
 let briefingData    = null;
+let lastRawTurns     = [];
 let mfEditTarget     = null; // {iata, arrFlight, depFlight} of manual flight being edited, or null when adding
 let currentShift    = 'AM';
 let currentTimeFrom = '00:00';
@@ -1594,6 +1596,7 @@ async function silentRefresh() {
   try {
     const raw = await apiFetch(`${BASE}/StandAndGate/TurnRounds/${dateFrom}/${dateTo}`);
     const turns = Array.isArray(raw) ? raw : [raw];
+    lastRawTurns = turns;
     const newData = processData(turns, dateFrom, dateTo, timeFrom, timeTo);
 
     // Re-inject any manually-added flights
@@ -1680,7 +1683,7 @@ async function silentRefresh() {
 
     // Re-enable export buttons
     ['btnEmail','btnHSOps','btnLFOps','btnTraffic',
-     'btnIntlOps'].forEach(id => {
+     'btnIntlOps','btnF9Rons'].forEach(id => {
       const b = document.getElementById(id);
       if (b) b.disabled = false;
     });
@@ -1911,6 +1914,7 @@ async function loadOps() {
   document.getElementById('btnLFOps').disabled = true;
   document.getElementById('btnTraffic').disabled = true;
   document.getElementById('btnIntlOps').disabled = true;
+  document.getElementById('btnF9Rons').disabled = true;
   setStatus('loading', `Fetching Stand & Gate data for ${dateFrom} ${timeFrom} – ${dateTo} ${timeTo}…`);
 
   // Capture current user inputs before re-render (reads _userInputs)
@@ -1919,6 +1923,7 @@ async function loadOps() {
   try {
     const raw = await apiFetch(`${BASE}/StandAndGate/TurnRounds/${dateFrom}/${dateTo}`);
     const turns = Array.isArray(raw) ? raw : [raw];
+    lastRawTurns = turns;
     const _prevHardstandForDeparture = briefingData?.hardstand || [];
     briefingData = processData(turns, dateFrom, dateTo, timeFrom, timeTo);
     // Re-inject manually-added flights from live snapshot or KV restore
@@ -2010,6 +2015,7 @@ async function loadOps() {
     document.getElementById('btnLFOps').disabled = false;
     document.getElementById('btnTraffic').disabled = false;
     document.getElementById('btnIntlOps').disabled = false;
+    document.getElementById('btnF9Rons').disabled = false;
   } catch(e) {
     setStatus('error', `Failed: ${e.message}`);
   }
@@ -2240,6 +2246,104 @@ function processData(turns, dateFrom, dateTo, timeFrom, timeTo) {
   // determines whether the TTL counter should decrement.
 
   return { hardstand, terminal, dateFrom, dateTo };
+}
+
+// ── F9 RON FILTER ──────────────────────────────────────────────────────────
+// F9 RONs report covers Frontier flights on D-gates, T-stands, S-stands, or
+// gates E2/E7/E10/E32/E33 — a superset of the normal D-only/hardstand-only
+// pipeline above, so it reads the raw (unfiltered) turns list directly
+// rather than briefingData.terminal/hardstand.
+const F9_RON_EXTRA_GATES = new Set(['E2','E7','E10','E32','E33']);
+function isF9RonLocation(gate, stand) {
+  const g = (gate  || '').trim().toUpperCase();
+  const s = (stand || '').trim().toUpperCase();
+  if (g.startsWith('D'))          return true;
+  if (s.startsWith('T'))          return true;
+  if (s.startsWith('S'))          return true;
+  if (F9_RON_EXTRA_GATES.has(g))  return true;
+  return false;
+}
+
+function processF9Rons(turns, dateFrom, dateTo, timeFrom, timeTo) {
+  const f9Rons = [];
+  const fromDT = new Date(`${dateFrom}T${timeFrom}:00`);
+  const toDT   = new Date(`${dateTo}T${timeTo}:00`);
+  const fullDay = timeFrom === '00:00' && timeTo === '23:59';
+
+  function inWindow(iso) {
+    if (!iso) return false;
+    const d = new Date(iso);
+    return d >= fromDT && d <= toDT;
+  }
+  function onDate(iso) {
+    if (!iso) return false;
+    const d = iso.substring(0,10);
+    return d >= dateFrom && d <= dateTo;
+  }
+
+  (turns || []).forEach(turn => {
+    const arr = turn.arrivalFlight   || {};
+    const dep = turn.departureFlight || {};
+
+    const arrIata = (arr.airline || '').toUpperCase();
+    const depIata = (dep.airline || '').toUpperCase();
+    if (arrIata !== 'F9' && depIata !== 'F9') return;
+
+    const arrOnDay = onDate(arr.scheduleTime || '');
+    const depOnDay = onDate(dep.scheduleTime || '');
+    if (!arrOnDay && !depOnDay) return;
+
+    const useArr = fullDay ? arrOnDay :
+      inWindow(arr.scheduleTime || '') || inWindow(arr.estimatedTime || arr.actualTime || '');
+    const useDep = fullDay ? depOnDay :
+      inWindow(dep.scheduleTime || '') || inWindow(dep.estimatedTime || dep.actualTime || '');
+    if (!useArr && !useDep) return;
+
+    const arrGate  = normalizeGate((turn.arrivalGate   || {}).name || '');
+    const depGate  = normalizeGate((turn.departureGate || {}).name || '');
+    const arrStand = (turn.arrivalStand   || {}).name || '';
+    const depStand = (turn.departureStand || {}).name || '';
+    const idleStand= (turn.idleStand      || {}).name || '';
+
+    const arrOk = useArr && arrIata === 'F9' && isF9RonLocation(arrGate, arrStand);
+    const depOk = useDep && depIata === 'F9' && isF9RonLocation(depGate, depStand);
+    if (!arrOk && !depOk) return;
+
+    const iata  = arrOk ? arrIata : depIata;
+    const gate  = (arrOk ? arrGate : '') || (depOk ? depGate : '') || arrGate || depGate || '';
+    const stand = arrStand || depStand || idleStand || '';
+
+    const estOrBlank = (est, sched) => {
+      const e = fmtTime(est||''), s = fmtTime(sched||'');
+      return (e && e !== s) ? e : '';
+    };
+
+    f9Rons.push({
+      iata,
+      airline:    NAMES[iata] || iata,
+      arrFlight:  arrOk && arr.flightNumber ? `F9${String(arr.flightNumber).replace(/^F9/i,'')}` : null,
+      arrDest:    arrOk ? (arr.destination || '') : '',
+      arrTime:    arrOk ? fmtTime(arr.scheduleTime) : '',
+      arrTimeIso: arrOk ? (arr.scheduleTime || '') : '',
+      arrEstTime: arrOk ? estOrBlank(arr.estimatedTime||arr.actualTime||'', arr.scheduleTime||'') : '',
+      depFlight:  depOk && dep.flightNumber ? `F9${String(dep.flightNumber).replace(/^F9/i,'')}` : null,
+      depDest:    depOk ? (dep.destination || '') : '',
+      depTime:    depOk ? fmtTime(dep.scheduleTime) : '',
+      depTimeIso: depOk ? (dep.scheduleTime || '') : '',
+      depEstTime: depOk ? estOrBlank(dep.estimatedTime||dep.actualTime||'', dep.scheduleTime||'') : '',
+      gate,
+      arrGate:    arrOk ? arrGate : '',
+      depGate:    depOk ? depGate : '',
+      stand,
+      arrStand:   arrOk ? arrStand : '',
+      depStand:   depOk ? depStand : '',
+      idleStand,
+    });
+  });
+
+  const sortKey = e => e.arrTimeIso || e.depTimeIso || '';
+  f9Rons.sort((a,b) => sortKey(a).localeCompare(sortKey(b)));
+  return f9Rons;
 }
 
 function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
@@ -3759,6 +3863,7 @@ const MAILTO_LISTS = {
   hsOps:   'chris.carpinelli@unifiservice.com;Danny.Pena@unifiservice.com;euphrates.moore@unifiservice.com;IOCGateCoordinators@dfwairport.com;CobusAdmins@dfw365.onmicrosoft.com;kevinr@unifiservice.com;dfwdispatch@prospectair.com;TermDACES@dfwairport.com;TermDSupervisors@dfwairport.com',
   lfOps:   'jaren.spikes@flycontour.com;dfw@flycontour.com;operations@flycontour.com;iocgatecoordinators@dfwairport.com;reginald.richardson@flycontour.com;shellie.housewright@flycontour.com;mason.notch@flycontour.com',
   intlOps: 'jaguilar1@dfwairport.com;hffilho@dfwairport.com;iocgatecoordinators@dfwairport.com;TermDACES@dfwairport.com;TermDSupervisors@dfwairport.com',
+  f9Rons:  'brian.williams@menziesaviation.com;brittany.mitchell@flyfrontier.com;bryan.ray@flyfrontier.com;christopher.pena@menziesaviation.com;David.Barnett@menziesaviation.com;destiney.mendez@menziesaviation.com;dfwf9ops@outlook.com;Farris.Teas@menziesaviation.com;felicia.crawford@flyfrontier.com;kim.davis@menziesaviation.com;luis.torres1@menziesaviation.com;marwa.elsherbiny@menziesaviation.com;meagan.mcdade@menziesaviation.com',
 };
 
 function openMailto(listKey, subject) {
@@ -4258,6 +4363,146 @@ function exportHSOps() {
 
   copyEmailHtml(fullHtml, 'btnHSOps');
   openMailto('hsOps', `F-Hardstand Operations - ${fmtSubjectDate(briefingData.dateFrom)}`);
+}
+
+// ── F9 RON EMAIL ──────────────────────────────────────────────────────────────
+// Frontier flights remaining on D-gates, T-stands, S-stands, or gates
+// E2/E7/E10/E32/E33 for the currently-selected TDOP window.
+function exportF9Rons() {
+  if (!briefingData) return;
+  const f9Rons = processF9Rons(lastRawTurns, briefingData.dateFrom, briefingData.dateTo, currentTimeFrom, currentTimeTo);
+  if (!f9Rons.length) { alert('No F9 RON flights found for this window.'); return; }
+
+  const dk         = briefingData.dateFrom;
+  const dateLong   = fmtDateLong(dk);
+  const shiftLabel = (currentTimeFrom === '00:00' && currentTimeTo === '23:59') ? 'Full Day' : `${currentTimeFrom}–${currentTimeTo}`;
+  const now        = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+
+  const FS  = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;';
+  const FSS = 'font-family:Arial,Helvetica,sans-serif;font-size:11px;';
+
+  const hdrTd = (txt) =>
+    `<td style="${FSS}padding:4px 8px 3px;font-size:10px;font-weight:700;color:#8A8A96;text-transform:uppercase;letter-spacing:.07em;background:#F4F4F6;border-bottom:1px solid #E8E8E8">${txt}</td>`;
+
+  const buildF9Card = (e) => {
+    const pad     = e.arrStand||e.depStand||e.stand||'—';
+    const arrGate = e.arrGate||e.gate||'—';
+    const depGate = e.depGate||e.gate||'—';
+    const arrCxl  = e.arrFlight ? getChk(`cancel_${e.iata}_${e.arrFlight}`) : false;
+    const depCxl  = e.depFlight ? getChk(`cancel_${e.iata}_${e.depFlight}`) : false;
+
+    const isGated = document.getElementById(`gatedbtn_hs_${e.iata}_${(e.arrFlight||e.depFlight||'').replace(/\s/g,'')}`)?.classList.contains('active') || false;
+
+    const buildRow = (fnum, dest, schedLbl, schedTime, etId, paxId, isArr, gate, canceled, note) => {
+      const et  = canceled ? '' : (getVal(etId)||'');
+      const pax = paxId ? (canceled ? '' : (getVal(paxId)||'—')) : '—';
+      const etColor    = et ? etaHexColor(schedTime, et, isArr) : (isArr?'#1A7A5E':'#3EB1C8');
+      const nextDay    = et && isNextDay(schedTime, et);
+      const ndBadge    = nextDay ? `&nbsp;<span style="display:inline-block;padding:1px 4px;font-size:9px;font-weight:700;color:#fff;background:#C0392B;border-radius:2px;font-family:Arial,Helvetica,sans-serif">+1</span>` : '';
+      const schedColor = isArr ? '#1A7A5E' : '#3EB1C8';
+      const strike     = (canceled || isGated) ? 'text-decoration:line-through;opacity:.45;' : '';
+      const isIntl     = INTL_AIRPORTS.has((dest||'').toUpperCase());
+      const bg         = isArr ? '#FFFFFF' : '#F8F8FA';
+      const td = (c, w='auto', extra='') =>
+        `<td style="${FS}padding:7px 8px;vertical-align:middle;background:${bg};${extra}${w!=='auto'?'width:'+w+';':''}white-space:nowrap">${c}</td>`;
+      const mainRow = `<tr>
+        ${td(`<span style="${strike}font-weight:700;color:#1C1C1E">${fnum}</span>`)}
+        ${td(`<span style="${strike}color:#585858">${dest}</span>`)}
+        ${td(`<span style="${strike}font-weight:600;color:${canceled?'#C0392B':schedColor}">${schedLbl}&nbsp;${schedTime}</span>`)}
+        ${canceled
+          ? td(`<span style="color:#C0392B;font-style:italic;font-weight:700">—</span>`)
+          : td(et ? `<span style="${isGated?'text-decoration:line-through;opacity:.45;':''}font-weight:700;color:${etColor}">${et}</span>${ndBadge}` : '<span style="color:#CCC">——</span>')}
+        ${td(`<span style="${strike}font-weight:700;color:#FF5000">${gate}</span>`,'52px')}
+        ${td(`<span style="${strike}color:#585858">${pad}</span>`,'44px')}
+        ${td(`<span style="${isGated?'text-decoration:line-through;opacity:.45;':''}color:#555">${pax||'—'}</span>`,'36px')}
+        ${td(`<span style="display:inline-block;border:1px solid ${isIntl?'#E8AAAA':'#AABDE8'};color:${isIntl?'#B03030':'#1A4A8A'};font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px">${isIntl?'INTL':'DOM'}</span>`,'44px')}
+      </tr>`;
+      const noteRow = note
+        ? `<tr><td colspan="8" style="${FSS}padding:2px 10px 7px 10px;background:${bg};color:#666;font-style:italic;white-space:normal"><strong style="font-style:normal;color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Note:</strong> ${escapeHtml(note)}</td></tr>`
+        : '';
+      return mainRow + noteRow;
+    };
+
+    let rows = '';
+    if (e.arrFlight) rows += buildRow(e.arrFlight, e.arrDest, 'STA', e.arrTime,
+      `eta_${e.iata}_${e.arrFlight}_arr`, `pax_${e.iata}_${e.arrFlight}_arr`, true, arrGate, arrCxl,
+      getNote(e.iata, e.arrFlight, 'arr'));
+    if (e.depFlight) rows += buildRow(e.depFlight, e.depDest, 'STD', e.depTime,
+      `etd_${e.iata}_${e.depFlight}_dep`, `pax_${e.iata}_${e.depFlight}_dep`, false, depGate, depCxl,
+      getNote(e.iata, e.depFlight, 'dep'));
+
+    const alBg = AIRLINE_COLORS[e.iata] || '#41395F';
+    const alFg = contrastColor(alBg);
+    const gatedLabel = isGated
+      ? `<span style="font-size:13px;font-weight:700;color:#1A7A5E;font-family:Arial,Helvetica,sans-serif;white-space:nowrap">&nbsp;— Flight Gated ✓</span>`
+      : '';
+    const cxlLabel = (arrCxl || depCxl)
+      ? `<span style="font-size:11px;font-weight:700;font-family:Arial,Helvetica,sans-serif;background:#C0392B;color:#fff;border-radius:3px;padding:2px 7px;white-space:nowrap">Flight Canceled</span>`
+      : '';
+
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-bottom:10px;border:1px solid #DEDEDE;border-radius:7px;overflow:hidden;font-family:Arial,Helvetica,sans-serif">
+      <tr><td colspan="8" style="padding:8px 12px;background:${alBg}">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td style="vertical-align:middle"><span style="font-size:16px;font-weight:700;color:${alFg};font-family:Arial,Helvetica,sans-serif">${e.airline}</span>${gatedLabel}</td>
+          ${cxlLabel ? `<td style="text-align:right;vertical-align:middle;white-space:nowrap">${cxlLabel}</td>` : ''}
+        </tr></table>
+      </td></tr>
+      <tr><td colspan="8" style="background:#FFFFFF">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>${hdrTd('Flight')}${hdrTd('City')}${hdrTd('SKD')}${hdrTd('ETA/ETD')}${hdrTd('Gate')}${hdrTd('Stand')}${hdrTd('PAX')}${hdrTd('Type')}</tr>
+          ${rows}
+        </table>
+      </td></tr>
+    </table>`;
+  };
+
+  const f9Html = f9Rons.map(e => buildF9Card(e)).join('');
+  if (!f9Html.trim()) { alert('All F9 RON flights are canceled.'); return; }
+
+  const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>F9 RONs — ${dateLong}</title>
+  <style>
+    body{margin:0;padding:0;background:#F4F4F6;-webkit-text-size-adjust:100%}
+    table{border-collapse:collapse}
+    @media only screen and (max-width:620px){
+      .outer{width:100%!important;border-radius:0!important}
+      .card-scroll{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+      .card-scroll table{min-width:520px}
+    }
+  </style>
+</head>
+<body style="margin:0;padding:16px 8px;background:#F4F4F6;font-family:Arial,Helvetica,sans-serif">
+  <table class="outer" align="center" border="0" cellpadding="0" cellspacing="0" width="680" style="max-width:680px;width:100%;background:#FFFFFF;border-radius:8px;overflow:hidden;border:1px solid #DEDEDE">
+    <tr><td style="background:#FFFFFF;border-bottom:3px solid #FF5000;padding:12px 16px">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;color:#FF5000;letter-spacing:.04em">DFW</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:#1C1C1E;margin-top:2px">F9 RON Operations</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#8A8A96;margin-top:2px">${dateLong} &nbsp;·&nbsp; ${shiftLabel}</div>
+        </td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="background:#F4F4F6;padding:8px 16px 4px">
+      <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#585858">✈&nbsp; F9 RON Operations — D Gates · T-Stands · S-Stands · E2/E7/E10/E32/E33</span>
+    </td></tr>
+    <tr><td style="padding:6px 16px 10px">
+      <div class="card-scroll">${f9Html}</div>
+    </td></tr>
+    <tr><td style="background:#F9F9F9;border-top:1px solid #EEEEEE;padding:6px 16px">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#AAAAAA">DFW Terminal D &nbsp;·&nbsp; TDOP V1.0.3</td>
+        <td style="font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#AAAAAA;text-align:right">Generated ${now}</td>
+      </tr></table>
+    </td></tr>
+  </table>
+</body></html>`;
+
+  copyEmailHtml(fullHtml, 'btnF9Rons');
+  openMailto('f9Rons', `F9 RON Operations - ${fmtSubjectDate(briefingData.dateFrom)}`);
 }
 
 
