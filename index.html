@@ -2435,7 +2435,7 @@ function processSunCountryAM(turns, dateFrom) {
 // Builds the on-page "☀ Sun Country — AM Lineup" panel: a table of legs with
 // editable MU / Bag Claim / Check-In inputs (persisted via the same generic
 // input system as PAX/notes) plus read-only Tow Off/On + Idle Stand.
-function buildSunCountrySection(legs) {
+function buildSunCountrySection(legs, amDate) {
   if (!legs.length) return '';
 
   const rows = legs.map(l => {
@@ -2487,7 +2487,7 @@ function buildSunCountrySection(legs) {
 
   return `<div style="margin-top:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
     <div style="background:#F58232;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-      <span style="font-size:.85rem;font-weight:700">☀ Sun Country — AM Lineup (00:01–09:00)</span>
+      <span style="font-size:.85rem;font-weight:700">☀ Sun Country — AM Lineup (00:01–09:00) &nbsp;·&nbsp; ${fmtDateLong(amDate)}</span>
       <button id="btnSunCountryExport" style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:4px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer" onclick="exportSunCountryAM()">✉ Export AM Lineup</button>
     </div>
     <table width="100%" style="border-collapse:collapse">
@@ -2736,7 +2736,7 @@ function renderBriefing(data, dateFrom, dateTo, timeFrom, timeTo) {
   h += `</div>`; // close right col
   h += `</div>`; // close briefing-grid
 
-  h += buildSunCountrySection(processSunCountryAM(lastRawTurns, dateFrom));
+  h += buildSunCountrySection(processSunCountryAM(lastRawTurns, dateTo), dateTo);
 
   h += `<div class="doc-footer-bar">
     <span>DFW Terminal D · TDOP V1.0.3</span><span>Generated ${now}</span>
@@ -4691,10 +4691,11 @@ function exportF9Rons() {
 // the current MU / Bag Claim / Check-In values typed into the on-page panel.
 function exportSunCountryAM() {
   if (!briefingData) return;
-  const legs = processSunCountryAM(lastRawTurns, briefingData.dateFrom);
+  const amDate = briefingData.dateTo || briefingData.dateFrom;
+  const legs = processSunCountryAM(lastRawTurns, amDate);
   if (!legs.length) { alert('No Sun Country AM Lineup flights found for this window.'); return; }
 
-  const dateLong = fmtDateLong(briefingData.dateFrom);
+  const dateLong = fmtDateLong(amDate);
   const now      = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
 
   const rowsHtml = legs.map((l, idx) => {
@@ -4769,7 +4770,7 @@ function exportSunCountryAM() {
 </table>`;
 
   copyEmailHtml(fullHtml, 'btnSunCountryExport', null, '✉ Export AM Lineup');
-  openMailto('sunCountryAM', `Sun Country AM Lineup - ${fmtSubjectDate(briefingData.dateFrom)}`);
+  openMailto('sunCountryAM', `Sun Country AM Lineup - ${fmtSubjectDate(amDate)}`);
 }
 
 
