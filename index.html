@@ -2384,8 +2384,17 @@ function processSunCountryAM(turns, dateFrom) {
     const idleStand = (turn.idleStand      || {}).name || '';
     const arrIsHs   = isHardstandStand(arrStand);
     const depIsHs   = isHardstandStand(depStand);
-    const towOff    = fmtTime(turn.tow1StartTime || '');
-    const towOn     = fmtTime(turn.tow2StartTime || '');
+    // getTowInfo needs arrStand/idleStand/depStand + numberOfTowings/tow1&2StartTime
+    // on one object, and uses fmtTowTime (regex HH:MM extraction) rather than
+    // fmtTime (Date parsing) since these API timestamps aren't standard ISO.
+    const towInfo = getTowInfo({
+      numberOfTowings: turn.numberOfTowings || 0,
+      arrStand, idleStand, depStand,
+      tow1StartTime: turn.tow1StartTime || '',
+      tow2StartTime: turn.tow2StartTime || '',
+    });
+    const towOff = towInfo ? towInfo.towOff : '';
+    const towOn  = towInfo ? towInfo.towOn  : '';
 
     const turnKey = `${arr.flightNumber || 'x'}_${dep.flightNumber || 'x'}`.replace(/\s/g,'');
 
