@@ -307,6 +307,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
         <button id="btnIntlOps" onclick="exportIntlOps()" disabled>Intl Ops</button>
         <button id="btnTraffic" onclick="exportTrafficWindow()" disabled>Traffic</button>
         <button id="btnF9Rons" onclick="exportF9Rons()" disabled>F9 RONs</button>
+        <button id="btnSunCountryAM" onclick="exportSunCountryAM()" disabled>Sun Country AM Lineup</button>
         <button onclick="window.open('NightBrief.html','_blank')" title="Open NightBrief">NightBrief</button>
       </div>
     </div>
@@ -1685,7 +1686,7 @@ async function silentRefresh() {
 
     // Re-enable export buttons
     ['btnEmail','btnHSOps','btnLFOps','btnTraffic',
-     'btnIntlOps','btnF9Rons'].forEach(id => {
+     'btnIntlOps','btnF9Rons','btnSunCountryAM'].forEach(id => {
       const b = document.getElementById(id);
       if (b) b.disabled = false;
     });
@@ -1917,6 +1918,7 @@ async function loadOps() {
   document.getElementById('btnTraffic').disabled = true;
   document.getElementById('btnIntlOps').disabled = true;
   document.getElementById('btnF9Rons').disabled = true;
+  document.getElementById('btnSunCountryAM').disabled = true;
   setStatus('loading', `Fetching Stand & Gate data for ${dateFrom} ${timeFrom} – ${dateTo} ${timeTo}…`);
 
   // Capture current user inputs before re-render (reads _userInputs)
@@ -2018,6 +2020,7 @@ async function loadOps() {
     document.getElementById('btnTraffic').disabled = false;
     document.getElementById('btnIntlOps').disabled = false;
     document.getElementById('btnF9Rons').disabled = false;
+    document.getElementById('btnSunCountryAM').disabled = false;
   } catch(e) {
     setStatus('error', `Failed: ${e.message}`);
   }
