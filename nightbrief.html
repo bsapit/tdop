@@ -744,11 +744,12 @@ footer .beta { color: var(--orange); font-weight: 700; }
             <div class="field-label">Prepared By</div>
             <select id="opsSender" onchange="syncSender('ops',this.value)" style="width:100%">
               <option value="">— Select name —</option>
+              <option value="Amanda Bitting">Amanda Bitting</option>
               <option value="Brad Sapit">Brad Sapit</option>
-              <option value="Georgah Gormley">Georgah Gormley</option>
+              <option value="Geo Gormley">Geo Gormley</option>
+              <option value="Harley Wood">Harley Wood</option>
               <option value="James McFarland">James McFarland</option>
               <option value="Joe Johnson">Joe Johnson</option>
-              <option value="Max Walker-Lucero">Max Walker-Lucero</option>
               <option value="Melissa Galloway">Melissa Galloway</option>
               <option value="Payal Asija">Payal Asija</option>
             </select>
@@ -776,7 +777,7 @@ footer .beta { color: var(--orange); font-weight: 700; }
 
     <!-- F-Hardstand NB Only -->
     <div class="card">
-      <div class="card-header">Section 2 — F-Hardstand Pads &nbsp;·&nbsp; NB Only: T83–T85, T90–T95</div>
+      <div class="card-header">Section 2 — F-Hardstand Pads &nbsp;·&nbsp; NB Only: T90–T95</div>
       <div class="card-body">
         <div class="gate-grid" id="fPads"></div>
       </div>
@@ -886,7 +887,7 @@ footer .beta { color: var(--orange); font-weight: 700; }
     </div>
 
     <div class="card" style="margin-bottom:8px;">
-      <div class="card-header">Overnight Flights — Arr/Dep 23:00–08:00 · Term D: D6–D8, D10–D12, D14–D16 / T83–T85 &amp; T90–T95 · Term E: E2, E7, E10, E32, E33 · All fields editable</div>
+      <div class="card-header">Overnight Flights — Arr/Dep 23:00–08:00 · Term D: D6–D8, D10–D12, D14–D16 / T90–T95 · Term E: E2, E7, E10 · All fields editable</div>
       <div class="card-body">
         <div id="opsTbody" class="flight-cards-wrap">
           <div class="flight-cards-empty">Click <strong>Refresh Data</strong> to pull live flights</div>
@@ -956,15 +957,10 @@ const CU_GATES = [
   { id:'E2',  nbOnly:true },
   { id:'E7',  nbOnly:true },
   { id:'E10', nbOnly:true },
-  { id:'E32', nbOnly:true },
-  { id:'E33', nbOnly:true },
 ];
 
 // F-Hardstand: NB-only fixed
 const F_PADS = [
-  { id:'T83', cap:'NB', locked:true },
-  { id:'T84', cap:'NB', locked:true },
-  { id:'T85', cap:'NB', locked:true },
   { id:'T90', cap:'NB', locked:true },
   { id:'T91', cap:'NB', locked:true },
   { id:'T92', cap:'NB', locked:true },
@@ -1512,13 +1508,13 @@ function contrastText(hex) {
 const PM_D_GATES = new Set(['D6','D7','D8','D10','D11','D12','D14','D15','D16']);
 
 // Terminal D hardstand T-stands (exact list).
-const PM_T_STANDS = new Set(['T83','T84','T85','T90','T91','T92','T93','T94','T95']);
+const PM_T_STANDS = new Set(['T90','T91','T92','T93','T94','T95']);
 
 // Terminal E common-use gates (exact list).
 // Note: Terminal E flights are matched by GATE only — not stand.
 // Airlines that don't send stand data would otherwise be incorrectly
 // excluded if we required a stand match here.
-const PM_E_GATES = new Set(['E2','E7','E10','E32','E33']);
+const PM_E_GATES = new Set(['E2','E7','E10']);
 
 function normGate(g)  { return String(g||'').trim().toUpperCase(); }
 function normStand(s) { return String(s||'').trim().toUpperCase(); }
@@ -1530,7 +1526,7 @@ function scopeLeg(iata, gate, stand) {
   const g = normGate(gate);
   const s = normStand(stand);
 
-  // Terminal E — match on gate only (E2, E7, E10, E32, E33).
+  // Terminal E — match on gate only (E2, E7, E10).
   if (PM_E_GATES.has(g)) return { include: true, terminal: 'E' };
 
   // Terminal D — match on gate OR stand.
@@ -2076,7 +2072,7 @@ function renderOpsTable() {
   };
 
   renderTerminal('Terminal D Overnight Ops', termD);
-  renderTerminal('Terminal E Overnight Ops — Common-Use Gates (E2 / E7 / E10 / E32 / E33)', termE);
+  renderTerminal('Terminal E Overnight Ops — Common-Use Gates (E2 / E7 / E10)', termE);
   if (other.length) renderTerminal('Other / Uncategorized', other);
 
   wrap.innerHTML = html;
@@ -2165,7 +2161,7 @@ function buildOpsText() {
     };
 
     writeSection('TERMINAL D OVERNIGHT OPS', termD);
-    writeSection('TERMINAL E OVERNIGHT OPS — COMMON-USE GATES (E2 / E7 / E10 / E32 / E33)', termE);
+    writeSection('TERMINAL E OVERNIGHT OPS — COMMON-USE GATES (E2 / E7 / E10)', termE);
     if (other.length) writeSection('OTHER / UNCATEGORIZED', other);
   }
 
@@ -2303,7 +2299,7 @@ function renderFlightSectionsHtml(flights, NAVY, ORANGE, LTGRAY) {
   };
 
   writeSection('Terminal D Overnight Ops', termD);
-  writeSection('Terminal E Overnight Ops — Common-Use Gates (E2, E7, E10, E32, E33)', termE);
+  writeSection('Terminal E Overnight Ops — Common-Use Gates (E2, E7, E10)', termE);
   if (other.length) writeSection('Other / Uncategorized', other);
 
   return h;
