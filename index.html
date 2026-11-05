@@ -704,9 +704,16 @@ const HEADERS = { 'accept':'application/json' };
 // ── TEAMS WEBHOOK ─────────────────────────────────────────────────────────────
 // Paste your incoming webhook URL(s) here.
 // Each entry: { label: 'Display name', url: 'https://...' }
+// Alerts, Alert Terminated and report posts go here. Paste the new alerts/reports flow URL.
 const TEAMS_DESTINATIONS = [
-  { label: 'Bussing Group', url: 'https://defaultb8b2085ab3c4408fab3e40ab7c8fa58.e.environment.api.gov.powerplatform.microsoft.us:443/powerautomate/automations/direct/cu/01/workflows/9b2144c2470a4ed9821be824cca6cbdd/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TiR0hzOkrcmcX0SEKEaWJubLu_qXdx2BsIjz9zcfB5s' },
+  { label: 'Cobus Chat', url: 'PASTE_ALERTS_FLOW_URL_HERE' },
 ];
+
+// Bus Needed has its own flow (builds its own card from title/airline/from/to/posted).
+const BUS_NEEDED_URL = 'https://defaultb8b2085ab3c4408fab3e40ab7c8fa58.e.environment.api.gov.powerplatform.microsoft.us:443/powerautomate/automations/direct/cu/01/workflows/9b2144c2470a4ed9821be824cca6cbdd/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TiR0hzOkrcmcX0SEKEaWJubLu_qXdx2BsIjz9zcfB5s';
+
+// Alert I, Alert II and Alert Terminated post here (their own flow builds the card).
+const ALERT_TEAMS_URL = 'https://defaultb8b2085ab3c4408fab3e40ab7c8fa58.e.environment.api.gov.powerplatform.microsoft.us:443/powerautomate/automations/direct/cu/24/workflows/3661185405d64d48a4486303ace3d8bf/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Vqi5LWb0Ndf0XwEAeCEdNBVXBC1tWEDiYAULbyBESYQ';
 
 const INTL_TEAMS_URL = 'https://prod-07.usgovtexas.logic.azure.us:443/workflows/76d5460b75ff4bc8a4c6e67fbe0a3935/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yH-4EK4InTLsXmfzay9K4wH2MhqJ-SOVuDCIMyFEOSo';
 
@@ -5002,7 +5009,7 @@ async function submitBusNeeded() {
     return;
   }
 
-  const webhookUrl = TEAMS_DESTINATIONS[0]?.url;
+  const webhookUrl = BUS_NEEDED_URL;
   if (!webhookUrl || webhookUrl.includes('PASTE_')) {
     statEl.style.color = 'var(--red)';
     statEl.textContent = '⚠ Teams webhook URL not configured.';
@@ -5019,7 +5026,7 @@ async function submitBusNeeded() {
   const html = `<div style="${S}max-width:420px">
     <div style="background:#D4800A;color:#fff;padding:8px 12px;border-radius:6px 6px 0 0">
       <div style="font-size:15px;font-weight:700;letter-spacing:.03em">🚌 BUS NEEDED</div>
-      <div style="font-size:11px;opacity:.85;margin-top:2px">DFW Terminal D &nbsp;·&nbsp; Posted ${now}</div>
+      <div style="font-size:11px;opacity:.85;margin-top:2px">Posted ${now}</div>
     </div>
     <div style="border:1px solid #E8E8E8;border-top:none;border-radius:0 0 6px 6px;background:#fff;padding:10px 14px">
       <table cellpadding="0" cellspacing="0" border="0" style="width:100%">
@@ -5033,16 +5040,20 @@ async function submitBusNeeded() {
           <td style="${S}font-size:11px;font-weight:700;color:#8A8A96;text-transform:uppercase;letter-spacing:.06em;padding:3px 0 1px">From</td>
         </tr>
         <tr>
-          <td style="${S}font-size:14px;font-weight:700;color:#1C1C1E">${fromWhere}</td>
+          <td style="${S}font-size:14px;font-weight:700;color:#1C1C1E;padding-bottom:8px">${fromWhere}</td>
+        </tr>
+        <tr>
+          <td style="${S}font-size:11px;font-weight:700;color:#8A8A96;text-transform:uppercase;letter-spacing:.06em;padding:3px 0 1px">To</td>
+        </tr>
+        <tr>
+          <td style="${S}font-size:14px;font-weight:700;color:#1C1C1E">${toWhere}</td>
         </tr>
       </table>
     </div>
   </div>`;
 
-  // The Power Automate flow builds the Teams card itself from these fields.
-  // Sent both flat and under `properties` because the flow's trigger schema nests them there.
-  const fields = { title: 'BUS NEEDED', airline, from: fromWhere, to: toWhere, posted: now };
-  const payload = { type: 'object', ...fields, properties: { ...fields } };
+  // The Bus Needed flow builds the Teams card itself from these fields.
+  const payload = { title: 'BUS NEEDED', airline, from: fromWhere, to: toWhere, posted: now };
 
   try {
     const resp = await fetch(webhookUrl, {
@@ -5110,7 +5121,7 @@ function closeAlertModal() {
 async function submitAlertTerminated() {
   document.getElementById('alertsDropdown').classList.remove('open');
 
-  const webhookUrl = TEAMS_DESTINATIONS[0]?.url;
+  const webhookUrl = ALERT_TEAMS_URL;
   if (!webhookUrl || webhookUrl.includes('PASTE_')) {
     console.warn('[TDOP] Teams webhook not configured.');
     return;
@@ -5122,7 +5133,7 @@ async function submitAlertTerminated() {
   const html = `<div style="${S}max-width:420px">
     <div style="background:#1A7A5E;color:#fff;padding:8px 12px;border-radius:6px 6px 0 0">
       <div style="font-size:15px;font-weight:700;letter-spacing:.03em">✅ ALERT TERMINATED</div>
-      <div style="font-size:11px;opacity:.85;margin-top:2px">DFW Terminal D &nbsp;·&nbsp; Posted ${now}</div>
+      <div style="font-size:11px;opacity:.85;margin-top:2px">Posted ${now}</div>
     </div>
     <div style="border:1px solid #E8E8E8;border-top:none;border-radius:0 0 6px 6px;background:#fff;padding:10px 14px">
       <p style="${S}font-size:14px;font-weight:700;color:#1C1C1E;margin:0">The alert has been terminated. All clear.</p>
@@ -5133,7 +5144,7 @@ async function submitAlertTerminated() {
     await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: html })
+      body: JSON.stringify({ kind: 'terminated', title: 'ALERT TERMINATED', style: 'good', posted: now, message: 'The alert has been terminated. All clear.' })
     });
     console.log('[TDOP] Alert Terminated sent to Cobus chat.');
   } catch (err) {
@@ -5161,7 +5172,7 @@ async function submitAlert() {
     return;
   }
 
-  const webhookUrl = TEAMS_DESTINATIONS[0]?.url;
+  const webhookUrl = ALERT_TEAMS_URL;
   if (!webhookUrl || webhookUrl.includes('PASTE_')) {
     statEl.style.color = 'var(--red)';
     statEl.textContent = '⚠ Teams webhook URL not configured.';
@@ -5197,7 +5208,7 @@ async function submitAlert() {
   const html = `<div style="${S}max-width:420px">
     <div style="background:${accent};color:#fff;padding:8px 12px;border-radius:6px 6px 0 0">
       <div style="font-size:15px;font-weight:700;letter-spacing:.03em">🚨 ${lvlLabel}</div>
-      <div style="font-size:11px;opacity:.85;margin-top:2px">DFW Terminal D &nbsp;·&nbsp; Posted ${now}</div>
+      <div style="font-size:11px;opacity:.85;margin-top:2px">Posted ${now}</div>
     </div>
     <div style="border:1px solid #E8E8E8;border-top:none;border-radius:0 0 6px 6px;background:#fff;padding:10px 14px">
       <table cellpadding="0" cellspacing="0" border="0" style="width:100%">${rows}
@@ -5205,7 +5216,17 @@ async function submitAlert() {
     </div>
   </div>`;
 
-  const payload = { text: html };
+  // The alert flow builds the Teams card itself from these fields.
+  // Alert I = amber ('warning'), Alert II = red ('attention') — Adaptive Cards only allow preset colors.
+  const na = v => v || 'N/A';
+  const payload = {
+    kind: 'alert',
+    title: lvlLabel,
+    style: _alertLevel === 1 ? 'warning' : 'attention',
+    posted: now,
+    runway: na(fields.runway), callsign: na(fields.callsign), acType: na(fields.acType),
+    issue: na(fields.issue), fob: na(fields.fob), sob: na(fields.sob), eta: na(fields.eta),
+  };
 
   try {
     const resp = await fetch(webhookUrl, {
