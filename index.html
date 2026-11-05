@@ -687,10 +687,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btn) btn.textContent = dark ? '☀️' : '🌙';
 });
 
-const AUTH    = 'Basic QnJhZC1BcHA6aldta1lRWHdKVnFNQkJkYUtzWVZ3b2hqNGdFNFdy';
-const BASE    = 'https://betterairport.bsapit-af2.workers.dev/dfw/api/v2/o/3d5d754ed9ba';
-const KV_URL  = 'https://betterairport.bsapit-af2.workers.dev/state';
-const HEADERS = { 'accept':'application/json', 'Authorization': AUTH };
+// Single place to point the page at your Cloudflare Worker.
+const WORKER_ORIGIN = 'https://tdop.bjs70413.workers.dev';
+// API credential now lives in the Worker as the UPSTREAM_AUTH secret.
+const BASE    = WORKER_ORIGIN + '/dfw/api/v2/o/3d5d754ed9ba';
+const KV_URL  = WORKER_ORIGIN + '/state';
+const HEADERS = { 'accept':'application/json' };
 // NOTE: PAX counts used to round-trip through a JSONbin (PAX_BIN_URL/KEY).
 // That's retired — TDOP and GateGadget now share the same Netlify Blob
 // store (GATEGADGET_PAX_URL, declared further down) for both directions.
@@ -3204,7 +3206,7 @@ function getSelectedHsCardData() {
 // The Worker's /busboard POST route is unauthed (matches /state pattern),
 // so no Authorization header is sent.
 
-const BUSBOARD_URL = 'https://betterairport.bsapit-af2.workers.dev/busboard';
+const BUSBOARD_URL = WORKER_ORIGIN + '/busboard';
 
 function _bbReadLive(id) {
   const el = document.getElementById(id);
