@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TDOP — User Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --orange:#FF5000;--navy:#1b3a6b;--teal:#2090A8;--gold:#F2A900;
+  --green:#1A7A5E;--red:#C0392B;--purple:#41395F;
+  --bg:#EEF3FA;--surface:#FFFFFF;--text1:#1b2a4a;--text2:#4A4A58;
+  --text3:#8A8A9A;--border:#D8DEE8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}
+body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--text1);line-height:1.65;}
+@media print{body{background:#fff;}.no-print{display:none!important;}.section{box-shadow:none!important;}.page-break{page-break-before:always;}}
+.page{max-width:880px;margin:0 auto;padding:0 0 60px;}
+
+.masthead{background:var(--navy);padding:30px 36px 26px;position:relative;overflow:hidden;border-bottom:5px solid var(--orange);}
+.masthead::before{content:'';position:absolute;right:-50px;top:-60px;width:240px;height:240px;border-radius:50%;background:rgba(255,80,0,.1);}
+.masthead::after{content:'';position:absolute;right:70px;bottom:-80px;width:160px;height:160px;border-radius:50%;background:rgba(32,144,168,.08);}
+.mi{position:relative;z-index:1;}
+.mt{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
+.ml{display:flex;align-items:center;gap:16px;}
+.dfw{background:var(--orange);color:#fff;font-size:22px;font-weight:900;letter-spacing:.1em;padding:7px 16px;border-radius:7px;}
+.mt-titles h1{color:#fff;font-size:23px;font-weight:900;letter-spacing:.01em;line-height:1.2;}
+.mt-titles p{color:rgba(255,255,255,.45);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+.mbadges{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{padding:4px 12px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.07em;}
+.bv{background:var(--orange);color:#fff;}
+.bi{background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);}
+.mdesc{color:rgba(255,255,255,.68);font-size:13px;line-height:1.6;max-width:680px;}
+
+.section{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin:18px 20px 0;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);}
+.sh{background:var(--navy);padding:12px 22px;display:flex;align-items:center;gap:10px;}
+.sh-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.sh h2{color:#fff;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;}
+.sb{padding:20px 22px;}
+
+.ov{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.ov-card{border-radius:7px;padding:13px 15px;border-left:4px solid var(--orange);background:var(--bg);}
+.ov-card h3{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--orange);margin-bottom:4px;}
+.ov-card p{font-size:12px;color:var(--text2);line-height:1.55;}
+
+.tbl{width:100%;border-collapse:collapse;}
+.tbl thead tr{background:var(--navy);}
+.tbl th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.7);}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12.5px;color:var(--text2);vertical-align:top;line-height:1.5;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:nth-child(even) td{background:#FAFBFD;}
+.fn{font-weight:700;color:var(--text1);}
+.pill{display:inline-flex;align-items:center;justify-content:center;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;min-width:78px;letter-spacing:.03em;}
+
+.ctbl{width:100%;border-collapse:collapse;}
+.ctbl thead tr{background:var(--bg);}
+.ctbl th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border);}
+.ctbl td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);vertical-align:top;line-height:1.5;}
+.ctbl tr:last-child td{border-bottom:none;}
+.ctbl .feat{font-weight:600;color:var(--text1);}
+
+.steps{display:flex;flex-direction:column;gap:14px;}
+.step{display:flex;gap:12px;align-items:flex-start;}
+.sn{background:var(--orange);color:#fff;width:26px;height:26px;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.sc h3{font-size:13px;font-weight:700;color:var(--text1);margin-bottom:3px;}
+.sc p{font-size:12.5px;color:var(--text2);line-height:1.55;}
+.stip{display:inline-block;margin-top:6px;background:#FFF3EE;color:var(--orange);font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;border-left:3px solid var(--orange);}
+
+.tips{display:flex;flex-direction:column;gap:8px;}
+.tip{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border-radius:7px;padding:10px 14px;}
+.ti{font-size:15px;flex-shrink:0;line-height:1;}
+.tt{font-size:12.5px;color:var(--text2);line-height:1.5;}
+.tt strong{color:var(--text1);}
+
+.road-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.rc{border:1.5px dashed var(--border);border-radius:8px;padding:14px 15px;position:relative;}
+.rc-tag{position:absolute;top:-9px;left:12px;background:var(--surface);padding:0 6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;}
+.rc h3{font-size:12px;font-weight:700;color:var(--text1);margin:6px 0 5px;}
+.rc p{font-size:11.5px;color:var(--text2);line-height:1.55;}
+.pri{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.05em;margin-bottom:4px;}
+.pri-hi{background:#FFF0F0;color:var(--red);}
+.pri-med{background:#FFFBE6;color:#8A6200;}
+.pri-lo{background:#EEF4FF;color:#1A4A8A;}
+
+.cl{display:flex;flex-direction:column;gap:6px;}
+.cli{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border-radius:6px;padding:9px 12px;}
+.cln{background:var(--teal);color:#fff;width:20px;height:20px;border-radius:4px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.cli p{font-size:12px;color:var(--text2);line-height:1.5;}
+.cli p strong{color:var(--text1);}
+
+.page-break{page-break-before:always;}
+.gfooter{text-align:center;padding:18px 20px 0;font-size:10.5px;color:var(--text3);border-top:1px solid var(--border);margin:22px 20px 0;line-height:1.7;}
+.print-btn{position:fixed;bottom:24px;right:24px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:11px 20px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 3px 14px rgba(255,80,0,.35);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="masthead">
+    <div class="mi">
+      <div class="mt">
+        <div class="ml">
+          <div class="dfw">DFW</div>
+          <div class="mt-titles"><h1>TDOP User Guide</h1><p>Terminal D Operations Briefing Platform &nbsp;·&nbsp; Gate Gadget Initiative</p></div>
+        </div>
+        <div class="mbadges"><span class="badge bv">V1.0.3</span><span class="badge bi">Internal Use Only</span></div>
+      </div>
+      <div class="mdesc">Complete reference for Gate Coordinators and Supervisors — how to run a shift, every button and card control, cloud save and live sync, Teams alerts, send actions, how the system is built, and the development roadmap.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sh"><div class="sh-dot" style="background:var(--orange);"></div><h2>1 — What Is TDOP?</h2></div>
+    <div class="sb">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.65;">TDOP (Terminal D Operations Briefing) is the primary web tool within the <strong>Gate Gadget Initiative</strong>, created by Brad J. Sapit for DFW Terminal D gate coordinators and supervisors. It fetches live flight data from the Stand &amp; Gate API, presents Terminal D gate flights and F-Hardstand operations in a side-by-side briefing grid, and provides one-click email and Teams actions to communicate the shift picture to every relevant ops team.</p>
+      <div class="ov">
+        <div class="ov-card"><h3>Live Data &amp; Auto-Refresh</h3><p>Briefing data pulled live from the Stand &amp; Gate API each Generate and auto-refreshed on a timed cycle. Gate and pad reassignments are detected each cycle and flagged with an amber ⚠ badge.</p></div>
+        <div class="ov-card"><h3>Two-Column Briefing Grid</h3><p>Left column: F-Hardstand operations. Right column: Terminal D gate flights. Each airline gets its own card with arrival and departure rows, inline editable fields, and per-leg controls.</p></div>
+        <div class="ov-card"><h3>Cloud Save &amp; Live Sync</h3><p>Every ETA, ETD, pax count, note, cancellation flag, and gated state can be saved to shared cloud storage with 💾 Save. It also auto-saves every 30 minutes, and other machines running the same day pick up changes within 10 seconds. Click ↓ Load (or Load Saved on startup) to restore.</p></div>
+        <div class="ov-card"><h3>Email &amp; Teams Sends</h3><p>Full-briefing and scoped emails from the Send Report menu, plus live Teams posts — Bus Needed, Alert I / II / Terminated, SeeSay, Intl Ops, and selected-card posts — all from the same toolbar. A hardstand snapshot also publishes to BusBoard automatically.</p></div>
+</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sh"><div class="sh-dot" style="background:var(--teal);"></div><h2>2 — Toolbar &amp; Menu Reference</h2></div>
+    <div class="sb" style="padding:0;">
+      <table class="tbl">
+        <thead><tr><th style="width:160px;">Button</th><th style="width:100px;">Color</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="fn">📋 Reference ▾</td><td><span class="pill" style="background:#888;">Menu</span></td><td>Opens the Quick Start Guide, Help (this User Guide), and the Phonebook in new tabs.</td></tr>
+          <tr><td class="fn">☀️/🌙 Theme</td><td><span class="pill" style="background:#888;">Muted</span></td><td>Toggles light/dark mode. Manual toggle — the app defaults to light regardless of your OS setting.</td></tr>
+          <tr><td class="fn">From / To</td><td><span class="pill" style="background:#2090A8;">Fields</span></td><td>Date and time window for the briefing (shift start and end). The window can cross midnight. Traffic and the INTL/Sun Country/F9 sends use this window.</td></tr>
+          <tr><td class="fn">🔒 Date</td><td><span class="pill" style="background:#888;">Muted</span></td><td>Unlocks the date fields. Dates lock after a pull to prevent accidents.</td></tr>
+          <tr><td class="fn">⟳ Refresh</td><td><span class="pill" style="background:#FF5000;">Orange</span></td><td>Pulls live flight data for the selected window. Always your starting action. Data then re-pulls automatically every 5 minutes, keeping everything you typed. Status dot pulses amber while loading and turns green on success.</td></tr>
+          <tr><td class="fn">💾 Save</td><td><span class="pill" style="background:#1A7A5E;">Green</span></td><td>Saves all current inputs to shared cloud storage. Also runs automatically every 30 minutes. The status bar shows when it last saved.</td></tr>
+          <tr><td class="fn">↓ Load</td><td><span class="pill" style="background:#2090A8;">Teal</span></td><td>Restores the last saved briefing for the day from cloud storage. Also offered as <em>Load Saved</em> on the startup screen.</td></tr>
+          <tr><td class="fn">✉ Send Report ▾</td><td><span class="pill" style="background:#7B4FBF;">Purple</span></td><td>Menu of email reports (below). Items are enabled once a briefing has been pulled, except NightBrief.</td></tr>
+          <tr><td class="fn">&nbsp;&nbsp;All Ops (full email)</td><td><span class="pill" style="background:#FF5000;">Orange</span></td><td>Complete Terminal D briefing as a formatted HTML email, pre-addressed to all ops distribution lists.</td></tr>
+          <tr><td class="fn">&nbsp;&nbsp;HS Ops</td><td><span class="pill" style="background:#41395F;">Purple</span></td><td>Hardstand-only summary to Gate Control / Hardstand leadership. Same 8-column layout as All Ops (Flight, City, SKD, ETA/ETD, Gate, Stand, PAX, Type).</td></tr>
+          <tr><td class="fn">&nbsp;&nbsp;LF Ops</td><td><span class="pill" style="background:#1A7A5E;">Green</span></td><td>Frontier (F9) scoped briefing to the Menzies F9 ops team.</td></tr>
+          <tr><td class="fn">&nbsp;&nbsp;Intl Ops</td><td><span class="pill" style="background:#7B4FBF;">Purple</span></td><td>Dual send — email plus a Power Automate Teams card, posted by a flow bot rather than your own account.</td></tr>
+          <tr><td class="fn">&nbsp;&nbsp;Traffic</td><td><span class="pill" style="background:#F2A900;">Gold</span></td><td>Arrivals list for every flight inside the From / To window in the header (ETA used when entered, otherwise STA). Windows that cross midnight work. Cancelled flights are left out.</td></tr>
+          <tr><td class="fn">&nbsp;&nbsp;F9 RONs</td><td><span class="pill" style="background:#3EB1C8;">Teal</span></td><td>Frontier remain-overnight (RON) flights for the window, as an email. Shows an alert if there are none.</td></tr>
+          <tr><td class="fn">&nbsp;&nbsp;Sun Country AM Lineup</td><td><span class="pill" style="background:#D4800A;">Amber</span></td><td>Sun Country morning lineup email. Also available from its own export control in the Sun Country section.</td></tr>
+          <tr><td class="fn">&nbsp;&nbsp;NightBrief</td><td><span class="pill" style="background:#585858;">Gray</span></td><td>Opens the NightBrief page in a new tab.</td></tr>
+          <tr><td class="fn">👁 SeeSay</td><td><span class="pill" style="background:#1565C0;">Blue</span></td><td>Posts a Teams card in the <strong>Bussing chat</strong> (via Power Automate) telling staff to submit requests to IOC Specialists through the SeeSay app, with a direct link. Always enabled — no briefing required.</td></tr>
+          <tr><td class="fn">🚌 Bus Needed</td><td><span class="pill" style="background:#D4800A;">Amber</span></td><td>Opens a popup with three required fields: <strong>Airline</strong>, <strong>From Where</strong>, <strong>To Where</strong>. OK posts a Bus Needed card to Teams showing those values and the post time.</td></tr>
+          <tr><td class="fn">🔧 EQUIP</td><td><span class="pill" style="background:#5D6D7E;">Slate</span></td><td>Opens the equipment move / removal email form in a new tab.</td></tr>
+          <tr><td class="fn">🚨 Alerts ▾</td><td><span class="pill" style="background:#C0392B;">Red</span></td><td>Menu: <strong>Alert I</strong>, <strong>Alert II</strong> and <strong>Alert Terminated</strong>. See section 5 for what each posts.</td></tr>
+          <tr><td class="fn">+ Add</td><td><span class="pill" style="background:#2090A8;">Teal</span></td><td>Adds a flight manually to the terminal section when the API does not list it.</td></tr>
+          <tr><td class="fn">⎘ Email / 📤 Post to Teams</td><td><span class="pill" style="background:#2471A3;">Blue</span></td><td>Appear when two or more airline cards are ticked. Email or post just those turns. Post to Teams uses the same Teams destination picker.</td></tr>
+          <tr><td class="fn">🗑 Clear All</td><td><span class="pill" style="background:#888;">Muted</span></td><td>Wipes saved state — ETAs, ETDs, pax, notes, cancellation flags, gated states, and the gate-change baseline. Use at end of shift.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section page-break">
+    <div class="sh"><div class="sh-dot" style="background:var(--gold);"></div><h2>3 — Airline Card Controls</h2></div>
+    <div class="sb">
+      <p style="font-size:12.5px;color:var(--text2);margin-bottom:16px;">Each airline card contains inline controls per flight leg plus card-level controls in the header.</p>
+      <table class="ctbl">
+        <thead><tr><th style="width:180px;">Control</th><th>What It Does</th></tr></thead>
+        <tbody>
+          <tr><td class="feat">ETA / ETD Field</td><td>Click the ETA or ETD cell and type the estimated time (e.g. 14:35). The API pre-fills estimated times on every pull; anything you type wins. Estimated times only show when they differ from the scheduled time. Overrides STA/STD in all emails and Teams posts.</td></tr>
+          <tr><td class="feat">Pax Count Field</td><td>Enter expected passenger count for the leg. Shown in the briefing card and carried into all emails and Teams posts. Counts also sync with the GateGadget pax store so gate teams see the same numbers.</td></tr>
+          <tr><td class="feat">Note Field</td><td>Per-leg freeform text (up to 100 characters). Appears italicized beneath the flight row. Shown in all emails and Teams posts. Use for ACARS notes, gate remarks, or crew status.</td></tr>
+          <tr><td class="feat">✗ Cancel Checkbox</td><td>Marks a leg as cancelled — strikes through red, CXL badge appears. If both legs of a hardstand flight are cancelled, the card moves to the terminal section and is removed from HS exports.</td></tr>
+          <tr><td class="feat">✈ Gated Toggle</td><td>Card-level toggle. When active, the card dims and all cells strike through, indicating the aircraft is blocked or on hold. The ✈ GATED indicator appears in the card header and in Teams posts.</td></tr>
+          <tr><td class="feat">Card Checkbox</td><td>Selects the card for multi-card operations. When two or more cards are checked, a selection toolbar appears with ⎘ Email and 📤 Post to Teams for only those flights.</td></tr>
+          <tr><td class="feat">⚠ Gate/Pad Changed Badge</td><td>Amber badge when the API detects a reassignment since the baseline was set on first Generate. Hover the highlighted cell to see the original value in a tooltip.</td></tr>
+          <tr><td class="feat">🔴 +1 Next-Day Badge</td><td>Red badge on times that cross midnight — indicates the time belongs to the following calendar day. Auto-applied from the API's scheduled times.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sh"><div class="sh-dot" style="background:var(--green);"></div><h2>4 — Running a Shift — Step by Step</h2></div>
+    <div class="sb">
+      <div class="steps">
+        <div class="step"><div class="sn">1</div><div class="sc"><h3>Open TDOP &amp; Choose Startup Option</h3><p>If a saved briefing exists, the startup screen offers <em>Load Saved</em> (continue today's shared state) or <em>New Briefing</em> (start clean). Load Saved restores ETAs, notes, flags, and pax counts for every machine on the same day.</p></div></div>
+        <div class="step"><div class="sn">2</div><div class="sc"><h3>Set Date &amp; Shift Time Window</h3><p>Use the From and To date/time fields. If the date is locked, tap 🔒 Date to unlock it.</p><span class="stip">The window can cross midnight, for example 04:30 to 02:00 the next day.</span></div></div>
+        <div class="step"><div class="sn">3</div><div class="sc"><h3>Click ⟳ Refresh</h3><p>Fetches live data from the Stand &amp; Gate API through the Cloudflare Worker. Status dot pulses amber while loading, turns green on success. Left column: F-Hardstand operations. Right column: Terminal D gate flights.</p></div></div>
+        <div class="step"><div class="sn">4</div><div class="sc"><h3>Enter ETAs, ETDs, Notes &amp; Pax</h3><p>Click into the ETA/ETD cell, pax field, or note field on any leg. API estimates pre-fill automatically; whatever you type is kept on every 5-minute refresh.</p></div></div>
+        <div class="step"><div class="sn">5</div><div class="sc"><h3>Flag Cancellations &amp; Gated Aircraft</h3><p>Check ✗ on any cancelled leg (it strikes through red). Use ✈ Gated on a card when the aircraft is blocked or on hold. Add missing flights with <em>+ Add</em>.</p></div></div>
+        <div class="step"><div class="sn">6</div><div class="sc"><h3>Save Your Work</h3><p>Click 💾 Save after key changes. It also auto-saves every 30 minutes, and other machines see updates within 10 seconds.</p></div></div>
+        <div class="step"><div class="sn">7</div><div class="sc"><h3>Send Briefings &amp; Post to Teams</h3><p>Open <strong>✉ Send Report ▾</strong> for All Ops, HS Ops, LF Ops, Intl Ops, Traffic, F9 RONs, Sun Country AM Lineup, or NightBrief. Use 🚌 Bus Needed, 🚨 Alerts, or 👁 SeeSay for live Teams posts.</p><span class="stip">Intl Ops sends both email and a Teams card in one click.</span></div></div>
+        <div class="step"><div class="sn">8</div><div class="sc"><h3>Watch for Gate / Pad Changes</h3><p>During auto-refresh, if a gate or pad is reassigned, the card gets an amber ⚠ badge and the cell highlights. Hover to see the original value. Baseline resets on Clear All and at 3:00 AM.</p></div></div>
+        <div class="step"><div class="sn">9</div><div class="sc"><h3>End of Shift — Clear All</h3><p>Click <strong>🗑 Clear All</strong> to wipe saved state, inputs, flags, and the gate-change baseline so the incoming coordinator starts clean. The app also resets itself at 3:00 AM.</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sh"><div class="sh-dot" style="background:var(--red);"></div><h2>5 — Teams Posts: Alerts, Bus Needed &amp; SeeSay</h2></div>
+    <div class="sb" style="padding:0;">
+      <table class="ctbl">
+        <thead><tr><th style="width:170px;">Post</th><th>What You Enter</th><th>What Teams Shows</th></tr></thead>
+        <tbody>
+          <tr><td class="feat">🔴 Alert I</td><td>Runway, Callsign &amp; Flight #, A/C Type, Issue, FOB (fuel on board), SOB (souls on board), ETA. At least one field is required.</td><td>Amber header "ALERT I" with the post time, then all seven rows. Any field left blank shows <strong>N/A</strong>.</td></tr>
+          <tr><td class="feat">🟠 Alert II</td><td>Same seven fields as Alert I.</td><td>Red header "ALERT II" with the post time and the same seven rows.</td></tr>
+          <tr><td class="feat">✅ Alert Terminated</td><td>Nothing — posts immediately when clicked.</td><td>Green header "ALERT TERMINATED", post time, and "The alert has been terminated. All clear."</td></tr>
+          <tr><td class="feat">🚌 Bus Needed</td><td>Airline, From Where, To Where. All three required.</td><td>Header "BUS NEEDED" with the post time, then Airline, From and To rows.</td></tr>
+          <tr><td class="feat">👁 SeeSay</td><td>Nothing.</td><td>A card in the Bussing chat directing staff to the SeeSay app, with a link to open it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sh"><div class="sh-dot" style="background:var(--gold);"></div><h2>6 — Tips, Notes &amp; Good to Know</h2></div>
+    <div class="sb">
+      <div class="tips">
+        <div class="tip"><span class="ti">☁️</span><div class="tt"><strong>Cloud save &amp; sync.</strong> Save and Load use shared cloud storage, so any machine or browser sees the same briefing. Auto-save runs every 30 minutes and other machines check for updates every 10 seconds. If two people edit at once, the most recent save wins.</div></div>
+        <div class="tip"><span class="ti">🔄</span><div class="tt"><strong>Auto-refresh &amp; gate-change baseline.</strong> Data re-pulls every 5 minutes. The first pull captures every gate/pad as the baseline; later refreshes compare against it. New flights added mid-shift seed with no flag. Baseline resets on Clear All and at 3:00 AM.</div></div>
+        <div class="tip"><span class="ti">🚌</span><div class="tt"><strong>BusBoard.</strong> After every successful refresh, the hardstand snapshot is published automatically for bus drivers. Flights that just moved from a hardstand to a gate stay visible for a few cycles so drivers see the transition. Terminal flights are never sent.</div></div>
+        <div class="tip"><span class="ti">⏰</span><div class="tt"><strong>Nightly reset.</strong> At 3:00 AM local the saved state is wiped and a fresh briefing is pulled, so each shift day starts clean.</div></div>
+        <div class="tip"><span class="ti">📋</span><div class="tt"><strong>Multi-select toolbar.</strong> Check two or more airline cards to Email or Post to Teams only those flights.</div></div>
+        <div class="tip"><span class="ti">📅</span><div class="tt"><strong>Date lock.</strong> Once a briefing is pulled, the date locks to prevent accidental changes. Tap 🔒 Date to change it.</div></div>
+        <div class="tip"><span class="ti">📡</span><div class="tt"><strong>Intl Ops.</strong> Sends email and a Teams card in one click. The Teams card appears as a flow bot post, not from your personal account.</div></div>
+        <div class="tip"><span class="ti">🚨</span><div class="tt"><strong>Alerts.</strong> Blank fields on Alert I / II show as N/A on the card, so send as soon as you have the runway and callsign and follow up in chat. Header colors are Teams presets — amber (Alert I), red (Alert II), green (Terminated).</div></div>
+        <div class="tip"><span class="ti">📋</span><div class="tt"><strong>Traffic.</strong> Uses the From / To times in the header, so set the window you want (for example 21:00–04:30 for overnight) before sending.</div></div>
+        <div class="tip"><span class="ti">🌙</span><div class="tt"><strong>Dark mode.</strong> Manual toggle — does not follow OS settings. Night shift coordinators may prefer it in the gate environment.</div></div>
+        <div class="tip"><span class="ti">🔧</span><div class="tt"><strong>EQUIP.</strong> Opens the equipment email form in its own tab so you can send a request without leaving your briefing.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section page-break">
+    <div class="sh"><div class="sh-dot" style="background:var(--teal);"></div><h2>7 — Future Enhancements — Roadmap</h2></div>
+    <div class="sb">
+      <p style="font-size:12.5px;color:var(--text2);margin-bottom:16px;">Features and improvements under consideration for future TDOP versions.</p>
+      <div class="road-grid">
+        <div class="rc"><div class="rc-tag" style="color:var(--red);">Operations</div><span class="pri pri-hi">High Priority</span><h3>☀️ SY Ops — Sun Country Summer Bus Ops</h3><p>Dedicated SY Ops button for seasonal summer operations when Sun Country uses bus boarding at D5A/D5B. Would email dfwops@suncountry.com and Menzies SY contacts with a bus-gate scoped briefing card.</p></div>
+        <div class="rc"><div class="rc-tag" style="color:var(--red);">Notifications</div><span class="pri pri-hi">High Priority</span><h3>📲 Teams — All Ops Channel Post</h3><p>Extend the Teams post pattern used by Intl Ops and Bus Needed to a full All Ops Teams post, sending the complete Terminal D briefing to a shared channel for supervisor review without opening email.</p></div>
+        <div class="rc"><div class="rc-tag" style="color:#8A6200;">UX</div><span class="pri pri-med">Medium Priority</span><h3>🕐 Shift Auto-Detection</h3><p>Automatically detect the current shift (Mid / Day / Evening / Night) based on system time and pre-fill the shift time range on load, reducing clicks for coordinators at shift start.</p></div>
+        <div class="rc"><div class="rc-tag" style="color:#8A6200;">Exports</div><span class="pri pri-med">Medium Priority</span><h3>📋 Clipboard Copy for Email HTML</h3><p>A "Copy HTML" option alongside each email send action so the formatted briefing card can be pasted directly into Outlook — useful on devices where mailto: links don't reliably open the mail client.</p></div>
+        <div class="rc"><div class="rc-tag" style="color:#8A6200;">Operations</div><span class="pri pri-med">Medium Priority</span><h3>🚌 D5A / D5B Split Bus Board</h3><p>Update the Bus Board output to show D5A and D5B as two distinct rows, making clear which sub-gate each aircraft is assigned to. Currently both roll up to one D5 entry.</p></div>
+        <div class="rc"><div class="rc-tag" style="color:#1A4A8A;">Future</div><span class="pri pri-lo">Backlog</span><h3>📱 Progressive Web App (PWA) Mode</h3><p>Package TDOP as an installable PWA so coordinators can add it to their device home screen and access it with last-saved state, removing reliance on a browser bookmark.</p></div>
+        <div class="rc"><div class="rc-tag" style="color:#1A4A8A;">Future</div><span class="pri pri-lo">Backlog</span><h3>🕑 Shift History Log</h3><p>A read-only log of briefing sends during the current session — timestamp, action type, and recipient — so coordinators can confirm what was sent and to whom.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sh"><div class="sh-dot" style="background:var(--orange);"></div><h2>8 — Shift Start Checklist</h2></div>
+    <div class="sb">
+      <div class="cl">
+        <div class="cli"><div class="cln">1</div><p><strong>Open TDOP.</strong> Choose <em>Load Saved</em> to continue today's shared briefing or <em>New Briefing</em> to start fresh.</p></div>
+        <div class="cli"><div class="cln">2</div><p><strong>Set the From / To window</strong> in the header. Tap 🔒 Date if the date is locked.</p></div>
+        <div class="cli"><div class="cln">3</div><p><strong>Click ⟳ Refresh.</strong> Wait for the status dot to turn green and the grid to populate.</p></div>
+        <div class="cli"><div class="cln">4</div><p><strong>Enter ETAs / ETDs</strong> — API estimates pre-fill; type over any that differ.</p></div>
+        <div class="cli"><div class="cln">5</div><p><strong>Add notes and pax counts</strong>, and flag cancellations with ✗ or ✈ Gated as needed.</p></div>
+        <div class="cli"><div class="cln">6</div><p><strong>Click 💾 Save</strong> so other machines and the next coordinator see your inputs.</p></div>
+        <div class="cli"><div class="cln">7</div><p><strong>Send briefings</strong> from ✉ Send Report ▾ — All Ops first, then scoped reports.</p></div>
+        <div class="cli"><div class="cln">8</div><p><strong>Monitor during shift</strong> — watch for ⚠ gate/pad change badges; use 🚌 Bus Needed and 🚨 Alerts for live Teams posts.</p></div>
+        <div class="cli"><div class="cln">9</div><p><strong>Use EQUIP</strong> for any ramp equipment issues that arise mid-shift.</p></div>
+        <div class="cli"><div class="cln">10</div><p><strong>End of shift: click 🗑 Clear All</strong> to reset for the incoming coordinator.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sh"><div class="sh-dot" style="background:var(--teal);"></div><h2>9 — How It Is Built (for Admins)</h2></div>
+    <div class="sb" style="padding:0;">
+      <table class="ctbl">
+        <thead><tr><th style="width:190px;">Piece</th><th>What It Does</th></tr></thead>
+        <tbody>
+          <tr><td class="feat">Netlify site (tdop)</td><td>Hosts the TDOP page (index.html) and the guides. Updating the page means replacing the file in the GitHub repo or on Netlify and hard-refreshing the browser (Ctrl+Shift+R).</td></tr>
+          <tr><td class="feat">Cloudflare Worker</td><td>One Worker handles three jobs. It forwards flight-data requests to the airport API and adds the stored API credential, so no password is in the page. It stores the shared briefing state (used by Save, Load and live sync). It stores the BusBoard snapshot. The page points at it through the <code>WORKER_ORIGIN</code> setting at the top of the script.</td></tr>
+          <tr><td class="feat">Worker settings</td><td>A KV namespace bound as <code>TDOP_KV</code>; a text variable <code>UPSTREAM</code> (the airport API host); and a secret <code>UPSTREAM_AUTH</code> (the API credential). Change the credential by updating the secret — no page edit needed.</td></tr>
+          <tr><td class="feat">Power Automate flows</td><td>Separate Teams flows post the cards. <strong>Bus Needed</strong> (receives title, airline, from, to, posted), <strong>Alerts</strong> (one flow for Alert I, II and Terminated, switching on the <code>kind</code> field), <strong>SeeSay</strong> and <strong>Intl Ops</strong>. Each has its own link set near the top of the page script. If a Teams post fails, check that the flow is turned on and its Teams connection has not expired.</td></tr>
+          <tr><td class="feat">Card layouts</td><td>Alert and Bus Needed card layouts live inside each flow (Adaptive Card JSON), so you can change wording or rows without touching the page — just keep the field names (title, airline, from, to, runway, callsign, acType, issue, fob, sob, eta, posted, style, message).</td></tr>
+          <tr><td class="feat">GateGadget pax store</td><td>Pax counts entered in TDOP sync with the shared GateGadget store, so gate-side teams see the same numbers.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="gfooter">
+    TDOP Gate Gadget &nbsp;·&nbsp; V1.0.3 &nbsp;·&nbsp; DFW Terminal D Operations &nbsp;·&nbsp; For Internal Use Only<br>
+    Created by Brad J. Sapit &nbsp;·&nbsp; Gate Gadget Initiative &nbsp;·&nbsp; Reflects features as of November 2026
+  </div>
+
+</div>
+<button class="print-btn no-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+</body>
+</html>
