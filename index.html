@@ -569,6 +569,10 @@ tr.canceled td.cell-intl{color:var(--red) !important}
       <label for="busFromWhere">From Where</label>
       <input type="text" id="busFromWhere" placeholder="e.g. Gate D22, Remote Stand R5…" autocomplete="off" />
     </div>
+    <div class="modal-field">
+      <label for="busToWhere">To Where</label>
+      <input type="text" id="busToWhere" placeholder="e.g. Gate D7, Remote Stand R5…" autocomplete="off" />
+    </div>
     <div id="busNeededStatus" style="font-size:.78rem;color:var(--text-2);min-height:18px;margin-top:4px"></div>
     <div class="modal-actions">
       <button class="btn" style="background:var(--text-3)" onclick="closeBusNeededModal()">Cancel</button>
@@ -4974,6 +4978,7 @@ function exportTrafficWindow() {
 function openBusNeededModal() {
   document.getElementById('busAirline').value = '';
   document.getElementById('busFromWhere').value = '';
+  document.getElementById('busToWhere').value = '';
   document.getElementById('busNeededStatus').textContent = '';
   document.getElementById('busNeededOkBtn').disabled = false;
   document.getElementById('busNeededModal').style.display = 'flex';
@@ -4987,12 +4992,13 @@ function closeBusNeededModal() {
 async function submitBusNeeded() {
   const airline   = document.getElementById('busAirline').value.trim();
   const fromWhere = document.getElementById('busFromWhere').value.trim();
+  const toWhere   = document.getElementById('busToWhere').value.trim();
   const statEl    = document.getElementById('busNeededStatus');
   const okBtn     = document.getElementById('busNeededOkBtn');
 
-  if (!airline || !fromWhere) {
+  if (!airline || !fromWhere || !toWhere) {
     statEl.style.color = 'var(--red)';
-    statEl.textContent = '⚠ Please fill in both fields.';
+    statEl.textContent = '⚠ Please fill in all three fields.';
     return;
   }
 
@@ -5035,7 +5041,7 @@ async function submitBusNeeded() {
 
   // The Power Automate flow builds the Teams card itself from these fields.
   // Sent both flat and under `properties` because the flow's trigger schema nests them there.
-  const fields = { title: 'BUS NEEDED', airline, from: fromWhere };
+  const fields = { title: 'BUS NEEDED', airline, from: fromWhere, to: toWhere, posted: now };
   const payload = { type: 'object', ...fields, properties: { ...fields } };
 
   try {
