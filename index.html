@@ -314,6 +314,8 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <button class="btn btn-seesay" id="btnSeeSay" onclick="triggerSeeSay()">👁 SeeSay</button>
     <button id="btnBusNeeded" class="btn btn-busneeded" onclick="openBusNeededModal()">🚌 Bus Needed</button>
     <button id="btnEquip" class="btn btn-equip" onclick="window.open('equipment_email.html','_blank')" title="Email request to move equipment">🔧 EQUIP</button>
+    <button id="btnBusBoard" class="btn" onclick="publishToBusBoard()" title="Publish hardstand snapshot to BusBoard now">📺 BusBoard</button>
+    <span id="busBoardStatus" style="font-family:var(--mono);font-size:.7rem;color:var(--text-3,#888)"></span>
     <div style="margin-left:auto"></div>
     <div class="btn btn-alerts" id="btnAlerts" style="padding:0;background:#C0392B">
       <button style="background:none;border:none;color:#fff;font-family:var(--sans);font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:8px 13px;cursor:pointer;white-space:nowrap;width:100%" onclick="toggleAlertsDropdown(event)">🚨 Alerts ▾</button>
@@ -2057,6 +2059,8 @@ async function loadOps() {
     document.getElementById('btnIntlOps').disabled = false;
     document.getElementById('btnF9Rons').disabled = false;
     document.getElementById('btnSunCountryAM').disabled = false;
+    // Publish to BusBoard after a manual Refresh as well (auto-refresh already does).
+    publishToBusBoard().catch(err => console.warn('[BusBoard] publish failed:', err));
   } catch(e) {
     setStatus('error', `Failed: ${e.message}`);
   }
