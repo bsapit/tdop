@@ -132,7 +132,7 @@ html,body{font-family:'Montserrat',sans-serif;background:#fff;color:#1C1A2B;font
         <div class="sh"><div class="sh-dot" style="background:#FF5000;"></div><h2>Toolbar Buttons</h2></div>
         <div class="btn-list">
           <div class="br"><span class="pill" style="background:#FF5000;">⟳ Refresh</span><p>Pulls live data for the selected date &amp; shift window. Your first action. Also re-pulls automatically every 5 minutes. 🔒 Date unlocks the date fields.</p></div>
-          <div class="br"><span class="pill" style="background:#1A7A5E;">💾 / ↓</span><p><strong>Save</strong> writes your inputs to the cloud; <strong>Load</strong> restores them. Auto-saves every 30 min and syncs between machines every 10 sec.</p></div>
+          <div class="br"><span class="pill" style="background:#1A7A5E;">💾 / ↓</span><p><strong>Save</strong> writes your inputs to the cloud; <strong>Load</strong> restores them. Entries auto-save ~8 sec after you stop typing and sync to other machines every 10 sec.</p></div>
           <div class="br"><span class="pill" style="background:#FF5000;">✉ All Ops</span><p><em>Send Report ▾</em> menu — full Terminal D briefing email to all ops lists.</p></div>
           <div class="br"><span class="pill" style="background:#41395F;">HS Ops</span><p><em>Send Report ▾</em> — hardstand-only brief to Gate Control / HS leadership.</p></div>
           <div class="br"><span class="pill" style="background:#1A7A5E;">LF Ops</span><p><em>Send Report ▾</em> — Frontier (F9) scoped brief to the Menzies F9 ops team.</p></div>
@@ -189,11 +189,11 @@ html,body{font-family:'Montserrat',sans-serif;background:#fff;color:#1C1A2B;font
         <div>
           <div class="sh"><div class="sh-dot" style="background:#FF5000;"></div><h2>Shift Start Workflow</h2></div>
           <div class="steps">
-            <div class="step"><div class="sn">1</div><p><strong>Open TDOP.</strong> Choose <em>Load Saved</em> to continue today's shared state, or <em>New Briefing</em> to start clean.</p></div>
+            <div class="step"><div class="sn">1</div><p><strong>Open TDOP.</strong> Choose <em>Load Saved</em> to join today's shared state. <em>New Briefing</em> erases it for everyone.</p></div>
             <div class="step"><div class="sn">2</div><p><strong>Set the From / To date &amp; time</strong> in the header. Tap 🔒 Date to unlock a locked date.</p></div>
             <div class="step"><div class="sn">3</div><p><strong>Click ⟳ Refresh.</strong> Status dot turns green; hardstand (left) and terminal (right) cards populate.</p></div>
             <div class="step"><div class="sn">4</div><p><strong>Enter ETAs / ETDs, pax and notes</strong> per leg. ETA/ETD pre-fill from the API; anything you type wins. Check ✗ to cancel a leg.</p></div>
-            <div class="step"><div class="sn">5</div><p><strong>Save</strong> with 💾 when you make key changes (it also auto-saves every 30 min). Other machines pick it up within 10 seconds.</p></div>
+            <div class="step"><div class="sn">5</div><p><strong>Entries save themselves</strong> ~8 sec after you stop typing (💾 forces a save). Other machines pick them up within 10 seconds.</p></div>
             <div class="step"><div class="sn">6</div><p><strong>Send Briefings</strong> from <em>✉ Send Report ▾</em>; use 🚌 Bus Needed, 🚨 Alerts or 👁 SeeSay for live Teams posts.</p></div>
             <div class="step"><div class="sn">7</div><p><strong>End of shift:</strong> click 🗑 Clear All so the incoming coordinator starts clean. The app also resets itself at 3:00 AM.</p></div>
           </div>
@@ -205,7 +205,7 @@ html,body{font-family:'Montserrat',sans-serif;background:#fff;color:#1C1A2B;font
         <div class="sh"><div class="sh-dot" style="background:#F2A900;"></div><h2>Key Features</h2></div>
         <div class="tips">
           <div class="tip"><span class="ti">⚠️</span><div class="tt"><strong>Gate/Pad Changed badge</strong> — amber flag when the API detects a reassignment since the first pull. Hover the highlighted cell to see the original value.</div></div>
-          <div class="tip"><span class="ti">☁️</span><div class="tt"><strong>Cloud save &amp; live sync</strong> — Save / Load use shared cloud storage, so any machine or browser sees the same briefing. Auto-save runs every 30 min and other machines update every 10 sec.</div></div>
+          <div class="tip"><span class="ti">☁️</span><div class="tt"><strong>Cloud save &amp; live sync</strong> — Save / Load use shared cloud storage, so any machine or browser sees the same briefing. Entries auto-save ~8 sec after you stop typing and other machines update every 10 sec.</div></div>
           <div class="tip"><span class="ti">🔄</span><div class="tt"><strong>Auto-refresh</strong> — flight data re-pulls every 5 minutes without losing anything you typed.</div></div>
           <div class="tip"><span class="ti">🚌</span><div class="tt"><strong>BusBoard</strong> — the hardstand snapshot is published automatically after every successful refresh for bus drivers. No button needed.</div></div>
           <div class="tip"><span class="ti">🚨</span><div class="tt"><strong>Alerts</strong> — Alert I and II need at least one field filled; blanks show as N/A on the card. Alert Terminated posts instantly with no form.</div></div>

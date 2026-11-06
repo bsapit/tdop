@@ -1366,11 +1366,19 @@ async function paxBinSync() {
   }
 }
 
-async function kvSave({ silent = false } = {}) {
+// Hash of what other users actually care about (inputs, checks, manual flights, window).
+// Excludes timestamps and the gate-change tracker so unchanged state is never re-written.
+let _kvLastSavedHash = null;
+function _kvHash(st) {
+  return JSON.stringify([st.dateFrom, st.dateTo, st.timeFrom, st.timeTo, st.inputs, st.manualFlights, st.promotedHardstand]);
+}
+
+async function kvSave({ silent = false, onlyIfChanged = false } = {}) {
   if (!briefingData) {
     if (!silent) setStatus('error','Refresh a briefing first before saving.');
-    return;
+    return false;
   }
+  if (onlyIfChanged && _kvHash(kvBuildState()) === _kvLastSavedHash) return false;
   const saveBtn = document.getElementById('btnSave');
   if (!silent && saveBtn) { saveBtn.textContent = '⌛ Saving…'; saveBtn.disabled = true; }
   try {
@@ -1381,6 +1389,7 @@ async function kvSave({ silent = false } = {}) {
       body: JSON.stringify(state),
     });
     _kvLastSavedAt = state.savedAt;   // track what we just saved
+    _kvLastSavedHash = _kvHash(state);
     const t = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
     const el  = document.getElementById('saveIndicator');
     const clr = document.getElementById('btnClearState');
@@ -1388,17 +1397,30 @@ async function kvSave({ silent = false } = {}) {
     if (clr) clr.style.display = '';
     if (!silent && saveBtn) { saveBtn.textContent = '✓ Saved!'; setTimeout(() => { saveBtn.textContent = '💾 Save'; saveBtn.disabled = false; }, 2500); }
     paxBinSync(); // fire-and-forget PAX sync to JSONbin for BusBoard
+    return true;
   } catch(e) {
     console.warn('TDOP: KV save failed', e.message);
     if (!silent && saveBtn) { saveBtn.textContent = '💾 Save'; saveBtn.disabled = false; }
     if (!silent) setStatus('error', 'Save failed — check Worker connection.');
+    return false;
   }
 }
 
 function kvScheduleSave() {
-  // Auto-save disabled — use the 💾 Save button to save manually.
-  // This prevents burning through the KV free tier write limit.
+  // Saves ~8s after the last edit so other users see ETAs, notes, PAX and
+  // cancellations without anyone pressing 💾 Save. Writes are skipped when
+  // nothing changed (see _kvHash), which keeps KV writes low.
+  if (typeof _applyingSyncedInputs !== 'undefined' && _applyingSyncedInputs) return;
+  if (!briefingData) return;
+  clearTimeout(_kvSaveTimer);
+  _kvSaveTimer = setTimeout(() => kvSave({ silent: true, onlyIfChanged: true }), 8000);
 }
+document.addEventListener('input', e => {
+  if (e.target.matches && e.target.matches('input.cell-eta, input.cell-note-input, input.cell-pax-input')) kvScheduleSave();
+});
+document.addEventListener('change', e => {
+  if (e.target.matches && e.target.matches('input.cancel-chk')) kvScheduleSave();
+});
 
 async function kvLoad() {
   try {
@@ -1541,6 +1563,7 @@ let _startupState = null; // holds KV state if a saved briefing was found
 })();
 
 async function startupNew() {
+  if (_startupState && !confirm('A saved briefing already exists' + (_startupState.dateFrom ? ' for ' + _startupState.dateFrom : '') + '.\n\nStarting a New Briefing ERASES it for everyone using TDOP.\n\nPress Cancel and choose Load Saved to join the shared briefing instead.\n\nErase it and start new?')) return;
   document.getElementById('startupModal').style.display = 'none';
   _startupState = null;
   _cleanPull    = true;
@@ -1586,7 +1609,8 @@ function startAutoSave() {
   if (_kvAutoSaveTimer) clearInterval(_kvAutoSaveTimer);
   _kvAutoSaveTimer = setInterval(async () => {
     if (!briefingData) return;
-    await kvSave({ silent: true });
+    const saved = await kvSave({ silent: true, onlyIfChanged: true });
+    if (!saved) return;
     const t = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
     const el = document.getElementById('saveIndicator');
     if (el) { el.textContent = `💾 Auto-saved ${t}`; el.style.display = ''; }
@@ -1725,10 +1749,8 @@ function startLiveSync() {
   _kvSyncTimer = setInterval(async () => {
     if (!briefingData) return;
 
-    // Don't sync if we have no baseline timestamp.
-    // _kvLastSavedAt is seeded from the loaded state on startup, so a
-    // second user who auto-loaded today's state can still receive updates.
-    if (!_kvLastSavedAt) return;
+    // A user who started a New Briefing has no baseline timestamp yet; treat it
+    // as 'never saved' so they still receive other users' saves.
 
     const remote = await kvLoad();
     if (!remote || !remote.savedAt || !remote.dateFrom) return;
@@ -1738,11 +1760,12 @@ function startLiveSync() {
     if (remote.dateFrom !== currentDate) return;
 
     const remoteTime = new Date(remote.savedAt).getTime();
-    const localTime  = new Date(_kvLastSavedAt).getTime();
+    const localTime  = _kvLastSavedAt ? new Date(_kvLastSavedAt).getTime() : 0;
 
     if (remoteTime > localTime + 2000) {  // 2s grace to avoid self-trigger
       _kvLastSavedAt = remote.savedAt;
       applySyncedInputs(remote.inputs || {});
+      _kvLastSavedHash = _kvHash(kvBuildState());
       showSyncBadge(remote.savedAt);
     }
   }, 10 * 1000); // every 10 seconds
