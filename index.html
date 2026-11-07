@@ -76,8 +76,6 @@ html,body{max-width:100%;overflow-x:hidden}
 .btn-seesay{background:#1565C0}
 .btn-busneeded{background:var(--teal);color:#fff;border:none}
 .btn-equip{background:var(--gold);color:#1a1a1a;border:none}
-.btn-busboard{background:#1A7A5E;color:#fff;border:none}
-.btn-busboard:hover:not(:disabled){filter:brightness(1.1)}
 .btn-alerts{background:#C0392B;color:#fff;position:relative}
 .btn-alerts-dropdown{display:none;position:absolute;top:calc(100% + 4px);right:0;min-width:130px;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:500;overflow:hidden}
 .btn-alerts-dropdown.open{display:block}
@@ -311,13 +309,12 @@ tr.canceled td.cell-intl{color:var(--red) !important}
         <button id="btnF9Rons" onclick="exportF9Rons()" disabled>F9 RONs</button>
         <button id="btnSunCountryAM" onclick="exportSunCountryAM()" disabled>Sun Country AM Lineup</button>
         <button onclick="window.open('NightBrief.html','_blank')" title="Open NightBrief">NightBrief</button>
+        <button onclick="window.open('https://ambriefing.netlify.app','_blank','noopener')" title="Open AM Briefing">AM Briefing</button>
       </div>
     </div>
     <button class="btn btn-seesay" id="btnSeeSay" onclick="triggerSeeSay()">👁 SeeSay</button>
     <button id="btnBusNeeded" class="btn btn-busneeded" onclick="openBusNeededModal()">🚌 Bus Needed</button>
     <button id="btnEquip" class="btn btn-equip" onclick="window.open('equipment_email.html','_blank')" title="Email request to move equipment">🔧 EQUIP</button>
-    <button id="btnBusBoard" class="btn btn-busboard" onclick="publishToBusBoard()" title="Publish hardstand snapshot to BusBoard now">📺 BusBoard</button>
-    <span id="busBoardStatus" style="font-family:var(--mono);font-size:.7rem;color:var(--text-3,#888)"></span>
     <div style="margin-left:auto"></div>
     <div class="btn btn-alerts" id="btnAlerts" style="padding:0;background:#C0392B">
       <button style="background:none;border:none;color:#fff;font-family:var(--sans);font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:8px 13px;cursor:pointer;white-space:nowrap;width:100%" onclick="toggleAlertsDropdown(event)">🚨 Alerts ▾</button>
@@ -1426,29 +1423,6 @@ document.addEventListener('change', e => {
   if (e.target.matches && e.target.matches('input.cancel-chk')) kvScheduleSave();
 });
 
-// ── AUTO-PUBLISH TO BUSBOARD ON EDIT ─────────────────────────────────────────
-// A few seconds after the last ETA / note / PAX / cancel edit, push a fresh
-// snapshot so BusBoard picks it up without waiting for the 5-minute refresh.
-// onlyIfChanged skips the send when the payload is identical to the last one.
-let _bbPubTimer = null;
-function scheduleBusBoardPublish() {
-  if (typeof _applyingSyncedInputs !== 'undefined' && _applyingSyncedInputs) return;
-  if (!briefingData) return;
-  clearTimeout(_bbPubTimer);
-  _bbPubTimer = setTimeout(() => {
-    publishToBusBoard({ onlyIfChanged: true }).catch(err => console.warn('[BusBoard] auto-publish failed:', err));
-  }, 4000);
-}
-document.addEventListener('input', e => {
-  if (e.target.matches && e.target.matches('input.cell-eta, input.cell-note-input, input.cell-pax-input')) scheduleBusBoardPublish();
-});
-document.addEventListener('change', e => {
-  if (e.target.matches && e.target.matches('input.cancel-chk, input.cell-eta, input.cell-note-input, input.cell-pax-input')) scheduleBusBoardPublish();
-});
-document.addEventListener('click', e => {
-  if (e.target.closest && e.target.closest('.al-gated-btn')) scheduleBusBoardPublish();
-});
-
 async function kvLoad() {
   try {
     const r = await fetch(KV_URL);
@@ -2084,8 +2058,6 @@ async function loadOps() {
     document.getElementById('btnIntlOps').disabled = false;
     document.getElementById('btnF9Rons').disabled = false;
     document.getElementById('btnSunCountryAM').disabled = false;
-    // Publish to BusBoard after a manual Refresh as well (auto-refresh already does).
-    publishToBusBoard().catch(err => console.warn('[BusBoard] publish failed:', err));
   } catch(e) {
     setStatus('error', `Failed: ${e.message}`);
   }
@@ -3269,8 +3241,7 @@ function getSelectedHsCardData() {
 // The Worker's /busboard POST route is unauthed (matches /state pattern),
 // so no Authorization header is sent.
 
-// BusBoard snapshot is stored by the GateGadget Netlify function (same host as PAX counts).
-const BUSBOARD_URL = 'https://gategadgetdata.netlify.app/api/busboard';
+const BUSBOARD_URL = WORKER_ORIGIN + '/busboard';
 
 function _bbReadLive(id) {
   const el = document.getElementById(id);
@@ -3365,10 +3336,9 @@ function _bbBuildTurn(e) {
   };
 }
 
-let _bbLastHash = null;
-async function publishToBusBoard({ onlyIfChanged = false } = {}) {
+async function publishToBusBoard() {
   if (!briefingData || !Array.isArray(briefingData.hardstand)) {
-    if (!onlyIfChanged) _bbSetStatus('No briefing loaded', 'err');
+    _bbSetStatus('No briefing loaded', 'err');
     return;
   }
 
@@ -3399,13 +3369,6 @@ async function publishToBusBoard({ onlyIfChanged = false } = {}) {
     recently_left_hardstand: Object.values(_hsRecentlyLeft)
   };
 
-  // Skip the network call when nothing BusBoard shows has changed.
-  const _bbHash = JSON.stringify(payload);
-  if (onlyIfChanged && _bbHash === _bbLastHash) {
-    if (btn) btn.disabled = false;
-    return;
-  }
-
   try {
     const res = await fetch(BUSBOARD_URL, {
       method:  'POST',
@@ -3419,7 +3382,6 @@ async function publishToBusBoard({ onlyIfChanged = false } = {}) {
     }
 
     const data = await res.json();
-    _bbLastHash = _bbHash;
     const t = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     _bbSetStatus(`✓ Published at ${t} (seq ${data.sequence})`, 'ok');
   } catch (err) {
