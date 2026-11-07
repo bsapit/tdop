@@ -76,6 +76,8 @@ html,body{max-width:100%;overflow-x:hidden}
 .btn-seesay{background:#1565C0}
 .btn-busneeded{background:var(--teal);color:#fff;border:none}
 .btn-equip{background:var(--gold);color:#1a1a1a;border:none}
+.btn-busboard{background:#1A7A5E;color:#fff;border:none}
+.btn-busboard:hover:not(:disabled){filter:brightness(1.1)}
 .btn-alerts{background:#C0392B;color:#fff;position:relative}
 .btn-alerts-dropdown{display:none;position:absolute;top:calc(100% + 4px);right:0;min-width:130px;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:500;overflow:hidden}
 .btn-alerts-dropdown.open{display:block}
@@ -314,7 +316,7 @@ tr.canceled td.cell-intl{color:var(--red) !important}
     <button class="btn btn-seesay" id="btnSeeSay" onclick="triggerSeeSay()">👁 SeeSay</button>
     <button id="btnBusNeeded" class="btn btn-busneeded" onclick="openBusNeededModal()">🚌 Bus Needed</button>
     <button id="btnEquip" class="btn btn-equip" onclick="window.open('equipment_email.html','_blank')" title="Email request to move equipment">🔧 EQUIP</button>
-    <button id="btnBusBoard" class="btn" onclick="publishToBusBoard()" title="Publish hardstand snapshot to BusBoard now">📺 BusBoard</button>
+    <button id="btnBusBoard" class="btn btn-busboard" onclick="publishToBusBoard()" title="Publish hardstand snapshot to BusBoard now">📺 BusBoard</button>
     <span id="busBoardStatus" style="font-family:var(--mono);font-size:.7rem;color:var(--text-3,#888)"></span>
     <div style="margin-left:auto"></div>
     <div class="btn btn-alerts" id="btnAlerts" style="padding:0;background:#C0392B">
