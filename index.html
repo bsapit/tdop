@@ -3241,14 +3241,16 @@ function getSelectedHsCardData() {
 }
 
 // ── BUSBOARD PUBLISH ─────────────────────────────────────────────────────────
-// Publishes the current HARDSTAND snapshot to the BusBoard Worker route.
+// Publishes the current HARDSTAND snapshot to the BusBoard Netlify function.
 // BusBoard is hardstand-only by design — terminal turns are not sent.
 // Reads live DOM state (ETA/ETD/PAX/canceled/gated) the same way the
 // Teams / Email exports do, so published data matches what ops sees.
 // The Worker's /busboard POST route is unauthed (matches /state pattern),
 // so no Authorization header is sent.
 
-const BUSBOARD_URL = WORKER_ORIGIN + '/busboard';
+// BusBoard reads from the GateGadget Netlify function (same host as pax counts),
+// which stamps sequence + published_at. It does NOT read from the Cloudflare Worker.
+const BUSBOARD_URL = 'https://gategadgetdata.netlify.app/api/busboard';
 
 function _bbReadLive(id) {
   const el = document.getElementById(id);
