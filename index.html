@@ -1426,6 +1426,29 @@ document.addEventListener('change', e => {
   if (e.target.matches && e.target.matches('input.cancel-chk')) kvScheduleSave();
 });
 
+// ── AUTO-PUBLISH TO BUSBOARD ON EDIT ─────────────────────────────────────────
+// A few seconds after the last ETA / note / PAX / cancel edit, push a fresh
+// snapshot so BusBoard picks it up without waiting for the 5-minute refresh.
+// onlyIfChanged skips the send when the payload is identical to the last one.
+let _bbPubTimer = null;
+function scheduleBusBoardPublish() {
+  if (typeof _applyingSyncedInputs !== 'undefined' && _applyingSyncedInputs) return;
+  if (!briefingData) return;
+  clearTimeout(_bbPubTimer);
+  _bbPubTimer = setTimeout(() => {
+    publishToBusBoard({ onlyIfChanged: true }).catch(err => console.warn('[BusBoard] auto-publish failed:', err));
+  }, 4000);
+}
+document.addEventListener('input', e => {
+  if (e.target.matches && e.target.matches('input.cell-eta, input.cell-note-input, input.cell-pax-input')) scheduleBusBoardPublish();
+});
+document.addEventListener('change', e => {
+  if (e.target.matches && e.target.matches('input.cancel-chk, input.cell-eta, input.cell-note-input, input.cell-pax-input')) scheduleBusBoardPublish();
+});
+document.addEventListener('click', e => {
+  if (e.target.closest && e.target.closest('.al-gated-btn')) scheduleBusBoardPublish();
+});
+
 async function kvLoad() {
   try {
     const r = await fetch(KV_URL);
@@ -3342,9 +3365,10 @@ function _bbBuildTurn(e) {
   };
 }
 
-async function publishToBusBoard() {
+let _bbLastHash = null;
+async function publishToBusBoard({ onlyIfChanged = false } = {}) {
   if (!briefingData || !Array.isArray(briefingData.hardstand)) {
-    _bbSetStatus('No briefing loaded', 'err');
+    if (!onlyIfChanged) _bbSetStatus('No briefing loaded', 'err');
     return;
   }
 
@@ -3375,6 +3399,13 @@ async function publishToBusBoard() {
     recently_left_hardstand: Object.values(_hsRecentlyLeft)
   };
 
+  // Skip the network call when nothing BusBoard shows has changed.
+  const _bbHash = JSON.stringify(payload);
+  if (onlyIfChanged && _bbHash === _bbLastHash) {
+    if (btn) btn.disabled = false;
+    return;
+  }
+
   try {
     const res = await fetch(BUSBOARD_URL, {
       method:  'POST',
@@ -3388,6 +3419,7 @@ async function publishToBusBoard() {
     }
 
     const data = await res.json();
+    _bbLastHash = _bbHash;
     const t = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     _bbSetStatus(`✓ Published at ${t} (seq ${data.sequence})`, 'ok');
   } catch (err) {
