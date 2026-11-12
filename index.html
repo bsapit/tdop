@@ -3412,81 +3412,82 @@ function _bbSetStatus(msg, kind) {
 }
 
 function buildTeamsAdaptiveCard(turns) {
+  // Returns a Teams "message" envelope carrying a native Adaptive Card, which is
+  // what the Power Automate "Post card in a chat or channel" action expects
+  // (card = triggerBody().attachments[0].content, type must be AdaptiveCard).
   const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   const dateStr = document.getElementById('dateFrom')?.value || '';
   const dateLabel = dateStr
     ? new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
     : '';
 
-  const row = (label, value) =>
-    `<tr><td style="padding:3px 10px 3px 0;color:#8A8A96;font-size:13px;white-space:nowrap;vertical-align:top">${label}</td><td style="padding:3px 0;font-size:13px;color:#1C1C1E">${value}</td></tr>`;
+  const body = [
+    {
+      type: 'Container',
+      style: 'attention',
+      bleed: true,
+      items: [
+        { type: 'TextBlock', text: '🚌 HARDSTAND OPERATIONS', weight: 'Bolder', size: 'Medium', wrap: true },
+        { type: 'TextBlock', text: `DFW Terminal D · ${dateLabel} · Posted ${now}`, isSubtle: true, size: 'Small', spacing: 'None', wrap: true }
+      ]
+    }
+  ];
 
-  const turnBlocks = turns.map((t, idx) => {
+  turns.forEach((t, idx) => {
     const arrGate = t.arr?.gate || '';
     const depGate = t.dep?.gate || '';
-    const gatedBadge = t.is_gated ? ' &nbsp;<strong style="color:#1A7A5E">✈ GATED</strong>' : '';
-
-    let rows = '';
-    // Show separate arr/dep gates when they differ, otherwise a single Gate row
+    const facts = [];
     if (arrGate && depGate && arrGate !== depGate) {
-      rows += row('Gate (Arr)', `<strong>${arrGate}</strong>`);
-      rows += row('Gate (Dep)', `<strong>${depGate}</strong>`);
+      facts.push({ title: 'Gate (Arr)', value: String(arrGate) });
+      facts.push({ title: 'Gate (Dep)', value: String(depGate) });
     } else {
-      rows += row('Gate', `<strong>${arrGate || depGate || '—'}</strong>`);
+      facts.push({ title: 'Gate', value: String(arrGate || depGate || '—') });
     }
-    const pad = t.arr?.stand || t.dep?.stand || t.stand || '—';
-    rows += row('Stand', pad);
+    facts.push({ title: 'Stand', value: String(t.arr?.stand || t.dep?.stand || t.stand || '—') });
 
     if (t.arr) {
-      let timeDisplay;
-      if (t.arr.canceled) {
-        timeDisplay = `<span style="text-decoration:line-through;color:#C0392B">STA ${t.arr.sta}</span> <span style="color:#C0392B;font-weight:700">CANCELED</span>`;
-      } else if (t.arr.eta) {
-        timeDisplay = `STA ${t.arr.sta} &nbsp;→&nbsp; <strong>ETA ${t.arr.eta}</strong>`;
-      } else {
-        timeDisplay = `STA ${t.arr.sta}`;
-      }
-      rows += row('Arrival', `${t.arr.flight} / ${t.arr.dest || '—'} &nbsp; ${timeDisplay}`);
-      if (t.arr.pax && !t.arr.canceled) rows += row('PAX (Arr)', t.arr.pax);
-      if (t.arr.note) rows += row('Note (Arr)', `<em style="color:#666">${escapeHtml(t.arr.note)}</em>`);
+      const time = t.arr.canceled ? `STA ${t.arr.sta} — CANCELED`
+                 : t.arr.eta ? `STA ${t.arr.sta} → ETA ${t.arr.eta}` : `STA ${t.arr.sta}`;
+      facts.push({ title: 'Arrival', value: `${t.arr.flight} / ${t.arr.dest || '—'}  ${time}` });
+      if (t.arr.pax && !t.arr.canceled) facts.push({ title: 'PAX (Arr)', value: String(t.arr.pax) });
+      if (t.arr.note) facts.push({ title: 'Note (Arr)', value: String(t.arr.note) });
     }
-
     if (t.dep) {
-      let timeDisplay;
-      if (t.dep.canceled) {
-        timeDisplay = `<span style="text-decoration:line-through;color:#C0392B">STD ${t.dep.std}</span> <span style="color:#C0392B;font-weight:700">CANCELED</span>`;
-      } else if (t.dep.etd) {
-        timeDisplay = `STD ${t.dep.std} &nbsp;→&nbsp; <strong>ETD ${t.dep.etd}</strong>`;
-      } else {
-        timeDisplay = `STD ${t.dep.std}`;
-      }
-      rows += row('Departure', `${t.dep.flight} / ${t.dep.dest || '—'} &nbsp; ${timeDisplay}`);
-      if (t.dep.pax && !t.dep.canceled) rows += row('PAX (Dep)', t.dep.pax);
-      if (t.dep.note) rows += row('Note (Dep)', `<em style="color:#666">${escapeHtml(t.dep.note)}</em>`);
+      const time = t.dep.canceled ? `STD ${t.dep.std} — CANCELED`
+                 : t.dep.etd ? `STD ${t.dep.std} → ETD ${t.dep.etd}` : `STD ${t.dep.std}`;
+      facts.push({ title: 'Departure', value: `${t.dep.flight} / ${t.dep.dest || '—'}  ${time}` });
+      if (t.dep.pax && !t.dep.canceled) facts.push({ title: 'PAX (Dep)', value: String(t.dep.pax) });
+      if (t.dep.note) facts.push({ title: 'Note (Dep)', value: String(t.dep.note) });
     }
 
-    const divider = idx > 0 ? `<div style="border-top:1px solid #EEEEEE;margin:10px 0"></div>` : '';
-    return `${divider}
-      <div style="margin-bottom:4px">
-        <span style="font-size:15px;font-weight:700;color:#1C1C1E">${t.airline}</span>${gatedBadge}
-      </div>
-      <table cellpadding="0" cellspacing="0" border="0">${rows}</table>`;
-  }).join('');
+    body.push({
+      type: 'Container',
+      separator: idx > 0,
+      spacing: 'Medium',
+      items: [
+        { type: 'TextBlock', text: `${t.airline || ''}${t.is_gated ? '  ✈ GATED' : ''}`, weight: 'Bolder', wrap: true },
+        { type: 'FactSet', facts }
+      ]
+    });
+  });
 
-  const html = `<div style="font-family:Segoe UI,Arial,sans-serif;max-width:480px">
-    <div style="background:#FF5000;color:#fff;padding:8px 12px;border-radius:6px 6px 0 0;margin-bottom:0">
-      <div style="font-size:14px;font-weight:700;letter-spacing:.04em">🚌 HARDSTAND OPERATIONS</div>
-      <div style="font-size:11px;opacity:.85;margin-top:2px">DFW Terminal D &nbsp;·&nbsp; ${dateLabel} &nbsp;·&nbsp; Posted ${now}</div>
-    </div>
-    <div style="border:1px solid #EEEEEE;border-top:none;border-radius:0 0 6px 6px;padding:12px 14px;background:#fff">
-      ${turnBlocks}
-      <div style="margin-top:12px;padding-top:8px;border-top:1px solid #EEEEEE;font-size:11px;color:#AAAAAA">
-        Posted from TDOP · DFW Terminal D Operations
-      </div>
-    </div>
-  </div>`;
+  body.push({ type: 'TextBlock', text: 'Posted from TDOP · DFW Terminal D Operations', isSubtle: true, size: 'Small', spacing: 'Medium', wrap: true });
 
-  return { text: html };
+  return {
+    type: 'message',
+    attachments: [
+      {
+        contentType: 'application/vnd.microsoft.card.adaptive',
+        contentUrl: null,
+        content: {
+          $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+          type: 'AdaptiveCard',
+          version: '1.4',
+          body
+        }
+      }
+    ]
+  };
 }
 
 function showTeamsDestPicker() {
