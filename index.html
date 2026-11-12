@@ -560,6 +560,31 @@ tr.canceled td.cell-intl{color:var(--red) !important}
   </div>
 </div>
 
+<!-- ── TRAFFIC TIME RANGE MODAL ── -->
+<div class="modal-backdrop" id="trafficModal" style="display:none" onclick="if(event.target===this)closeTrafficModal()">
+  <div class="modal-box" style="width:340px">
+    <h3>📋 Traffic — Time Range</h3>
+    <p style="font-size:.78rem;color:var(--text-2);margin-bottom:12px">Flights arriving in this window, plus any flight still waiting on its tow-on.</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn" type="button" style="background:var(--text-3);font-size:.72rem;padding:5px 10px" onclick="setTrafficPreset('04:30','14:30')">AM</button>
+      <button class="btn" type="button" style="background:var(--text-3);font-size:.72rem;padding:5px 10px" onclick="setTrafficPreset('14:00','23:59')">PM</button>
+      <button class="btn" type="button" style="background:var(--text-3);font-size:.72rem;padding:5px 10px" onclick="setTrafficPreset('21:00','04:30')">O/N</button>
+    </div>
+    <div class="modal-field">
+      <label for="trafficFrom">From</label>
+      <input type="time" id="trafficFrom" />
+    </div>
+    <div class="modal-field">
+      <label for="trafficTo">To</label>
+      <input type="time" id="trafficTo" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn" style="background:var(--text-3)" onclick="closeTrafficModal()">Cancel</button>
+      <button class="btn" style="background:var(--purple)" onclick="confirmTrafficModal()">Generate</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── BUS NEEDED MODAL ── -->
 <div class="modal-backdrop" id="busNeededModal" style="display:none" onclick="if(event.target===this)closeBusNeededModal()">
   <div class="modal-box">
@@ -4891,13 +4916,48 @@ function getTowInfo(e) {
 
 
 
+// True while a flight has a tow plan whose tow-on time hasn't passed yet and the
+// flight has already arrived (so it is on the ground, idle or about to tow).
+function towStillPending(e) {
+  if (!getTowInfo(e) || !e.tow2StartTime) return false;
+  const towOn = new Date(String(e.tow2StartTime).slice(0, 16));   // airport-local wall time
+  if (isNaN(towOn)) return false;
+  const now = new Date();
+  if (towOn <= now) return false;                                 // tow-on time expired
+  const arrIso = e.arrTimeIso ? new Date(String(e.arrTimeIso).slice(0, 16)) : null;
+  if (arrIso && !isNaN(arrIso) && arrIso > now) return false;     // hasn't arrived yet
+  return true;
+}
+
 const TRAFFIC_CFG = { accent: '#F2A900', accentDk: '#B07800', headBg: '#FFF8E0', altBg: '#FFFBF0' };
 
+// Traffic opens a From/To pop-up; the range chosen there is used for this report
+// only (it is independent of the page's own time range). Last-used range is remembered.
+let _trafficLast = null;
 function exportTrafficWindow() {
   if (!briefingData) return;
+  const f = _trafficLast?.from || document.getElementById('timeFrom')?.value || '04:30';
+  const t = _trafficLast?.to   || document.getElementById('timeTo')?.value   || '23:59';
+  document.getElementById('trafficFrom').value = f;
+  document.getElementById('trafficTo').value   = t;
+  document.getElementById('trafficModal').style.display = 'flex';
+}
+function closeTrafficModal() { document.getElementById('trafficModal').style.display = 'none'; }
+function setTrafficPreset(f, t) {
+  document.getElementById('trafficFrom').value = f;
+  document.getElementById('trafficTo').value   = t;
+}
+function confirmTrafficModal() {
+  const f = document.getElementById('trafficFrom').value;
+  const t = document.getElementById('trafficTo').value;
+  if (!f || !t) return;
+  _trafficLast = { from: f, to: t };
+  closeTrafficModal();
+  runTrafficExport(f, t);
+}
 
-  const winFrom = document.getElementById('timeFrom')?.value || '00:00';
-  const winTo   = document.getElementById('timeTo')?.value   || '23:59';
+function runTrafficExport(winFrom, winTo) {
+  if (!briefingData) return;
   const fromM   = toMins(winFrom);
   const toM     = toMins(winTo);
   const wraps   = toM < fromM; // window crosses midnight
@@ -4924,7 +4984,9 @@ function exportTrafficWindow() {
   [...briefingData.terminal, ...briefingData.hardstand].forEach(e => {
     if (!e.arrFlight || seen.has(e.arrFlight)) return;
     if (getChk(`cancel_${e.iata}_${e.arrFlight}`)) return;
-    if (!inWindow(bestArrTime(e))) return;
+    // Persist flights that have already arrived and are idling between tow-off and
+    // tow-on: they stay on the list until the tow-on time has passed.
+    if (!inWindow(bestArrTime(e)) && !towStillPending(e)) return;
     seen.add(e.arrFlight);
     arrivals.push(e);
   });
