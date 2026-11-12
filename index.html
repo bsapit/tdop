@@ -3412,6 +3412,16 @@ function _bbSetStatus(msg, kind) {
                      'var(--text-3, #888)';
 }
 
+const TEAMS_AIRLINE_COLOR_BANNER = true;
+function solidPngDataUri(hex) {
+  // 1x1 PNG of a single colour, as a data: URI (used as a card container background).
+  const c = document.createElement('canvas');
+  c.width = 1; c.height = 1;
+  const x = c.getContext('2d');
+  x.fillStyle = hex; x.fillRect(0, 0, 1, 1);
+  return c.toDataURL('image/png');
+}
+
 function buildTeamsAdaptiveCard(turns) {
   // Teams "message" envelope carrying an Adaptive Card. Layout is ColumnSet rows
   // (two short lines per flight leg) so it stays readable in a narrow chat pane.
@@ -3454,19 +3464,23 @@ function buildTeamsAdaptiveCard(turns) {
     return c;
   };
 
-  const body = [
-    {
-      type: 'Container', style: 'emphasis',
-      items: [tb('DFW Hardstand Operations — F-Hardstand', { size: 'Default', weight: 'Bolder' })]
-    }
-  ];
+  const body = [];
 
   turns.forEach(t => {
     const banner = `${t.airline || t.iata || ''}${t.gate_changed ? '  ⚠ Gate/Pad Changed' : ''}${t.is_gated ? '  ✈ GATED' : ''}`;
-    body.push({
-      type: 'Container', style: 'emphasis', spacing: 'Small',
-      items: [tb(banner, { weight: 'Bolder', color: t.gate_changed ? 'Warning' : 'Default' })]
-    });
+    // Banner uses the airline's own hex colour (same AIRLINE_COLORS as the app cards).
+    // Adaptive Cards can't set arbitrary hex on text/containers, so the colour is sent
+    // as a 1x1 PNG background image; text is Light/Dark by contrast. If Teams doesn't
+    // show the colour, set TEAMS_AIRLINE_COLOR_BANNER = false to go back to a plain banner.
+    const hex = AIRLINE_COLORS[t.iata] || '#41395F';
+    const useColor = TEAMS_AIRLINE_COLOR_BANNER && /^#[0-9a-f]{6}$/i.test(hex);
+    const bannerCont = { type: 'Container', spacing: 'Small', items: [tb(banner, {
+      size: 'Medium', weight: 'Bolder',
+      color: useColor ? (contrastColor(hex) === '#FFFFFF' ? 'Light' : 'Dark') : (t.gate_changed ? 'Warning' : 'Default')
+    })] };
+    if (useColor) bannerCont.backgroundImage = { url: solidPngDataUri(hex), fillMode: 'Cover' };
+    else bannerCont.style = 'emphasis';
+    body.push(bannerCont);
     if (t.arr) body.push(legBlock('ARR', t.arr, false));
     if (t.dep) body.push(legBlock('DEP', t.dep, false));
   });
