@@ -3413,46 +3413,50 @@ function _bbSetStatus(msg, kind) {
 }
 
 function buildTeamsAdaptiveCard(turns) {
-  // Teams "message" envelope carrying an Adaptive Card (v1.5 Table) styled like
-  // the F-Hardstand export: title bar, airline banner, bordered table, footer.
+  // Teams "message" envelope carrying an Adaptive Card. Layout is ColumnSet rows
+  // (two short lines per flight leg) so it stays readable in a narrow chat pane.
   // The Power Automate "Post card in a chat or channel" action's Adaptive Card
   // field must be the expression: triggerBody()?['attachments']?[0]?['content']
   // NOTE: the flow's trigger schema requires weight AND isSubtle on every
-  // TextBlock, so tb() always sets both.
+  // TextBlock, so tb() always sets both. Do not use Table (schema mismatch).
   const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
   const tb = (text, o = {}) => ({
     type: 'TextBlock', text: String(text), size: 'Small', weight: 'Default', isSubtle: false, wrap: true, ...o
   });
-  const cell = (text, o = {}) => ({ type: 'TableCell', items: [tb(text, o)] });
-  const hdr = (t) => cell(t, { weight: 'Bolder' });
-  const COLS = ['Flight', 'City', 'SKD', 'ETA/ETD', 'Gate', 'Stand', 'PAX', 'Type'];
+  const col = (text, width, o = {}) => ({ type: 'Column', width, items: [tb(text, o)] });
+  const set = (columns, o = {}) => ({ type: 'ColumnSet', spacing: 'None', columns, ...o });
 
-  const legRow = (kind, leg) => {
+  const legBlock = (kind, leg, emphasis) => {
     const isArr = kind === 'ARR';
     const label = isArr ? 'STA' : 'STD';
     const sched = isArr ? leg.sta : leg.std;
     const est   = isArr ? leg.eta : leg.etd;
     const intl  = INTL_AIRPORTS.has((leg.dest || '').toUpperCase());
     const cx    = !!leg.canceled;
-    return {
-      type: 'TableRow',
-      cells: [
-        cell(leg.flight, { weight: 'Bolder', color: cx ? 'Attention' : 'Default' }),
-        cell(leg.dest || '—'),
-        cell(cx ? `${label} ${sched || '—'} CXL` : `${label} ${sched || '—'}`, { weight: 'Bolder', color: cx ? 'Attention' : 'Good' }),
-        cell(est || '——', { weight: est ? 'Bolder' : 'Default', color: est ? 'Good' : 'Default' }),
-        cell(leg.gate || '—', { weight: 'Bolder', color: 'Attention' }),
-        cell(leg.stand || '—'),
-        cell(leg.pax || '—'),
-        cell(intl ? 'INTL' : 'DOM', { weight: 'Bolder', color: intl ? 'Attention' : 'Accent' })
-      ]
-    };
+    const items = [
+      set([
+        col(`${kind} ${leg.flight}`, 'stretch', { weight: 'Bolder', color: cx ? 'Attention' : 'Default' }),
+        col(leg.dest || '—', 'stretch'),
+        col(cx ? `${label} ${sched || '—'} CXL` : `${label} ${sched || '—'}`, 'stretch', { weight: 'Bolder', color: cx ? 'Attention' : 'Good' }),
+        col(est ? `${isArr ? 'ETA' : 'ETD'} ${est}` : `${isArr ? 'ETA' : 'ETD'} ——`, 'stretch', { weight: est ? 'Bolder' : 'Default', color: est ? 'Good' : 'Default' })
+      ]),
+      set([
+        col(`Gate ${leg.gate || '—'}`, 'stretch', { weight: 'Bolder', color: 'Attention' }),
+        col(`Stand ${leg.stand || '—'}`, 'stretch'),
+        col(`PAX ${leg.pax || '—'}`, 'stretch'),
+        col(intl ? 'INTL' : 'DOM', 'stretch', { weight: 'Bolder', color: intl ? 'Attention' : 'Accent' })
+      ])
+    ];
+    if (leg.note) items.push(tb(`Note: ${leg.note}`, { isSubtle: true, spacing: 'None' }));
+    const c = { type: 'Container', spacing: 'Small', separator: true, items };
+    if (emphasis) c.style = 'emphasis';
+    return c;
   };
 
   const body = [
     {
-      type: 'Container', style: 'emphasis', bleed: false,
+      type: 'Container', style: 'emphasis',
       items: [tb('DFW Hardstand Operations — F-Hardstand', { size: 'Default', weight: 'Bolder' })]
     }
   ];
@@ -3463,23 +3467,8 @@ function buildTeamsAdaptiveCard(turns) {
       type: 'Container', style: 'emphasis', spacing: 'Small',
       items: [tb(banner, { weight: 'Bolder', color: t.gate_changed ? 'Warning' : 'Default' })]
     });
-    const rows = [{ type: 'TableRow', style: 'emphasis', cells: COLS.map(hdr) }];
-    if (t.arr) rows.push(legRow('ARR', t.arr));
-    if (t.dep) rows.push(legRow('DEP', t.dep));
-    body.push({
-      type: 'Table',
-      gridStyle: 'default',
-      showGridLines: true,
-      firstRowAsHeaders: true,
-      spacing: 'None',
-      // width must be a string, and type/items are included only to satisfy the flow
-      // trigger's request schema (which was generated from a ColumnSet sample).
-      columns: ['5', '3', '5', '4', '3', '3', '3', '3'].map(w => ({ type: 'Column', width: w, items: [] })),
-      rows
-    });
-    [['Arr', t.arr], ['Dep', t.dep]].forEach(([k, leg]) => {
-      if (leg && leg.note) body.push(tb(`Note (${k}): ${leg.note}`, { isSubtle: true, spacing: 'None' }));
-    });
+    if (t.arr) body.push(legBlock('ARR', t.arr, false));
+    if (t.dep) body.push(legBlock('DEP', t.dep, false));
   });
 
   body.push({
@@ -3496,8 +3485,8 @@ function buildTeamsAdaptiveCard(turns) {
         content: {
           $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
           type: 'AdaptiveCard',
-          version: '1.5',
-          msteams: { width: 'Full' },   // use the full chat width so the table isn't squeezed
+          version: '1.4',
+          msteams: { width: 'Full' },
           body
         }
       }
