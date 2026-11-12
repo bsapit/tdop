@@ -3472,7 +3472,9 @@ function buildTeamsAdaptiveCard(turns) {
       showGridLines: true,
       firstRowAsHeaders: true,
       spacing: 'None',
-      columns: [{ width: 3 }, { width: 2 }, { width: 3 }, { width: 3 }, { width: 2 }, { width: 2 }, { width: 2 }, { width: 2 }],
+      // width must be a string, and type/items are included only to satisfy the flow
+      // trigger's request schema (which was generated from a ColumnSet sample).
+      columns: ['5', '3', '5', '4', '3', '3', '3', '3'].map(w => ({ type: 'Column', width: w, items: [] })),
       rows
     });
     [['Arr', t.arr], ['Dep', t.dep]].forEach(([k, leg]) => {
@@ -3495,6 +3497,7 @@ function buildTeamsAdaptiveCard(turns) {
           $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
           type: 'AdaptiveCard',
           version: '1.5',
+          msteams: { width: 'Full' },   // use the full chat width so the table isn't squeezed
           body
         }
       }
