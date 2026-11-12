@@ -3445,7 +3445,7 @@ function buildTeamsAdaptiveCard(turns) {
         cell(leg.gate || '—', { weight: 'Bolder', color: 'Attention' }),
         cell(leg.stand || '—'),
         cell(leg.pax || '—'),
-        cell(intl ? 'INTL' : 'DOM', { color: intl ? 'Attention' : 'Default' })
+        cell(intl ? 'INTL' : 'DOM', { weight: 'Bolder', color: intl ? 'Attention' : 'Accent' })
       ]
     };
   };
