@@ -3412,66 +3412,67 @@ function _bbSetStatus(msg, kind) {
 }
 
 function buildTeamsAdaptiveCard(turns) {
-  // Returns a Teams "message" envelope carrying a native Adaptive Card, which is
-  // what the Power Automate "Post card in a chat or channel" action expects
-  // (card = triggerBody().attachments[0].content, type must be AdaptiveCard).
-  const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  // Returns a Teams "message" envelope carrying a native Adaptive Card.
+  // The Power Automate "Post card in a chat or channel" action's Adaptive Card
+  // field must be the expression: triggerBody()?['attachments']?[0]?['content']
+  const nowD = new Date();
+  const now = nowD.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   const dateStr = document.getElementById('dateFrom')?.value || '';
   const dateLabel = dateStr
-    ? new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+    ? new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
     : '';
 
+  const txt = (text, o = {}) => ({ type: 'TextBlock', text: String(text), size: 'Small', wrap: false, ...o });
+  const col = (text, width, o = {}) => ({ type: 'Column', width, items: [txt(text, o)] });
+  const COLS = ['FLIGHT', 'CITY', 'SKD', 'ETA/ETD', 'GATE', 'STAND', 'PAX', 'TYPE'];
+  const WIDTHS = ['stretch', 'stretch', 'stretch', 'stretch', 'auto', 'auto', 'auto', 'auto'];
+
+  const headerRow = () => ({
+    type: 'ColumnSet', spacing: 'Small',
+    columns: COLS.map((c, i) => col(c, WIDTHS[i], { weight: 'Bolder', isSubtle: true }))
+  });
+
+  const legRow = (kind, leg, emphasis) => {
+    const isArr = kind === 'ARR';
+    const sched = isArr ? leg.sta : leg.std;
+    const est   = isArr ? leg.eta : leg.etd;
+    const label = isArr ? 'STA' : 'STD';
+    const intl  = INTL_AIRPORTS.has((leg.dest || '').toUpperCase());
+    const cells = [
+      col(`${kind} ${leg.flight}`, WIDTHS[0], leg.canceled ? { color: 'Attention', weight: 'Bolder' } : {}),
+      col(leg.dest || '—', WIDTHS[1], { isSubtle: true }),
+      col(leg.canceled ? `${label} ${sched || '—'} CXL` : `${label} ${sched || '—'}`, WIDTHS[2],
+          { color: leg.canceled ? 'Attention' : (isArr ? 'Good' : 'Accent') }),
+      col(est || '——', WIDTHS[3]),
+      col(leg.gate || '—', WIDTHS[4], { color: 'Attention', weight: 'Bolder' }),
+      col(leg.stand || '—', WIDTHS[5]),
+      col(leg.pax || '—', WIDTHS[6], { isSubtle: true }),
+      col(intl ? 'INTL' : 'DOM', WIDTHS[7], intl ? { color: 'Attention' } : {})
+    ];
+    const row = { type: 'ColumnSet', spacing: 'None', columns: cells };
+    if (emphasis) row.style = 'emphasis';
+    return row;
+  };
+
   const body = [
-    {
-      type: 'Container',
-      style: 'attention',
-      bleed: true,
-      items: [
-        { type: 'TextBlock', text: '🚌 HARDSTAND OPERATIONS', weight: 'Bolder', size: 'Medium', wrap: true },
-        { type: 'TextBlock', text: `DFW Terminal D · ${dateLabel} · Posted ${now}`, isSubtle: true, size: 'Small', spacing: 'None', wrap: true }
-      ]
-    }
+    { type: 'TextBlock', text: 'DFW Terminal D · F-Hardstand Operations', weight: 'Bolder', size: 'Large', color: 'Attention', wrap: true },
+    { type: 'TextBlock', text: `${dateLabel} · Full Day · Generated ${now}`, size: 'Small', isSubtle: true, spacing: 'None', wrap: true }
   ];
 
   turns.forEach((t, idx) => {
-    const arrGate = t.arr?.gate || '';
-    const depGate = t.dep?.gate || '';
-    const facts = [];
-    if (arrGate && depGate && arrGate !== depGate) {
-      facts.push({ title: 'Gate (Arr)', value: String(arrGate) });
-      facts.push({ title: 'Gate (Dep)', value: String(depGate) });
-    } else {
-      facts.push({ title: 'Gate', value: String(arrGate || depGate || '—') });
-    }
-    facts.push({ title: 'Stand', value: String(t.arr?.stand || t.dep?.stand || t.stand || '—') });
-
-    if (t.arr) {
-      const time = t.arr.canceled ? `STA ${t.arr.sta} — CANCELED`
-                 : t.arr.eta ? `STA ${t.arr.sta} → ETA ${t.arr.eta}` : `STA ${t.arr.sta}`;
-      facts.push({ title: 'Arrival', value: `${t.arr.flight} / ${t.arr.dest || '—'}  ${time}` });
-      if (t.arr.pax && !t.arr.canceled) facts.push({ title: 'PAX (Arr)', value: String(t.arr.pax) });
-      if (t.arr.note) facts.push({ title: 'Note (Arr)', value: String(t.arr.note) });
-    }
-    if (t.dep) {
-      const time = t.dep.canceled ? `STD ${t.dep.std} — CANCELED`
-                 : t.dep.etd ? `STD ${t.dep.std} → ETD ${t.dep.etd}` : `STD ${t.dep.std}`;
-      facts.push({ title: 'Departure', value: `${t.dep.flight} / ${t.dep.dest || '—'}  ${time}` });
-      if (t.dep.pax && !t.dep.canceled) facts.push({ title: 'PAX (Dep)', value: String(t.dep.pax) });
-      if (t.dep.note) facts.push({ title: 'Note (Dep)', value: String(t.dep.note) });
-    }
-
     body.push({
-      type: 'Container',
-      separator: idx > 0,
-      spacing: 'Medium',
-      items: [
-        { type: 'TextBlock', text: `${t.airline || ''}${t.is_gated ? '  ✈ GATED' : ''}`, weight: 'Bolder', wrap: true },
-        { type: 'FactSet', facts }
-      ]
+      type: 'TextBlock', text: `${t.airline || t.iata || ''}${t.is_gated ? '  ✈ GATED' : ''}`,
+      weight: 'Bolder', size: 'Medium', color: 'Accent', spacing: 'Medium', separator: true, wrap: false
+    });
+    body.push(headerRow());
+    if (t.arr) body.push(legRow('ARR', t.arr, false));
+    if (t.dep) body.push(legRow('DEP', t.dep, true));
+    [['Arr', t.arr], ['Dep', t.dep]].forEach(([k, leg]) => {
+      if (leg && leg.note) body.push(txt(`Note (${k}): ${leg.note}`, { isSubtle: true, wrap: true, spacing: 'None' }));
     });
   });
 
-  body.push({ type: 'TextBlock', text: 'Posted from TDOP · DFW Terminal D Operations', isSubtle: true, size: 'Small', spacing: 'Medium', wrap: true });
+  body.push({ type: 'TextBlock', text: `DFW Terminal D · TDOP · ${now}`, size: 'Small', isSubtle: true, separator: true, spacing: 'Medium', wrap: true });
 
   return {
     type: 'message',
