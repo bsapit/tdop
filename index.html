@@ -3231,6 +3231,7 @@ function getSelectedHsCardData() {
       dep,
       stand:    pad,
       is_gated: isGated,
+      gate_changed: d.gateChanged === '1',
       // Preserve the flight labels used by showTeamsDestPicker for its
       // "Send N turns (AA123/AA456, …)" summary line.
       arrFlight,
@@ -3412,67 +3413,77 @@ function _bbSetStatus(msg, kind) {
 }
 
 function buildTeamsAdaptiveCard(turns) {
-  // Returns a Teams "message" envelope carrying a native Adaptive Card.
+  // Teams "message" envelope carrying an Adaptive Card (v1.5 Table) styled like
+  // the F-Hardstand export: title bar, airline banner, bordered table, footer.
   // The Power Automate "Post card in a chat or channel" action's Adaptive Card
   // field must be the expression: triggerBody()?['attachments']?[0]?['content']
-  const nowD = new Date();
-  const now = nowD.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  const dateStr = document.getElementById('dateFrom')?.value || '';
-  const dateLabel = dateStr
-    ? new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-    : '';
+  // NOTE: the flow's trigger schema requires weight AND isSubtle on every
+  // TextBlock, so tb() always sets both.
+  const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-  const txt = (text, o = {}) => ({ type: 'TextBlock', text: String(text), size: 'Small', weight: 'Default', isSubtle: false, wrap: false, ...o });
-  const col = (text, width, o = {}) => ({ type: 'Column', width, items: [txt(text, o)] });
-  const COLS = ['FLIGHT', 'CITY', 'SKD', 'ETA/ETD', 'GATE', 'STAND', 'PAX', 'TYPE'];
-  const WIDTHS = ['stretch', 'stretch', 'stretch', 'stretch', 'auto', 'auto', 'auto', 'auto'];
-
-  const headerRow = () => ({
-    type: 'ColumnSet', spacing: 'Small',
-    columns: COLS.map((c, i) => col(c, WIDTHS[i], { weight: 'Bolder', isSubtle: true }))
+  const tb = (text, o = {}) => ({
+    type: 'TextBlock', text: String(text), size: 'Small', weight: 'Default', isSubtle: false, wrap: true, ...o
   });
+  const cell = (text, o = {}) => ({ type: 'TableCell', items: [tb(text, o)] });
+  const hdr = (t) => cell(t, { weight: 'Bolder' });
+  const COLS = ['Flight', 'City', 'SKD', 'ETA/ETD', 'Gate', 'Stand', 'PAX', 'Type'];
 
-  const legRow = (kind, leg, emphasis) => {
+  const legRow = (kind, leg) => {
     const isArr = kind === 'ARR';
+    const label = isArr ? 'STA' : 'STD';
     const sched = isArr ? leg.sta : leg.std;
     const est   = isArr ? leg.eta : leg.etd;
-    const label = isArr ? 'STA' : 'STD';
     const intl  = INTL_AIRPORTS.has((leg.dest || '').toUpperCase());
-    const cells = [
-      col(`${kind} ${leg.flight}`, WIDTHS[0], leg.canceled ? { color: 'Attention', weight: 'Bolder' } : {}),
-      col(leg.dest || '—', WIDTHS[1], { isSubtle: true }),
-      col(leg.canceled ? `${label} ${sched || '—'} CXL` : `${label} ${sched || '—'}`, WIDTHS[2],
-          { color: leg.canceled ? 'Attention' : (isArr ? 'Good' : 'Accent') }),
-      col(est || '——', WIDTHS[3]),
-      col(leg.gate || '—', WIDTHS[4], { color: 'Attention', weight: 'Bolder' }),
-      col(leg.stand || '—', WIDTHS[5]),
-      col(leg.pax || '—', WIDTHS[6], { isSubtle: true }),
-      col(intl ? 'INTL' : 'DOM', WIDTHS[7], intl ? { color: 'Attention' } : {})
-    ];
-    const row = { type: 'ColumnSet', spacing: 'None', columns: cells };
-    if (emphasis) row.style = 'emphasis';
-    return row;
+    const cx    = !!leg.canceled;
+    return {
+      type: 'TableRow',
+      cells: [
+        cell(leg.flight, { weight: 'Bolder', color: cx ? 'Attention' : 'Default' }),
+        cell(leg.dest || '—'),
+        cell(cx ? `${label} ${sched || '—'} CXL` : `${label} ${sched || '—'}`, { weight: 'Bolder', color: cx ? 'Attention' : 'Good' }),
+        cell(est || '——', { weight: est ? 'Bolder' : 'Default', color: est ? 'Good' : 'Default' }),
+        cell(leg.gate || '—', { weight: 'Bolder', color: 'Attention' }),
+        cell(leg.stand || '—'),
+        cell(leg.pax || '—'),
+        cell(intl ? 'INTL' : 'DOM', { color: intl ? 'Attention' : 'Default' })
+      ]
+    };
   };
 
   const body = [
-    { type: 'TextBlock', text: 'DFW Terminal D · F-Hardstand Operations', isSubtle: false, weight: 'Bolder', size: 'Large', color: 'Attention', wrap: true },
-    { type: 'TextBlock', text: `${dateLabel} · Full Day · Generated ${now}`, size: 'Small', weight: 'Default', isSubtle: true, spacing: 'None', wrap: true }
+    {
+      type: 'Container', style: 'emphasis', bleed: false,
+      items: [tb('DFW Hardstand Operations — F-Hardstand', { size: 'Default', weight: 'Bolder' })]
+    }
   ];
 
-  turns.forEach((t, idx) => {
+  turns.forEach(t => {
+    const banner = `${t.airline || t.iata || ''}${t.gate_changed ? '  ⚠ Gate/Pad Changed' : ''}${t.is_gated ? '  ✈ GATED' : ''}`;
     body.push({
-      type: 'TextBlock', text: `${t.airline || t.iata || ''}${t.is_gated ? '  ✈ GATED' : ''}`,
-      weight: 'Bolder', isSubtle: false, size: 'Medium', color: 'Accent', spacing: 'Medium', separator: true, wrap: false
+      type: 'Container', style: 'emphasis', spacing: 'Small',
+      items: [tb(banner, { weight: 'Bolder', color: t.gate_changed ? 'Warning' : 'Default' })]
     });
-    body.push(headerRow());
-    if (t.arr) body.push(legRow('ARR', t.arr, false));
-    if (t.dep) body.push(legRow('DEP', t.dep, true));
+    const rows = [{ type: 'TableRow', style: 'emphasis', cells: COLS.map(hdr) }];
+    if (t.arr) rows.push(legRow('ARR', t.arr));
+    if (t.dep) rows.push(legRow('DEP', t.dep));
+    body.push({
+      type: 'Table',
+      gridStyle: 'default',
+      showGridLines: true,
+      firstRowAsHeaders: true,
+      spacing: 'None',
+      columns: [{ width: 3 }, { width: 2 }, { width: 3 }, { width: 3 }, { width: 2 }, { width: 2 }, { width: 2 }, { width: 2 }],
+      rows
+    });
     [['Arr', t.arr], ['Dep', t.dep]].forEach(([k, leg]) => {
-      if (leg && leg.note) body.push(txt(`Note (${k}): ${leg.note}`, { isSubtle: true, wrap: true, spacing: 'None' }));
+      if (leg && leg.note) body.push(tb(`Note (${k}): ${leg.note}`, { isSubtle: true, spacing: 'None' }));
     });
   });
 
-  body.push({ type: 'TextBlock', text: `DFW Terminal D · TDOP · ${now}`, size: 'Small', weight: 'Default', isSubtle: true, separator: true, spacing: 'Medium', wrap: true });
+  body.push({
+    type: 'Container', style: 'emphasis', spacing: 'Small',
+    items: [tb(`DFW Terminal D · TDOP V1.0.3 · Generated ${now}`, { isSubtle: true })]
+  });
 
   return {
     type: 'message',
@@ -3483,7 +3494,7 @@ function buildTeamsAdaptiveCard(turns) {
         content: {
           $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
           type: 'AdaptiveCard',
-          version: '1.4',
+          version: '1.5',
           body
         }
       }
