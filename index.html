@@ -3422,7 +3422,7 @@ function buildTeamsAdaptiveCard(turns) {
     ? new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
     : '';
 
-  const txt = (text, o = {}) => ({ type: 'TextBlock', text: String(text), size: 'Small', wrap: false, ...o });
+  const txt = (text, o = {}) => ({ type: 'TextBlock', text: String(text), size: 'Small', weight: 'Default', isSubtle: false, wrap: false, ...o });
   const col = (text, width, o = {}) => ({ type: 'Column', width, items: [txt(text, o)] });
   const COLS = ['FLIGHT', 'CITY', 'SKD', 'ETA/ETD', 'GATE', 'STAND', 'PAX', 'TYPE'];
   const WIDTHS = ['stretch', 'stretch', 'stretch', 'stretch', 'auto', 'auto', 'auto', 'auto'];
@@ -3455,14 +3455,14 @@ function buildTeamsAdaptiveCard(turns) {
   };
 
   const body = [
-    { type: 'TextBlock', text: 'DFW Terminal D · F-Hardstand Operations', weight: 'Bolder', size: 'Large', color: 'Attention', wrap: true },
-    { type: 'TextBlock', text: `${dateLabel} · Full Day · Generated ${now}`, size: 'Small', isSubtle: true, spacing: 'None', wrap: true }
+    { type: 'TextBlock', text: 'DFW Terminal D · F-Hardstand Operations', isSubtle: false, weight: 'Bolder', size: 'Large', color: 'Attention', wrap: true },
+    { type: 'TextBlock', text: `${dateLabel} · Full Day · Generated ${now}`, size: 'Small', weight: 'Default', isSubtle: true, spacing: 'None', wrap: true }
   ];
 
   turns.forEach((t, idx) => {
     body.push({
       type: 'TextBlock', text: `${t.airline || t.iata || ''}${t.is_gated ? '  ✈ GATED' : ''}`,
-      weight: 'Bolder', size: 'Medium', color: 'Accent', spacing: 'Medium', separator: true, wrap: false
+      weight: 'Bolder', isSubtle: false, size: 'Medium', color: 'Accent', spacing: 'Medium', separator: true, wrap: false
     });
     body.push(headerRow());
     if (t.arr) body.push(legRow('ARR', t.arr, false));
@@ -3472,7 +3472,7 @@ function buildTeamsAdaptiveCard(turns) {
     });
   });
 
-  body.push({ type: 'TextBlock', text: `DFW Terminal D · TDOP · ${now}`, size: 'Small', isSubtle: true, separator: true, spacing: 'Medium', wrap: true });
+  body.push({ type: 'TextBlock', text: `DFW Terminal D · TDOP · ${now}`, size: 'Small', weight: 'Default', isSubtle: true, separator: true, spacing: 'Medium', wrap: true });
 
   return {
     type: 'message',
