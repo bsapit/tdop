@@ -878,7 +878,9 @@ function shouldInclude(iata, nature, destination, fnum, gate, stand) {
 
 function normalizeGate(name) {
   if (!name) return '';
-  return name.trim().replace(/([A-Z]\d+)[ABC]$/i, (_,g) => g).toUpperCase();
+  const n = name.trim().toUpperCase();
+  if (/^D5[AB]$/.test(n)) return n;                 // D5A / D5B keep their suffix
+  return n.replace(/([A-Z]\d+)[ABC]$/, (_,g) => g); // all other gates (D7, D12, ...) drop A/B/C
 }
 
 function fmtTime(iso) {
