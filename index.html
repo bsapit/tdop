@@ -883,6 +883,80 @@ function normalizeGate(name) {
   return n.replace(/([A-Z]\d+)[ABC]$/, (_,g) => g); // all other gates (D7, D12, ...) drop A/B/C
 }
 
+// ── Manual-flight helpers: sort key + live stand/gate lookup ────────────────
+// Comparable timestamp for any briefing entry. API entries carry an ISO
+// schedule time; manual entries only have local "HH:MM", so build a real
+// datetime from the briefing date (rolling to dateTo for overnight windows).
+function entryTimeMs(e) {
+  const iso = e.arrTimeIso || e.depTimeIso;
+  if (iso) { const t = new Date(iso).getTime(); if (!isNaN(t)) return t; }
+  const m = String(e.arrTime || e.depTime || '').match(/^(\d{1,2}):(\d{2})$/);
+  if (!m || !briefingData) return Number.MAX_SAFE_INTEGER;
+  const hh = m[1].padStart(2, '0');
+  let t = new Date(`${briefingData.dateFrom}T${hh}:${m[2]}:00`).getTime();
+  const from = new Date(`${briefingData.dateFrom}T${currentTimeFrom || '00:00'}:00`).getTime();
+  if (t < from && briefingData.dateTo) t = new Date(`${briefingData.dateTo}T${hh}:${m[2]}:00`).getTime();
+  return t;
+}
+function sortHardstandList(list) {
+  list.sort((a, b) => entryTimeMs(a) - entryTimeMs(b));
+}
+
+// Find the live turn for a manually-entered flight in the raw API data and
+// return its Stand/Gate per leg. Matches on airline code + flight digits;
+// if the same number appears more than once, prefers the matching HH:MM.
+function lookupLiveStandGate(entry) {
+  const digits = f => String(f || '').replace(/\D/g, '').replace(/^0+/, '');
+  const legMatches = (leg, fnum) => {
+    if (!leg || !fnum) return 0;
+    if (digits(leg.flightNumber) !== digits(fnum)) return 0;
+    const code = String(leg.airline || '').toUpperCase();
+    const want = String(entry.iata || '').toUpperCase();
+    return (!want || !code || code === want) ? 1 : 0;
+  };
+  let best = null, bestScore = 0;
+  (lastRawTurns || []).forEach(turn => {
+    const arr = turn.arrivalFlight || {}, dep = turn.departureFlight || {};
+    let score = 0;
+    if (entry.arrFlight && legMatches(arr, entry.arrFlight)) {
+      score += 1 + (fmtTime(arr.scheduleTime) === entry.arrTime ? 2 : 0);
+    }
+    if (entry.depFlight && legMatches(dep, entry.depFlight)) {
+      score += 1 + (fmtTime(dep.scheduleTime) === entry.depTime ? 2 : 0);
+    }
+    if (score > bestScore) { best = turn; bestScore = score; }
+  });
+  if (!best) return null;
+  return {
+    arrStand: (best.arrivalStand   || {}).name || '',
+    depStand: (best.departureStand || {}).name || '',
+    idleStand:(best.idleStand      || {}).name || '',
+    arrGate:  normalizeGate((best.arrivalGate   || {}).name || ''),
+    depGate:  normalizeGate((best.departureGate || {}).name || ''),
+  };
+}
+
+// Copy the live Stand/Gate onto a manual entry (only fills what the API has;
+// never blanks a value the user already set). Returns true if anything found.
+function applyLiveStandGate(e) {
+  if (!e || !e.manual) return false;
+  const live = lookupLiveStandGate(e);
+  if (!live) return false;
+  if (e.arrFlight) {
+    if (live.arrStand) e.arrStand = live.arrStand;
+    if (live.arrGate)  e.arrGate  = live.arrGate;
+  }
+  if (e.depFlight) {
+    if (live.depStand) e.depStand = live.depStand;
+    if (live.depGate)  e.depGate  = live.depGate;
+  }
+  const stand = (e.arrFlight ? live.arrStand : '') || (e.depFlight ? live.depStand : '') || live.idleStand;
+  const gate  = (e.arrFlight ? live.arrGate  : '') || (e.depFlight ? live.depGate  : '');
+  if (stand) e.stand = stand;
+  if (gate)  e.gate  = gate;
+  return !!(stand || gate);
+}
+
 function fmtTime(iso) {
   if (!iso) return '';
   try { return new Date(iso).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false}); }
@@ -1687,12 +1761,11 @@ async function silentRefresh() {
         );
         if (!already) newData.hardstand.push(ph);
       });
-      newData.hardstand.sort((a,b) => {
-        const ka = a.arrTimeIso || a.depTimeIso || a.arrTime || a.depTime || '';
-        const kb = b.arrTimeIso || b.depTimeIso || b.arrTime || b.depTime || '';
-        return String(ka).localeCompare(String(kb));
-      });
+      sortHardstandList(newData.hardstand);
     }
+
+    // Auto-pick the live Stand/Gate for manually-added flights (terminal + hardstand copies)
+    [...newData.terminal, ...newData.hardstand].forEach(applyLiveStandGate);
 
     // Gate/Stand change detection is USER-DRIVEN ONLY.
     // silentRefresh does NOT touch _gateStandTracker — the tracker is only
@@ -2007,12 +2080,14 @@ async function loadOps() {
       briefingData.terminal.sort((a,b) => (a.arrTime||a.depTime||'').localeCompare(b.arrTime||b.depTime||''));
     }
     window._kvPendingManual = [];
-    window._kvPendingPromotedHS = [];
     // Re-inject promoted hardstand entries (created via "Make Hardstand") that
     // are not already present in the freshly-fetched hardstand list.
+    // NOTE: read the KV-restored list BEFORE clearing it — clearing first made
+    // promoted hardstand flights vanish from F-Hardstand Operations on reload.
     const promotedHS = (inputSnap.__promotedHardstand || []).length
       ? inputSnap.__promotedHardstand
       : (window._kvPendingPromotedHS || []);
+    window._kvPendingPromotedHS = [];
     if (promotedHS.length) {
       promotedHS.forEach(ph => {
         const already = briefingData.hardstand.some(h =>
@@ -2022,12 +2097,11 @@ async function loadOps() {
         );
         if (!already) briefingData.hardstand.push(ph);
       });
-      briefingData.hardstand.sort((a,b) => {
-        const ka = a.arrTimeIso || a.depTimeIso || a.arrTime || a.depTime || '';
-        const kb = b.arrTimeIso || b.depTimeIso || b.arrTime || b.depTime || '';
-        return String(ka).localeCompare(String(kb));
-      });
+      sortHardstandList(briefingData.hardstand);
     }
+
+    // Auto-pick the live Stand/Gate for manually-added flights (terminal + hardstand copies)
+    [...briefingData.terminal, ...briefingData.hardstand].forEach(applyLiveStandGate);
 
     // Gate/Stand change detection — USER mode: reset TTL on change, otherwise
     // decrement. On a clean pull (New Briefing), wipe the tracker first so no
@@ -3109,6 +3183,11 @@ function addManualFlight() {
       }
     }
 
+    applyLiveStandGate(term);
+    if (Array.isArray(briefingData.hardstand)) {
+      briefingData.hardstand.filter(h => h.manual).forEach(applyLiveStandGate);
+      sortHardstandList(briefingData.hardstand);
+    }
     briefingData.terminal.sort((a, b) => {
       const ta = a.arrTime || a.depTime || '';
       const tb = b.arrTime || b.depTime || '';
@@ -3132,6 +3211,7 @@ function addManualFlight() {
     isIntl: false, isHardstand: false, manual: true,
   };
 
+  applyLiveStandGate(entry);   // pick up the live Stand/Gate if the API already has it
   briefingData.terminal.push(entry);
   // Sort by STA (falling back to STD for dep-only)
   briefingData.terminal.sort((a, b) => {
@@ -3725,11 +3805,16 @@ function promoteTerminalToHardstand(iata, arrFlight, depFlight) {
 
   // Prompt for the T-Stand (e.g. T84). Pre-fill with the current stand if it
   // already starts with T, otherwise blank.
-  const suggested = String(term.arrStand || term.depStand || term.stand || '').trim();
-  const raw = prompt(`Assign a required stand for ${term.airline} ${arrFlight||depFlight}:`, suggested);
-  if (raw === null) return;
-  const tstand = String(raw).trim();
-  if (!tstand) { alert('Stand is required.'); return; }
+  // Pick the stand up automatically from the live data (manual flights only
+  // carry what the user typed). Only prompt if the API has no stand for it yet.
+  if (term.manual) applyLiveStandGate(term);
+  let tstand = String(term.arrStand || term.depStand || term.stand || '').trim();
+  if (!tstand) {
+    const raw = prompt(`No stand found yet for ${term.airline} ${arrFlight||depFlight}. Assign a required stand:`, '');
+    if (raw === null) return;
+    tstand = String(raw).trim();
+    if (!tstand) { alert('Stand is required.'); return; }
+  }
 
   // Build the hardstand entry — clone all fields from the terminal entry,
   // overwrite stand fields with the chosen T-stand. Mark `promoted` so it
@@ -3744,11 +3829,7 @@ function promoteTerminalToHardstand(iata, arrFlight, depFlight) {
     manual:   term.manual || false,
   };
   briefingData.hardstand.push(hsEntry);
-  briefingData.hardstand.sort((a,b) => {
-    const ka = a.arrTimeIso || a.depTimeIso || a.arrTime || a.depTime || '';
-    const kb = b.arrTimeIso || b.depTimeIso || b.arrTime || b.depTime || '';
-    return String(ka).localeCompare(String(kb));
-  });
+  sortHardstandList(briefingData.hardstand);
 
   // Mark the existing terminal entry as a hardstand mirror so PAX inputs and
   // hardstand styling appear in all exports.
