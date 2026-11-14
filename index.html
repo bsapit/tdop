@@ -4294,37 +4294,22 @@ function exportIntlOps() {
   const shiftLabel = (currentTimeFrom === '00:00' && currentTimeTo === '23:59') ? 'Full Day' : `${currentTimeFrom}–${currentTimeTo}`;
   const now        = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
 
-  // Filter: hardstand INTL arrivals (and dep-only INTL) not canceled, STA/STD or ETA/ETD between 13:00–21:00.
+  // Filter: international hardstand ARRIVALS only (no departures), not canceled,
+  // pad starting with T, H or S, STA or ETA between 13:00–21:00.
   // Includes ALL F-Hardstand airlines (AA, UA, DL, etc.) — no airline exclusions applied here.
-  // Bug fix: also captures departure-only hardstand entries with an INTL destination,
-  // and arrival entries where the dep leg (not arr) carries the INTL destination code.
   const entries = briefingData.hardstand.filter(e => {
-    if (e.arrFlight) {
-      if (getChk(`cancel_${e.iata}_${e.arrFlight}`)) return false;
-      const arrDU = (e.arrDest||'').toUpperCase();
-      const depDU = (e.depDest||'').toUpperCase();
-      if (!INTL_AIRPORTS.has(arrDU) && !INTL_AIRPORTS.has(depDU)) return false;
-      const sta  = e.arrTime || '';
-      const eta  = getVal(`eta_${e.iata}_${e.arrFlight}_arr`) || '';
-      const best = eta || sta;
-      return best >= '13:00' && best <= '21:00';
-    }
-    if (e.depFlight) {
-      if (getChk(`cancel_${e.iata}_${e.depFlight}`)) return false;
-      if (!INTL_AIRPORTS.has((e.depDest||'').toUpperCase())) return false;
-      const std  = e.depTime || '';
-      const etd  = getVal(`eta_${e.iata}_${e.depFlight}_dep`) || '';
-      const best = etd || std;
-      return best >= '13:00' && best <= '21:00';
-    }
-    return false;
-  }).sort((a, b) => {
-    const aT = a.arrTime || a.depTime || '';
-    const bT = b.arrTime || b.depTime || '';
-    return aT.localeCompare(bT);
-  });
+    if (!e.arrFlight) return false;                       // arrivals only — drop dep-only entries
+    if (getChk(`cancel_${e.iata}_${e.arrFlight}`)) return false;
+    if (!INTL_AIRPORTS.has((e.arrDest||'').toUpperCase())) return false;  // must arrive FROM an international airport
+    const pad = String(e.arrStand || e.stand || '').trim().toUpperCase();
+    if (!/^[THS]/.test(pad)) return false;                // pad must start with T, H or S
+    const sta  = e.arrTime || '';
+    const eta  = getVal(`eta_${e.iata}_${e.arrFlight}_arr`) || '';
+    const best = eta || sta;
+    return best >= '13:00' && best <= '21:00';
+  }).sort((a, b) => (a.arrTime || '').localeCompare(b.arrTime || ''));
 
-  if (!entries.length) { alert('No international hardstand arrivals with STA or ETA between 13:00–21:00 found.'); return; }
+  if (!entries.length) { alert('No international hardstand arrivals on T/H/S pads with STA or ETA between 13:00–21:00 found.'); return; }
 
   // ── Plain text ──
   const lines = [];
